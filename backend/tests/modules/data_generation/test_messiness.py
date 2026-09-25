@@ -20,3 +20,16 @@ def test_maybe_empty_or_none_returns_all_three_distinct_states():
     assert None in results
     assert "" in results
     assert "   " in results
+
+
+def test_messy_name_produces_genuine_typos_not_just_casing():
+    """Real human data-entry errors (transposed/doubled/dropped letters),
+    distinct from cosmetic casing/whitespace variants - added after
+    researching real dirty-data taxonomies (Experian: >60% of dirty data
+    traces back to human error, not formatting)."""
+    random.seed(3)
+    name = "Jonathan Reyes"
+    cosmetic_variants = {name, name.upper(), name.lower(), f"  {name}  ", name.replace(" ", "  ", 1)}
+    variants = {messy_name(name) for _ in range(5_000)}
+    typo_variants = variants - cosmetic_variants
+    assert len(typo_variants) > 0
