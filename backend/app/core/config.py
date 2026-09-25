@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
+    # Local frontend dev server origin - Module 6. Kept as a single
+    # configurable value (not "allow all") so the CORS surface stays
+    # deliberate even though this never runs multi-tenant in local dev.
+    frontend_origin: str = "http://localhost:3000"
+
     @property
     def postgres_dsn(self) -> str:
         return (
