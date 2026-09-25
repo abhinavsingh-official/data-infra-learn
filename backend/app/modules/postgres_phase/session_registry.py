@@ -33,5 +33,13 @@ def forget(session_id: str) -> None:
 
 
 def expired_session_ids() -> list[str]:
+    # Snapshot before iterating: defensive against a concurrent
+    # register()/forget() mutating the dict mid-iteration (Python raises
+    # RuntimeError if a dict changes size while iterating it directly).
+    # Tried to reproduce this under real concurrent stress (20+ threads,
+    # shared keys) and didn't manage to - noting that honestly rather than
+    # claiming a bug was found - but the fix is free, so applying it as
+    # standard defensive practice rather than leaving the theoretical risk.
     now = time.time()
-    return [sid for sid, rec in _sessions.items() if now - rec.created_at > SESSION_TTL_SECONDS]
+    snapshot = list(_sessions.items())
+    return [sid for sid, rec in snapshot if now - rec.created_at > SESSION_TTL_SECONDS]

@@ -51,6 +51,7 @@ def execute(session_id: str, body: ExecuteRequest) -> dict:
         "success": result.success,
         "columns": result.columns,
         "rows": result.rows,
+        "truncated": result.truncated,
         "error_code": result.error_code,
         "error_message": result.error_message,
     }

@@ -19,7 +19,14 @@ STATEMENT_TIMEOUT = "30s"
 # rather than an accident of what wasn't locked down.
 READABLE_SHARED_TABLES = ["raw_transaction_events"]
 
-_SAFE_SESSION_ID = re.compile(r"^[a-f0-9]{16,64}$")
+# Max 40, not 64 as originally written: role_name() prepends "session_"
+# (8 chars), and Postgres silently truncates identifiers past 63 bytes
+# (confirmed by testing directly - only a NOTICE, not an error) - a
+# session_id long enough to survive the regex could still collide with
+# another session's role name after truncation. 40 hex chars + the
+# prefix stays safely under the limit; actual usage only ever needs 32
+# (secrets.token_hex(16)).
+_SAFE_SESSION_ID = re.compile(r"^[a-f0-9]{16,40}$")
 
 
 class UnsafeSessionId(ValueError):
