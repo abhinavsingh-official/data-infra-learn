@@ -2,15 +2,24 @@ services:
   postgres:
     image: postgres:16
     container_name: data-infra-learn-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_SUPERUSER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-data_infra_learn}
+      # Read by docker/init/01_app_role.sh - single source of truth is .env,
+      # not a hardcoded value in the init script.
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER:-app_role}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:-app_role_dev_password}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d:ro
+    # Enforces the "must run on a low-spec machine, must not crash the host"
+    # requirement (PLAN.md) directly, rather than just asserting it in docs.
+    mem_limit: 512m
+    cpus: 0.5
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER:-postgres} -d ${POSTGRES_DB:-data_infra_learn}"]
       interval: 5s

@@ -10,9 +10,9 @@ Planning, architecture decisions, and the component/repo inventory live in the c
 
 ```
 ./setup.sh
-cd backend && source .venv/bin/activate && uvicorn app.main:app --reload
+cd backend && source .venv/bin/activate && python -m app.main
 ```
 
-Then `curl http://localhost:8000/health` should return `{"status":"ok","database":"reachable"}`.
+Then `curl http://localhost:8000/health` should return `{"status":"ok","database":"reachable"}`. Host/port come from `.env` (`API_PORT`), not hardcoded.
 
 Note: Postgres runs on host port **5433**, not 5432 — deliberately, to avoid colliding with a native/Homebrew Postgres install that might already be running on the default port.
