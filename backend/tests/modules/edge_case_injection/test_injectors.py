@@ -90,3 +90,42 @@ def test_malformed_excel_corruption_mangles_a_long_numeric_id():
             assert payload["event_id"] != BASE_PAYLOAD["event_id"]
             return
     raise AssertionError("excel-corrupted event_id variant never occurred in 200 tries")
+
+
+def test_malformed_does_not_resurrect_a_field_null_already_removed():
+    """Found on review, not by running: 'ambiguous_date' unconditionally
+    overwrote 'timestamp' even if inject_null had already deleted it,
+    which would make the fault log claim a field is both entirely missing
+    and present-but-ambiguous for the same row - a contradiction the
+    grader would later check against a lying answer key."""
+    random.seed(9)
+    payload_missing_timestamp = {k: v for k, v in BASE_PAYLOAD.items() if k != "timestamp"}
+    for _ in range(500):
+        payload, fault = injectors.inject_malformed(dict(payload_missing_timestamp), rate=1.0)
+        if fault:
+            assert fault["fault_type"] != "malformed_ambiguous_date"
+            assert "timestamp" not in payload
+
+
+def test_malformed_leading_zero_strip_only_fires_when_it_actually_changes_something():
+    """Found on review: the old code chose this variant based on an
+    always-true condition on a DIFFERENT field (event_id), then applied
+    lstrip('0') to card_last4 regardless of whether it had a leading zero
+    - silently no-op'ing on ~90% of values while still logging a fault
+    that produced no visible change."""
+    random.seed(10)
+    payload_no_leading_zero = dict(BASE_PAYLOAD)
+    payload_no_leading_zero["card_last4"] = "5300"  # doesn't start with 0
+    for _ in range(500):
+        payload, fault = injectors.inject_malformed(dict(payload_no_leading_zero), rate=1.0)
+        if fault and fault["fault_type"] == "malformed_excel_corruption":
+            assert payload["card_last4"] == "5300" or "E+" in payload["event_id"]  # only via the OTHER sub-variant
+
+    payload_with_leading_zero = dict(BASE_PAYLOAD)
+    payload_with_leading_zero["card_last4"] = "0042"
+    saw_leading_zero_strip = False
+    for _ in range(500):
+        payload, fault = injectors.inject_malformed(dict(payload_with_leading_zero), rate=1.0)
+        if fault and payload.get("card_last4") == "42":
+            saw_leading_zero_strip = True
+    assert saw_leading_zero_strip

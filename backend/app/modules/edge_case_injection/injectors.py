@@ -114,23 +114,46 @@ def inject_schema_drift(payload: dict[str, Any], rate: float) -> tuple[dict[str,
 
 
 def inject_malformed(payload: dict[str, Any], rate: float) -> tuple[dict[str, Any], FaultRecord | None]:
-    """3.5 - Excel-style ID corruption, or an ambiguous regional date string."""
+    """3.5 - Excel-style ID corruption, or an ambiguous regional date string.
+
+    Guards, both found by re-reviewing rather than just re-running: (1)
+    'ambiguous_date' only runs if 'timestamp' is still present - otherwise
+    it would silently re-add a field inject_null had already deleted,
+    making the fault log claim two contradictory things about the same
+    field. (2) the excel_corruption sub-choice between event_id (always
+    reachable) and card_last4 (only reachable ~10% of the time, when it
+    genuinely starts with '0') is now an explicit precondition-checked
+    choice, not an if/else gated on a condition that was always true for
+    event_id - the card_last4 branch was previously dead code, and even
+    when reached via a bad condition, silently no-op'd on ~90% of values
+    while still logging a fault that produced no visible change."""
     if random.random() >= rate:
         return payload, None
     mutated = dict(payload)
-    variant = random.choice(["excel_corruption", "ambiguous_date"])
-    if variant == "excel_corruption":
+    available_variants = []
+    if "event_id" in mutated and mutated["event_id"].isdigit() and len(mutated["event_id"]) >= 10:
+        available_variants.append("scientific_notation")
+    if "card_last4" in mutated and mutated["card_last4"].startswith("0"):
+        available_variants.append("leading_zero_strip")
+    if "timestamp" in mutated:
+        available_variants.append("ambiguous_date")
+    if not available_variants:
+        return payload, None
+    variant = random.choice(available_variants)
+    if variant == "scientific_notation":
         raw_id = mutated["event_id"]
-        # Simulates a long numeric-looking ID that was opened in Excel and
-        # converted to scientific notation, permanently losing precision.
-        if raw_id.isdigit() and len(raw_id) >= 10:
-            mutated["event_id"] = f"{float(raw_id[:3]):.0f}E+{len(raw_id) - 3}"
-        else:
-            mutated["card_last4"] = mutated["card_last4"].lstrip("0") or "0"
+        mutated["event_id"] = f"{float(raw_id[:3]):.0f}E+{len(raw_id) - 3}"
         return mutated, {
             "fault_type": "malformed_excel_corruption",
             "error_code": "ERR_MALFORMED_EXCEL_CORRUPTION",
-            "description": "An ID-like field was corrupted the way Excel corrupts long numeric IDs (scientific notation / stripped leading zeros).",
+            "description": "A long numeric ID was corrupted into scientific notation, the way Excel corrupts long numeric IDs opened from a CSV.",
+        }
+    if variant == "leading_zero_strip":
+        mutated["card_last4"] = mutated["card_last4"].lstrip("0") or "0"
+        return mutated, {
+            "fault_type": "malformed_excel_corruption",
+            "error_code": "ERR_MALFORMED_EXCEL_CORRUPTION",
+            "description": "A leading zero was stripped from an ID-like field, the way Excel strips leading zeros from numeric-looking text.",
         }
     day, month, year = random.randint(1, 12), random.randint(1, 12), 2025
     mutated["timestamp"] = f"{day:02d}/{month:02d}/{year}"

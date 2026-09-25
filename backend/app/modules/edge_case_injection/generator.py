@@ -101,7 +101,12 @@ def run(sample_size: int = 50_000, rate: float = DEFAULT_RATE) -> dict[str, Any]
             if duplicate:
                 dup_delivery_id, dup_received_at, dup_fault = duplicate
                 pending_rows.append((dup_received_at, dup_delivery_id, payload))
-                pending_faults_by_index.append([dup_fault])
+                # The duplicate is a literal copy of `payload`, so it carries
+                # whatever other faults the original row already has, not
+                # just the duplicate_delivery fault itself - found on review:
+                # a grader checking "does this row have every fault it
+                # should" would otherwise find the duplicate incomplete.
+                pending_faults_by_index.append(row_faults + [dup_fault])
 
         event_ids = _write_events(conn, pending_rows)
         faults_to_log = [
