@@ -4,4 +4,15 @@ A data-engineering learning platform: one company's data (fintech / digital lend
 
 Planning, architecture decisions, and the component/repo inventory live in the companion repo: [AbhinavSingh189/Portfolio-Upgrade](https://github.com/AbhinavSingh189/Portfolio-Upgrade) — see `PLAN.md`, `ARCHITECTURE_DECISIONS.md`, and `SYSTEM_SPEC.md` there for the full picture. This repo holds the actual code.
 
-**Status:** scaffolding not yet started — see Module 0 in `PLAN.md`.
+**Status:** Module 1 (repo & infra scaffolding) done — Postgres via Docker Compose, FastAPI backend skeleton, config, health check, tests all working end-to-end. Module 2 (data generation) is next.
+
+## Running locally
+
+```
+./setup.sh
+cd backend && source .venv/bin/activate && uvicorn app.main:app --reload
+```
+
+Then `curl http://localhost:8000/health` should return `{"status":"ok","database":"reachable"}`.
+
+Note: Postgres runs on host port **5433**, not 5432 — deliberately, to avoid colliding with a native/Homebrew Postgres install that might already be running on the default port.
