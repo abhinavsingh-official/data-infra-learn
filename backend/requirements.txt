@@ -3,6 +3,7 @@ uvicorn[standard]==0.54.0
 pydantic-settings==2.15.0
 psycopg[binary]==3.3.6
 faker==40.39.0
-pandera==0.33.1
+pandera[polars]==0.33.1
+polars==1.44.2
 pytest==9.1.1
 httpx==0.28.1

@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.core.db import get_admin_connection
+from app.modules.grading.report import grade_submission
 from app.modules.postgres_phase import session_registry
 from app.modules.postgres_phase.session_provisioning import role_name, deprovision_session, provision_session
 from app.modules.postgres_phase.sql_execution import execute_submission
@@ -54,6 +55,21 @@ def execute(session_id: str, body: ExecuteRequest) -> dict:
         "truncated": result.truncated,
         "error_code": result.error_code,
         "error_message": result.error_message,
+    }
+
+
+@router.post("/sessions/{session_id}/grade")
+def grade(session_id: str) -> dict:
+    record = session_registry.get(session_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+    report = grade_submission(role_name(session_id), record.password)
+    return {
+        "passed": report.passed,
+        "total_clean_rows": report.total_clean_rows,
+        "structural_findings": [vars(f) for f in report.structural_findings],
+        "fault_findings": [vars(f) for f in report.fault_findings],
+        "fault_type_summary": report.fault_type_summary,
     }
 
 

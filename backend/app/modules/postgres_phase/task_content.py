@@ -31,4 +31,18 @@ POSTGRES_PHASE_TASK = {
         "Nothing here is randomly broken - every edge case is deliberate and it's fine to write "
         "multiple passes (one to normalize the payload shape, one to load it) rather than a single query."
     ),
+    "required_output": {
+        "table": "clean_transactions",
+        "note": (
+            "Any intermediate tables you create are entirely up to you - only this one output table's "
+            "shape is fixed, since grading needs something concrete to check."
+        ),
+        "columns": {
+            "event_id": "text, unique, not null",
+            "amount": "numeric, not null",
+            "merchant": "text",
+            "currency": "text",
+            "event_timestamp": "timestamptz",
+        },
+    },
 }
