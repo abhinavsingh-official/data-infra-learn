@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     postgres_app_user: str = "app_role"
     postgres_app_password: str = "app_role_dev_password"
 
+    # Control-plane only (session provisioning) - never used for regular
+    # request handling. See MODULE_4_PLAN.md's two-connection-tier decision.
+    postgres_superuser: str = "postgres"
+    postgres_superuser_password: str = "postgres"
+
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
@@ -26,6 +31,13 @@ class Settings(BaseSettings):
     def postgres_dsn(self) -> str:
         return (
             f"postgresql://{self.postgres_app_user}:{self.postgres_app_password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
+
+    @property
+    def postgres_admin_dsn(self) -> str:
+        return (
+            f"postgresql://{self.postgres_superuser}:{self.postgres_superuser_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
 

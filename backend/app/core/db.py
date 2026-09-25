@@ -23,3 +23,20 @@ def get_connection() -> Iterator[Connection]:
         yield conn
     finally:
         conn.close()
+
+
+@contextmanager
+def get_admin_connection() -> Iterator[Connection]:
+    """Superuser connection - ONLY for session provisioning (creating/
+    dropping per-session roles and schemas), never for regular request
+    handling. See MODULE_4_PLAN.md's two-connection-tier decision: the
+    data-plane connection above stays maximally restricted, and this
+    narrowly-used control-plane connection is what's allowed to do things
+    app_role deliberately cannot (CREATE ROLE, CREATE SCHEMA for another
+    role's ownership)."""
+    settings = get_settings()
+    conn = psycopg.connect(settings.postgres_admin_dsn)
+    try:
+        yield conn
+    finally:
+        conn.close()
