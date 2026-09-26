@@ -1,6 +1,7 @@
 import type {
   ExecuteResult,
   GradingReport,
+  LakeTask,
   MongoExecuteResult,
   NosqlGradingReport,
   NosqlTask,
@@ -131,6 +132,33 @@ export function gradeWarehouseSession(sessionId: string) {
 
 export function endWarehouseSession(sessionId: string) {
   return request<{ status: string }>(`/warehouse-phase/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+}
+
+export function getLakeTask() {
+  return request<LakeTask>("/lake-phase/task");
+}
+
+export function createLakeSession() {
+  return request<{ session_id: string; output_dir: string }>("/lake-phase/sessions", { method: "POST" });
+}
+
+export function executeLakeSql(sessionId: string, sql: string) {
+  return request<ExecuteResult>(`/lake-phase/sessions/${sessionId}/execute`, {
+    method: "POST",
+    body: JSON.stringify({ sql }),
+  });
+}
+
+export function gradeLakeSession(sessionId: string) {
+  return request<GradingReport>(`/lake-phase/sessions/${sessionId}/grade`, {
+    method: "POST",
+  });
+}
+
+export function endLakeSession(sessionId: string) {
+  return request<{ status: string }>(`/lake-phase/sessions/${sessionId}`, {
     method: "DELETE",
   });
 }

@@ -4,7 +4,7 @@ A data-engineering learning platform: one company's data (fintech / digital lend
 
 Planning, architecture decisions, and the component/repo inventory live in the companion repo: [AbhinavSingh189/Portfolio-Upgrade](https://github.com/AbhinavSingh189/Portfolio-Upgrade) — see `PLAN.md`, `ARCHITECTURE_DECISIONS.md`, and `SYSTEM_SPEC.md` there for the full picture. This repo holds the actual code.
 
-**Status:** Modules 1-8 done — Postgres, NoSQL (MongoDB), and Warehouse (DuckDB, SCD Type 2) phases all working end-to-end behind a shared frontend. Module 9 (Data Lake phase) is next.
+**Status:** Modules 1-9 done — Postgres, NoSQL (MongoDB), Warehouse (DuckDB, SCD Type 2), and Data Lake (DuckDB, partitioned Parquet, schema-on-read) phases all working end-to-end behind a shared frontend. Module 10 (Lakehouse phase) is next.
 
 ## Running locally
 

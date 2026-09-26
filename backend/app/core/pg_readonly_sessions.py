@@ -16,7 +16,18 @@ from psycopg import Connection, sql
 
 from app.core.session_ids import validate_session_id
 
-READABLE_SOURCE_TABLES = ["users", "accounts", "transactions", "reward_events", "repayments"]
+READABLE_SOURCE_TABLES = [
+    "users",
+    "accounts",
+    "transactions",
+    "reward_events",
+    "repayments",
+    # Module 3's raw JSONB feed - not sensitive (the actual answer key,
+    # injected_fault_log, is a separate table that stays default-deny).
+    # Added for lake_phase (Module 9), which sources from this feed the
+    # same way postgres_phase's own session roles already do.
+    "raw_transaction_events",
+]
 STATEMENT_TIMEOUT = "30s"
 
 

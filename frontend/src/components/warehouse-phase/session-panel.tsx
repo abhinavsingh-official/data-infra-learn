@@ -6,16 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { SqlWorkspace } from "@/components/shared/sql-workspace";
 import {
   ApiError,
   createWarehouseSession,
   endWarehouseSession,
+  executeWarehouseSql,
   gradeWarehouseSession,
   simulateWarehouseChanges,
 } from "@/lib/api";
 import type { WarehouseGradingReport } from "@/lib/types";
 import { GradingReportView } from "./grading-report";
-import { SqlWorkspace } from "./sql-workspace";
 
 export function SessionPanel() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -109,7 +110,12 @@ export function SessionPanel() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <SqlWorkspace sessionId={sessionId} />
+          <SqlWorkspace
+            sessionId={sessionId}
+            execute={executeWarehouseSql}
+            placeholder="CREATE TABLE dim_users AS SELECT ... FROM pg.users"
+            rows={6}
+          />
           <Separator />
           <div className="flex flex-wrap gap-2">
             <Button onClick={handleSimulateChanges} variant="secondary" disabled={simulating}>

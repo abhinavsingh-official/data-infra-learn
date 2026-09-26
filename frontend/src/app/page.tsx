@@ -41,7 +41,7 @@ const PARADIGMS: StorageParadigm[] = [
     tagline: "Partitioned Parquet, schema-on-read",
     description:
       "The same data as partitioned Parquet files queried with DuckDB - schema-on-read tradeoffs instead of schema-on-write.",
-    available: false,
+    available: true,
   },
   {
     slug: "lakehouse",

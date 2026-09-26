@@ -6,3 +6,4 @@ __pycache__/
 node_modules/
 .next/
 backend/data/warehouse_sessions/
+backend/data/lake_sessions/

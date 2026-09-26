@@ -132,8 +132,15 @@ def _error_code_for_pandera_check(check_name: str) -> str:
     return "ERR_SCHEMA_DRIFT_TYPE_CHANGE"  # e.g. greater_than(0) failing - most often a bad type conversion
 
 
-def grade_submission(role: str, password: str) -> GradingReport:
-    clean_df = _fetch_clean_transactions(role, password)
+def grade_clean_transactions(clean_df: pl.DataFrame) -> GradingReport:
+    """The reusable core: structural (pandera) + per-fault-type checks
+    against the real ground truth, given an already-fetched
+    clean_transactions dataframe. Deliberately has no opinion on WHERE
+    clean_df came from - Module 5 (postgres_phase) fetches it via a
+    session's Postgres role; Module 9 (lake_phase) fetches the identical
+    contract from a DuckDB file instead. The required-output shape and
+    the ground truth (injected_fault_log) are the same either way, so
+    this logic is shared rather than reimplemented a second time."""
     report = GradingReport(total_clean_rows=clean_df.height)
 
     if clean_df.height > 0:
@@ -162,3 +169,8 @@ def grade_submission(role: str, password: str) -> GradingReport:
             report.fault_findings.append(finding)
 
     return report
+
+
+def grade_submission(role: str, password: str) -> GradingReport:
+    clean_df = _fetch_clean_transactions(role, password)
+    return grade_clean_transactions(clean_df)

@@ -13,7 +13,7 @@ phase comes from Postgres's own role permissions rather than obscurity."""
 import json
 from dataclasses import asdict, dataclass
 
-from app.modules.warehouse_phase.session_provisioning import db_path, open_session_db, session_locks
+from app.modules.warehouse_phase.session_provisioning import db_path, open_session_db, session_lock
 
 # Deterministic, not random - every session mutates the exact same
 # subset the exact same way, so grading and manual testing both know
@@ -48,7 +48,7 @@ def apply_mutations(session_id: str) -> list[AccountMutation]:
     truncated or doubled one."""
     existing = load_mutations(session_id)
 
-    with session_locks[session_id]:
+    with session_lock(session_id):
         con = open_session_db(session_id)
         try:
             candidates = con.execute(

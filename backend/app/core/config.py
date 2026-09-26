@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     # access to any file it created.
     warehouse_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "warehouse_sessions"
 
+    # Module 9 - one DuckDB file plus a real local directory of Parquet
+    # output per lake-phase session.
+    lake_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "lake_sessions"
+
     @property
     def mongo_admin_uri(self) -> str:
         return (

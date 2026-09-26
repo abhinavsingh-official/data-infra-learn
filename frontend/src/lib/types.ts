@@ -128,3 +128,16 @@ export interface WarehouseGradingReport {
   total_transactions: number;
   findings: WarehouseFinding[];
 }
+
+export interface LakeTask {
+  title: string;
+  summary: string;
+  source: string;
+  your_output_directory: string;
+  workflow: string[];
+  required_output: {
+    table: string;
+    columns: Record<string, string>;
+  };
+  hints: string[];
+}

@@ -14,7 +14,7 @@ from app.modules.warehouse_phase.session_provisioning import (
     attach_postgres_source,
     open_session_db,
     pg_role_name,
-    session_locks,
+    session_lock,
 )
 from app.modules.warehouse_phase.simulate_changes import AccountMutation, load_mutations
 
@@ -171,7 +171,7 @@ def _check_fact_transactions(con: duckdb.DuckDBPyConnection, findings: list[Find
 
 def grade_submission(session_id: str, pg_password: str) -> GradingReport:
     mutations = load_mutations(session_id)
-    with session_locks[session_id]:
+    with session_lock(session_id):
         con = open_session_db(session_id)
         try:
             attach_postgres_source(con, pg_role_name(session_id), pg_password)
