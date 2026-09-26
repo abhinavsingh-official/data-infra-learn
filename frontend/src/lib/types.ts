@@ -42,3 +42,49 @@ export interface GradingReport {
   fault_findings: Finding[];
   fault_type_summary: Record<string, FaultTypeSummary>;
 }
+
+export interface NosqlTask {
+  title: string;
+  summary: string;
+  source: string;
+  design_questions_to_answer: string[];
+  required_output: {
+    collection: string;
+    note: string;
+    document_shape: Record<string, string>;
+  };
+  hint: string;
+}
+
+export interface QuerySourceResult {
+  success: boolean;
+  columns: string[];
+  rows: unknown[][];
+  truncated: boolean;
+  error_code: string | null;
+  error_message: string | null;
+}
+
+export interface MongoExecuteResult {
+  success: boolean;
+  result: Record<string, unknown>;
+  truncated: boolean;
+  error_code: string | null;
+  error_message: string | null;
+}
+
+export interface NosqlFinding {
+  error_code: string;
+  account_id: string;
+  detail: string;
+  why: string;
+  fix: string;
+  tradeoffs: string;
+}
+
+export interface NosqlGradingReport {
+  passed: boolean;
+  total_profiles: number;
+  total_accounts: number;
+  findings: NosqlFinding[];
+}

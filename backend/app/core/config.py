@@ -32,6 +32,21 @@ class Settings(BaseSettings):
     # deliberate even though this never runs multi-tenant in local dev.
     frontend_origin: str = "http://localhost:3000"
 
+    # Module 7 - MongoDB. Root user is provisioning-only (creates/drops
+    # per-session scoped users), mirroring the Postgres superuser/app_role
+    # split - never used for regular request handling.
+    mongo_host: str = "localhost"
+    mongo_port: int = 27017
+    mongo_superuser: str = "mongo_admin"
+    mongo_superuser_password: str = "mongo_admin_dev_password"
+
+    @property
+    def mongo_admin_uri(self) -> str:
+        return (
+            f"mongodb://{self.mongo_superuser}:{self.mongo_superuser_password}"
+            f"@{self.mongo_host}:{self.mongo_port}/?authSource=admin"
+        )
+
     @property
     def postgres_dsn(self) -> str:
         return (

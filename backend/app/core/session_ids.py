@@ -1,0 +1,30 @@
+"""Session-id validation, shared across every storage-phase module (first
+extracted from postgres_phase for Module 7's nosql_phase). This is a
+security invariant, not phase-specific business logic - duplicating it
+per module would risk the two copies drifting (e.g. one module's regex
+loosening without the other's), so it lives here once instead of
+following CODE_STANDARDS.md's usual "duplication is fine for now"
+guidance for phase modules."""
+
+import re
+
+# Deliberately short of 64: identifier-truncation collision found in
+# Module 4 (Postgres silently truncates identifiers past 63 bytes) means
+# any prefixed name (role_name, db_name, etc.) derived from a session_id
+# must leave headroom for its own prefix. 40 hex chars + an 8-16 char
+# prefix stays safely under that limit; actual usage only ever needs 32
+# (secrets.token_hex(16)).
+SAFE_SESSION_ID = re.compile(r"^[a-f0-9]{16,40}$")
+
+
+class UnsafeSessionId(ValueError):
+    pass
+
+
+def validate_session_id(session_id: str) -> None:
+    """Defense in depth alongside parameterized identifiers - reject
+    anything that isn't a plain hex token *before* it ever reaches a
+    database identifier, rather than relying solely on quoting/escaping
+    to make arbitrary input safe."""
+    if not SAFE_SESSION_ID.match(session_id):
+        raise UnsafeSessionId(f"session_id must be a 16-40 char lowercase hex token, got: {session_id!r}")

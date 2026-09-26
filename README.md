@@ -4,7 +4,7 @@ A data-engineering learning platform: one company's data (fintech / digital lend
 
 Planning, architecture decisions, and the component/repo inventory live in the companion repo: [AbhinavSingh189/Portfolio-Upgrade](https://github.com/AbhinavSingh189/Portfolio-Upgrade) — see `PLAN.md`, `ARCHITECTURE_DECISIONS.md`, and `SYSTEM_SPEC.md` there for the full picture. This repo holds the actual code.
 
-**Status:** Modules 1-6 done — Postgres phase (provisioning, data generation, edge-case injection, submission API, grading/remediation) working end-to-end, now with a working frontend on top. Module 7 (NoSQL phase) is next.
+**Status:** Modules 1-7 done — Postgres phase and NoSQL (MongoDB) phase both working end-to-end behind a shared frontend. Module 8 (Warehouse phase) is next.
 
 ## Running locally
 
@@ -17,7 +17,7 @@ cd backend && source .venv/bin/activate && python -m app.main
 
 Then `curl http://localhost:8000/health` should return `{"status":"ok","database":"reachable"}`. Host/port come from `.env` (`API_PORT`), not hardcoded.
 
-Note: Postgres runs on host port **5433**, not 5432 — deliberately, to avoid colliding with a native/Homebrew Postgres install that might already be running on the default port.
+Note: Postgres runs on host port **5433**, not 5432 — deliberately, to avoid colliding with a native/Homebrew Postgres install that might already be running on the default port. MongoDB runs on the default **27017**.
 
 Frontend (separate terminal, with the backend already running):
 

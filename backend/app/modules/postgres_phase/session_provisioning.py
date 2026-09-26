@@ -3,11 +3,12 @@ schema, isolated from every other session. See MODULE_4_PLAN.md for the
 two-connection-tier decision (this uses the admin connection, never the
 regular app_role one) and the research behind the design."""
 
-import re
 import secrets
 import string
 
 from psycopg import Connection, sql
+
+from app.core.session_ids import validate_session_id
 
 STATEMENT_TIMEOUT = "30s"
 
@@ -18,27 +19,6 @@ STATEMENT_TIMEOUT = "30s"
 # constant exists so the "readable" set is a deliberate, visible decision
 # rather than an accident of what wasn't locked down.
 READABLE_SHARED_TABLES = ["raw_transaction_events"]
-
-# Max 40, not 64 as originally written: role_name() prepends "session_"
-# (8 chars), and Postgres silently truncates identifiers past 63 bytes
-# (confirmed by testing directly - only a NOTICE, not an error) - a
-# session_id long enough to survive the regex could still collide with
-# another session's role name after truncation. 40 hex chars + the
-# prefix stays safely under the limit; actual usage only ever needs 32
-# (secrets.token_hex(16)).
-_SAFE_SESSION_ID = re.compile(r"^[a-f0-9]{16,40}$")
-
-
-class UnsafeSessionId(ValueError):
-    pass
-
-
-def _validate_session_id(session_id: str) -> None:
-    """Defense in depth alongside sql.Identifier - reject anything that
-    isn't a plain hex token *before* it ever reaches SQL construction,
-    rather than relying solely on quoting to make arbitrary input safe."""
-    if not _SAFE_SESSION_ID.match(session_id):
-        raise UnsafeSessionId(f"session_id must be a 16-64 char lowercase hex token, got: {session_id!r}")
 
 
 def role_name(session_id: str) -> str:
@@ -55,7 +35,7 @@ def provision_session(conn: Connection, session_id: str) -> str:
     that schema, and applies the statement_timeout from ARCHITECTURE_
     DECISIONS.md §7. Returns the generated password (the caller is
     responsible for handing it to whatever connects as this role)."""
-    _validate_session_id(session_id)
+    validate_session_id(session_id)
     role = role_name(session_id)
     password = _generate_password()
 
@@ -98,7 +78,7 @@ def deprovision_session(conn: Connection, session_id: str) -> None:
     read grants. DROP OWNED BY handles both the role's own schema AND any
     privileges granted to it on other objects in one step; DROP SCHEMA
     alone only ever covered the former."""
-    _validate_session_id(session_id)
+    validate_session_id(session_id)
     role = role_name(session_id)
     # DROP OWNED BY errors if the role doesn't exist (unlike DROP ROLE IF
     # EXISTS) - guard so a double-deprovision or a partially-failed

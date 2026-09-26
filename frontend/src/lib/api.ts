@@ -1,4 +1,12 @@
-import type { ExecuteResult, GradingReport, PostgresTask } from "./types";
+import type {
+  ExecuteResult,
+  GradingReport,
+  MongoExecuteResult,
+  NosqlGradingReport,
+  NosqlTask,
+  PostgresTask,
+  QuerySourceResult,
+} from "./types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -52,6 +60,40 @@ export function gradeSession(sessionId: string) {
 
 export function endSession(sessionId: string) {
   return request<{ status: string }>(`/postgres-phase/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+}
+
+export function getNosqlTask() {
+  return request<NosqlTask>("/nosql-phase/task");
+}
+
+export function createNosqlSession() {
+  return request<{ session_id: string }>("/nosql-phase/sessions", { method: "POST" });
+}
+
+export function querySource(sessionId: string, sql: string) {
+  return request<QuerySourceResult>(`/nosql-phase/sessions/${sessionId}/query-source`, {
+    method: "POST",
+    body: JSON.stringify({ sql }),
+  });
+}
+
+export function executeMongoCommand(sessionId: string, command: object) {
+  return request<MongoExecuteResult>(`/nosql-phase/sessions/${sessionId}/execute`, {
+    method: "POST",
+    body: JSON.stringify({ command }),
+  });
+}
+
+export function gradeNosqlSession(sessionId: string) {
+  return request<NosqlGradingReport>(`/nosql-phase/sessions/${sessionId}/grade`, {
+    method: "POST",
+  });
+}
+
+export function endNosqlSession(sessionId: string) {
+  return request<{ status: string }>(`/nosql-phase/sessions/${sessionId}`, {
     method: "DELETE",
   });
 }

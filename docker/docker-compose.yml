@@ -26,5 +26,27 @@ services:
       timeout: 5s
       retries: 10
 
+  mongo:
+    image: mongo:7
+    container_name: data-infra-learn-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_SUPERUSER:-mongo_admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_SUPERUSER_PASSWORD:-mongo_admin_dev_password}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+    # Same low-spec constraint as the Postgres service above - a single
+    # Mongo container, no replica set, genuinely lightweight (ARCHITECTURE_DECISIONS.md §6).
+    mem_limit: 384m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\")' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
+  mongo_data:

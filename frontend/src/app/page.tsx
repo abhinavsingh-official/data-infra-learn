@@ -25,7 +25,7 @@ const PARADIGMS: StorageParadigm[] = [
     tagline: "Document modeling, denormalization",
     description:
       "Remodel the same fintech data as documents instead of rows - what changes, what you trade away, what eventual consistency actually costs you.",
-    available: false,
+    available: true,
   },
   {
     slug: "warehouse",

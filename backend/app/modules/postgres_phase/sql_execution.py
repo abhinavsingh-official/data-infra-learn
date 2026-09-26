@@ -4,6 +4,7 @@ a bad submission (syntax error, timeout, permission violation) must come
 back as a structured result, not an unhandled 500."""
 
 from dataclasses import dataclass, field
+from decimal import Decimal
 from typing import Any
 
 import psycopg
@@ -26,6 +27,18 @@ class ExecutionResult:
 def _session_dsn(role: str, password: str) -> str:
     settings = get_settings()
     return f"postgresql://{role}:{password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
+
+
+def _jsonable_row(row: tuple[Any, ...]) -> tuple[Any, ...]:
+    """FastAPI's response serialization for a bare `-> dict` return
+    annotation (no Pydantic response_model) renders a raw Decimal as a
+    quoted JSON string, not a number - confirmed directly, and different
+    from calling jsonable_encoder by hand, which does convert it to a
+    float. Every NUMERIC column a user's SELECT returns (amount, balance,
+    etc.) would otherwise come back type-wrong over the API - a real bug
+    hiding in both this endpoint and nosql_phase's query-source, which
+    reuses this function directly."""
+    return tuple(float(value) if isinstance(value, Decimal) else value for value in row)
 
 
 def _contains_multiple_statements(sql_text: str) -> bool:
@@ -70,6 +83,7 @@ def execute_submission(role: str, password: str, sql_text: str) -> ExecutionResu
                     if len(rows) > MAX_RETURNED_ROWS:
                         rows = rows[:MAX_RETURNED_ROWS]
                         truncated = True
+                    rows = [_jsonable_row(row) for row in rows]
                 else:
                     columns, rows = [], []
             conn.commit()
