@@ -12,7 +12,7 @@ from typing import Any
 
 import duckdb
 
-from app.modules.warehouse_phase.session_provisioning import attach_postgres_source, db_path
+from app.modules.warehouse_phase.session_provisioning import attach_postgres_source, open_session_db, session_locks
 
 MAX_RETURNED_ROWS = 1000
 
@@ -51,21 +51,22 @@ def execute_submission(session_id: str, pg_role: str, pg_password: str, sql_text
             error_code="MULTIPLE_STATEMENTS",
             error_message="Submit one SQL statement per request.",
         )
-    con = duckdb.connect(str(db_path(session_id)))
-    try:
-        attach_postgres_source(con, pg_role, pg_password)
-        result = con.execute(sql_text)
-        if result.description is not None:
-            columns = [d[0] for d in result.description]
-            rows = result.fetchmany(MAX_RETURNED_ROWS + 1)
-            truncated = len(rows) > MAX_RETURNED_ROWS
-            if truncated:
-                rows = rows[:MAX_RETURNED_ROWS]
-            rows = [_jsonable_row(row) for row in rows]
-        else:
-            columns, rows, truncated = [], [], False
-        return DuckDbExecutionResult(success=True, columns=columns, rows=rows, truncated=truncated)
-    except duckdb.Error as e:
-        return DuckDbExecutionResult(success=False, error_code=type(e).__name__, error_message=str(e).strip())
-    finally:
-        con.close()
+    with session_locks[session_id]:
+        con = open_session_db(session_id)
+        try:
+            attach_postgres_source(con, pg_role, pg_password)
+            result = con.execute(sql_text)
+            if result.description is not None:
+                columns = [d[0] for d in result.description]
+                rows = result.fetchmany(MAX_RETURNED_ROWS + 1)
+                truncated = len(rows) > MAX_RETURNED_ROWS
+                if truncated:
+                    rows = rows[:MAX_RETURNED_ROWS]
+                rows = [_jsonable_row(row) for row in rows]
+            else:
+                columns, rows, truncated = [], [], False
+            return DuckDbExecutionResult(success=True, columns=columns, rows=rows, truncated=truncated)
+        except duckdb.Error as e:
+            return DuckDbExecutionResult(success=False, error_code=type(e).__name__, error_message=str(e).strip())
+        finally:
+            con.close()

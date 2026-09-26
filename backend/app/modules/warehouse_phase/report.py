@@ -10,7 +10,12 @@ from dataclasses import dataclass, field
 import duckdb
 
 from app.modules.warehouse_phase.remediation import REMEDIATION
-from app.modules.warehouse_phase.session_provisioning import attach_postgres_source, db_path, pg_role_name
+from app.modules.warehouse_phase.session_provisioning import (
+    attach_postgres_source,
+    open_session_db,
+    pg_role_name,
+    session_locks,
+)
 from app.modules.warehouse_phase.simulate_changes import AccountMutation, load_mutations
 
 
@@ -166,35 +171,38 @@ def _check_fact_transactions(con: duckdb.DuckDBPyConnection, findings: list[Find
 
 def grade_submission(session_id: str, pg_password: str) -> GradingReport:
     mutations = load_mutations(session_id)
-    con = duckdb.connect(str(db_path(session_id)))
-    try:
-        attach_postgres_source(con, pg_role_name(session_id), pg_password)
+    with session_locks[session_id]:
+        con = open_session_db(session_id)
+        try:
+            attach_postgres_source(con, pg_role_name(session_id), pg_password)
 
-        total_accounts = con.execute("SELECT COUNT(*) FROM source_accounts_snapshot").fetchone()[0]
-        total_users = con.execute("SELECT COUNT(*) FROM pg.users").fetchone()[0]
-        total_transactions = con.execute("SELECT COUNT(*) FROM pg.transactions").fetchone()[0]
+            total_accounts = con.execute("SELECT COUNT(*) FROM source_accounts_snapshot").fetchone()[0]
+            total_users = con.execute("SELECT COUNT(*) FROM pg.users").fetchone()[0]
+            total_transactions = con.execute("SELECT COUNT(*) FROM pg.transactions").fetchone()[0]
 
-        findings: list[Finding] = []
-        if not _table_exists(con, "dim_users"):
-            findings.append(_make_finding("ERR_MISSING_DIM_USER_ROW", "*", "dim_users table doesn't exist."))
-        else:
-            _check_dim_users(con, findings)
+            findings: list[Finding] = []
+            if not _table_exists(con, "dim_users"):
+                findings.append(_make_finding("ERR_MISSING_DIM_USER_ROW", "*", "dim_users table doesn't exist."))
+            else:
+                _check_dim_users(con, findings)
 
-        if not _table_exists(con, "dim_accounts"):
-            findings.append(_make_finding("ERR_MISSING_DIM_ACCOUNT_ROW", "*", "dim_accounts table doesn't exist."))
-        else:
-            _check_dim_accounts(con, mutations, findings)
+            if not _table_exists(con, "dim_accounts"):
+                findings.append(
+                    _make_finding("ERR_MISSING_DIM_ACCOUNT_ROW", "*", "dim_accounts table doesn't exist.")
+                )
+            else:
+                _check_dim_accounts(con, mutations, findings)
 
-        if not _table_exists(con, "fact_transactions"):
-            findings.append(_make_finding("ERR_MISSING_FACT_ROW", "*", "fact_transactions table doesn't exist."))
-        elif _table_exists(con, "dim_users") and _table_exists(con, "dim_accounts"):
-            _check_fact_transactions(con, findings)
+            if not _table_exists(con, "fact_transactions"):
+                findings.append(_make_finding("ERR_MISSING_FACT_ROW", "*", "fact_transactions table doesn't exist."))
+            elif _table_exists(con, "dim_users") and _table_exists(con, "dim_accounts"):
+                _check_fact_transactions(con, findings)
 
-        return GradingReport(
-            total_accounts=total_accounts,
-            total_users=total_users,
-            total_transactions=total_transactions,
-            findings=findings,
-        )
-    finally:
-        con.close()
+            return GradingReport(
+                total_accounts=total_accounts,
+                total_users=total_users,
+                total_transactions=total_transactions,
+                findings=findings,
+            )
+        finally:
+            con.close()

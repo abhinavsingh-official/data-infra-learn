@@ -95,9 +95,13 @@ REMEDIATION = {
         "why": (
             "fact_transactions' account_key/user_key/amount/merchant doesn't resolve correctly - "
             "most often a wrong join (joining transactions to the wrong dim_accounts row, or "
-            "amount left as source units instead of mapped consistently)."
+            "amount left as source units instead of mapped consistently). If this fires only for "
+            "mutated accounts specifically, the real cause is usually that fact_transactions was "
+            "never rebuilt after simulate-changes - its account_key values still point at the "
+            "OLD (now closed-out) dim_accounts row, since this task requires current-row "
+            "resolution, not the row that was current when the transaction happened."
         ),
-        "fix": "Join fact_transactions to dim_accounts on account_id + is_current = true, and to dim_users via the account's owner - not on a stale or ambiguous key.",
+        "fix": "Join fact_transactions to dim_accounts on account_id + is_current = true, and to dim_users via the account's owner - not on a stale or ambiguous key. Rebuild fact_transactions after any dim_accounts change, for the same reason.",
         "tradeoffs": (
             "Resolving to the CURRENT dimension row (this task's required approach) is simpler "
             "but not point-in-time accurate - a transaction from before an account's status "

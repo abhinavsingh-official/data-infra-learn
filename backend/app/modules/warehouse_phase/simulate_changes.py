@@ -13,9 +13,7 @@ phase comes from Postgres's own role permissions rather than obscurity."""
 import json
 from dataclasses import asdict, dataclass
 
-import duckdb
-
-from app.modules.warehouse_phase.session_provisioning import db_path
+from app.modules.warehouse_phase.session_provisioning import db_path, open_session_db, session_locks
 
 # Deterministic, not random - every session mutates the exact same
 # subset the exact same way, so grading and manual testing both know
@@ -50,50 +48,51 @@ def apply_mutations(session_id: str) -> list[AccountMutation]:
     truncated or doubled one."""
     existing = load_mutations(session_id)
 
-    con = duckdb.connect(str(db_path(session_id)))
-    try:
-        candidates = con.execute(
-            "SELECT id, account_status, credit_limit "
-            "FROM source_accounts_snapshot WHERE id % 10 = 0 AND account_status = 'active'"
-        ).fetchall()
-        candidate_ids = [row[0] for row in candidates]
-        old_values = {row[0]: (row[1], float(row[2])) for row in candidates}
-
-        new_mutations: list[AccountMutation] = []
-        if candidate_ids:
-            con.execute(
-                "UPDATE source_accounts_snapshot "
-                "SET account_status = 'delinquent', credit_limit = credit_limit * ? "
-                "WHERE id % 10 = 0 AND account_status = 'active'",
-                [_MUTATION_CREDIT_LIMIT_FACTOR],
-            )
-            # Read the mutation's ground truth back from what DuckDB
-            # actually stored, rather than recomputing it independently in
-            # Python - found by testing a real correct submission: Python's
-            # `round(float(x) * 0.5, 2)` and DuckDB's own DECIMAL
-            # arithmetic for the identical `credit_limit * 0.5` disagreed
-            # by a cent on some rows (float vs. decimal rounding), which
-            # made grading falsely flag genuinely-correct submissions -
-            # the same class of cross-boundary type/precision mismatch as
-            # Module 5's Decimal/float bug and Module 7's date-type bug.
-            new_rows = con.execute(
-                "SELECT id, credit_limit FROM source_accounts_snapshot WHERE id IN "
-                f"({', '.join('?' for _ in candidate_ids)})",
-                candidate_ids,
+    with session_locks[session_id]:
+        con = open_session_db(session_id)
+        try:
+            candidates = con.execute(
+                "SELECT id, account_status, credit_limit "
+                "FROM source_accounts_snapshot WHERE id % 10 = 0 AND account_status = 'active'"
             ).fetchall()
-            new_credit_limits = {row[0]: float(row[1]) for row in new_rows}
-            new_mutations = [
-                AccountMutation(
-                    account_id=account_id,
-                    old_status=old_values[account_id][0],
-                    new_status="delinquent",
-                    old_credit_limit=old_values[account_id][1],
-                    new_credit_limit=new_credit_limits[account_id],
+            candidate_ids = [row[0] for row in candidates]
+            old_values = {row[0]: (row[1], float(row[2])) for row in candidates}
+
+            new_mutations: list[AccountMutation] = []
+            if candidate_ids:
+                con.execute(
+                    "UPDATE source_accounts_snapshot "
+                    "SET account_status = 'delinquent', credit_limit = credit_limit * ? "
+                    "WHERE id % 10 = 0 AND account_status = 'active'",
+                    [_MUTATION_CREDIT_LIMIT_FACTOR],
                 )
-                for account_id in candidate_ids
-            ]
-    finally:
-        con.close()
+                # Read the mutation's ground truth back from what DuckDB
+                # actually stored, rather than recomputing it independently in
+                # Python - found by testing a real correct submission: Python's
+                # `round(float(x) * 0.5, 2)` and DuckDB's own DECIMAL
+                # arithmetic for the identical `credit_limit * 0.5` disagreed
+                # by a cent on some rows (float vs. decimal rounding), which
+                # made grading falsely flag genuinely-correct submissions -
+                # the same class of cross-boundary type/precision mismatch as
+                # Module 5's Decimal/float bug and Module 7's date-type bug.
+                new_rows = con.execute(
+                    "SELECT id, credit_limit FROM source_accounts_snapshot WHERE id IN "
+                    f"({', '.join('?' for _ in candidate_ids)})",
+                    candidate_ids,
+                ).fetchall()
+                new_credit_limits = {row[0]: float(row[1]) for row in new_rows}
+                new_mutations = [
+                    AccountMutation(
+                        account_id=account_id,
+                        old_status=old_values[account_id][0],
+                        new_status="delinquent",
+                        old_credit_limit=old_values[account_id][1],
+                        new_credit_limit=new_credit_limits[account_id],
+                    )
+                    for account_id in candidate_ids
+                ]
+        finally:
+            con.close()
 
     merged = existing + new_mutations
     mutations_path(session_id).write_text(json.dumps([asdict(m) for m in merged]))

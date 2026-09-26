@@ -1,4 +1,5 @@
 import secrets
+import threading
 
 from app.core.db import get_admin_connection
 from app.modules.warehouse_phase.duckdb_execution import execute_submission
@@ -72,5 +73,32 @@ def test_execute_decimal_columns_are_jsonable_floats_not_strings():
         )
         assert result.success is True
         assert isinstance(result.rows[0][0], float)
+    finally:
+        _teardown(session_id)
+
+
+def test_concurrent_execute_against_the_same_session_does_not_collide():
+    """Regression: DuckDB's Python client shares one underlying database
+    instance/catalog across every connection opened to the same file
+    path within a single process - a second concurrent execute() call
+    used to see `pg` already attached by the first and fail with
+    BinderException (confirmed directly: 7 of 8 concurrent requests
+    failed this way before session-level locking was added)."""
+    session_id, password = _new_session()
+    try:
+        role = pg_role_name(session_id)
+        results = []
+
+        def run():
+            results.append(execute_submission(session_id, role, password, "SELECT COUNT(*) FROM pg.users"))
+
+        threads = [threading.Thread(target=run) for _ in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(results) == 8
+        assert all(r.success for r in results), [r.error_message for r in results if not r.success]
     finally:
         _teardown(session_id)
