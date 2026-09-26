@@ -11,9 +11,13 @@ import re
 # Deliberately short of 64: identifier-truncation collision found in
 # Module 4 (Postgres silently truncates identifiers past 63 bytes) means
 # any prefixed name (role_name, db_name, etc.) derived from a session_id
-# must leave headroom for its own prefix. 40 hex chars + an 8-16 char
-# prefix stays safely under that limit; actual usage only ever needs 32
-# (secrets.token_hex(16)).
+# must leave headroom for its own prefix. The longest prefix in use as of
+# Module 10 is "lakehouse_session_" (19 chars) - 40 hex chars + that
+# still stays under the 63-byte limit with 4 bytes to spare, but actual
+# usage only ever needs 32 (secrets.token_hex(16)), which leaves a
+# comfortable 12 bytes of real headroom against today's longest prefix.
+# Re-check this margin before adding a phase whose prefix is longer than
+# "lakehouse_session_".
 SAFE_SESSION_ID = re.compile(r"^[a-f0-9]{16,40}$")
 
 
