@@ -25,7 +25,7 @@ const PARADIGMS: StorageParadigm[] = [
     tagline: "Document modeling, denormalization",
     description:
       "Remodel the same fintech data as documents instead of rows - what changes, what you trade away, what eventual consistency actually costs you.",
-    available: false,
+    available: true,
   },
   {
     slug: "warehouse",
@@ -33,7 +33,7 @@ const PARADIGMS: StorageParadigm[] = [
     tagline: "Star schema, slowly changing dimensions",
     description:
       "Dimensional modeling on top of the same source data - fact/dimension tables, SCD Type 2, analytics-shaped queries.",
-    available: false,
+    available: true,
   },
   {
     slug: "lake",
@@ -41,7 +41,7 @@ const PARADIGMS: StorageParadigm[] = [
     tagline: "Partitioned Parquet, schema-on-read",
     description:
       "The same data as partitioned Parquet files queried with DuckDB - schema-on-read tradeoffs instead of schema-on-write.",
-    available: false,
+    available: true,
   },
   {
     slug: "lakehouse",
@@ -49,7 +49,7 @@ const PARADIGMS: StorageParadigm[] = [
     tagline: "ACID table semantics on object storage",
     description:
       "Delta/Iceberg-style table semantics on top of the lake layer - batch and incremental append unified under one table format.",
-    available: false,
+    available: true,
   },
 ];
 
@@ -82,6 +82,18 @@ export default function StoragePickerPage() {
           </Link>
         ))}
       </div>
+
+      <Link href="/compare" className="block">
+        <Card className="transition-colors hover:border-foreground/30">
+          <CardHeader>
+            <CardTitle>See how these compare</CardTitle>
+            <CardDescription>
+              The same real operation - deduplicating a retried event - expressed across all five
+              paradigms side by side, with the real reference query from each one.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </Link>
     </div>
   );
 }

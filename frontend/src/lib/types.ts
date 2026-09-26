@@ -42,3 +42,155 @@ export interface GradingReport {
   fault_findings: Finding[];
   fault_type_summary: Record<string, FaultTypeSummary>;
 }
+
+export interface NosqlTask {
+  title: string;
+  summary: string;
+  source: string;
+  design_questions_to_answer: string[];
+  required_output: {
+    collection: string;
+    note: string;
+    document_shape: Record<string, string>;
+  };
+  hint: string;
+}
+
+export interface QuerySourceResult {
+  success: boolean;
+  columns: string[];
+  rows: unknown[][];
+  truncated: boolean;
+  error_code: string | null;
+  error_message: string | null;
+}
+
+export interface MongoExecuteResult {
+  success: boolean;
+  result: Record<string, unknown>;
+  truncated: boolean;
+  error_code: string | null;
+  error_message: string | null;
+}
+
+export interface NosqlFinding {
+  error_code: string;
+  account_id: string;
+  detail: string;
+  why: string;
+  fix: string;
+  tradeoffs: string;
+}
+
+export interface NosqlGradingReport {
+  passed: boolean;
+  total_profiles: number;
+  total_accounts: number;
+  findings: NosqlFinding[];
+}
+
+export interface WarehouseRequiredTable {
+  note: string;
+  columns: Record<string, string>;
+}
+
+export interface WarehouseTask {
+  title: string;
+  summary: string;
+  source: Record<string, string>;
+  required_output: Record<string, WarehouseRequiredTable>;
+  workflow: string[];
+  hint: string;
+}
+
+export interface WarehouseExecuteResult {
+  success: boolean;
+  columns: string[];
+  rows: unknown[][];
+  truncated: boolean;
+  error_code: string | null;
+  error_message: string | null;
+}
+
+export interface WarehouseFinding {
+  error_code: string;
+  entity_id: string;
+  detail: string;
+  why: string;
+  fix: string;
+  tradeoffs: string;
+}
+
+export interface WarehouseGradingReport {
+  passed: boolean;
+  total_accounts: number;
+  total_users: number;
+  total_transactions: number;
+  findings: WarehouseFinding[];
+}
+
+export interface RemediationEntry {
+  error_code: string;
+  why: string;
+  fix: string;
+  tradeoffs: string;
+}
+
+export interface LearnPhase {
+  phase: string;
+  one_liner: string;
+  entries: RemediationEntry[];
+}
+
+export interface LearnPage {
+  overview: string;
+  phases: LearnPhase[];
+  comparison: ComparisonView;
+}
+
+export interface ComparisonEntry {
+  paradigm: string;
+  source: string;
+  code: string;
+  explanation: string;
+}
+
+export interface ComparisonView {
+  operation: string;
+  why_this_operation: string;
+  entries: ComparisonEntry[];
+  real_duplicate_count: number;
+}
+
+export interface LakehouseTask {
+  title: string;
+  summary: string;
+  source: Record<string, string>;
+  workflow: string[];
+  required_output: {
+    table: string;
+    columns: Record<string, string>;
+  };
+  hints: string[];
+}
+
+export interface CommitBatchResult {
+  success: boolean;
+  version: number | null;
+  row_count: number | null;
+  error_code: string | null;
+  error_message: string | null;
+}
+
+export interface LakeTask {
+  title: string;
+  summary: string;
+  source: string;
+  your_output_directory: string;
+  workflow: string[];
+  required_output: {
+    table: string;
+    columns: Record<string, string>;
+  };
+  hints: string[];
+}

@@ -13,19 +13,21 @@ if [ ! -f .env ]; then
   echo "Created .env from .env.example"
 fi
 
-echo "Starting Postgres..."
+echo "Starting Postgres and MongoDB..."
 docker compose --env-file .env -f docker/docker-compose.yml up -d
 
-echo "Waiting for Postgres to be healthy..."
-max_attempts=30
-attempt=0
-until docker compose --env-file .env -f docker/docker-compose.yml ps postgres --format '{{.Health}}' | grep -q healthy; do
-  attempt=$((attempt + 1))
-  if [ "$attempt" -ge "$max_attempts" ]; then
-    echo "Postgres didn't become healthy after ${max_attempts}s. Check 'docker compose -f docker/docker-compose.yml logs postgres'." >&2
-    exit 1
-  fi
-  sleep 1
+for service in postgres mongo; do
+  echo "Waiting for ${service} to be healthy..."
+  max_attempts=30
+  attempt=0
+  until docker compose --env-file .env -f docker/docker-compose.yml ps "$service" --format '{{.Health}}' | grep -q healthy; do
+    attempt=$((attempt + 1))
+    if [ "$attempt" -ge "$max_attempts" ]; then
+      echo "${service} didn't become healthy after ${max_attempts}s. Check 'docker compose -f docker/docker-compose.yml logs ${service}'." >&2
+      exit 1
+    fi
+    sleep 1
+  done
 done
 
 if [ ! -d backend/.venv ]; then

@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ApiError, createSession, endSession, gradeSession } from "@/lib/api";
+import { SqlWorkspace } from "@/components/shared/sql-workspace";
+import { ApiError, createSession, endSession, executeSql, gradeSession } from "@/lib/api";
+import { GradingReportView } from "@/components/shared/grading-report";
 import type { GradingReport } from "@/lib/types";
-import { GradingReportView } from "./grading-report";
-import { SqlWorkspace } from "./sql-workspace";
 
 export function SessionPanel() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -90,7 +90,11 @@ export function SessionPanel() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <SqlWorkspace sessionId={sessionId} />
+          <SqlWorkspace
+            sessionId={sessionId}
+            execute={executeSql}
+            placeholder="CREATE TABLE clean_transactions ( ... );"
+          />
           <Separator />
           <div className="flex flex-wrap gap-2">
             <Button onClick={handleGrade} disabled={grading}>

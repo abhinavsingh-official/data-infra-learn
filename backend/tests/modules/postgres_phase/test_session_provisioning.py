@@ -5,8 +5,8 @@ import pytest
 
 from app.core.config import get_settings
 from app.core.db import get_admin_connection
+from app.core.session_ids import UnsafeSessionId
 from app.modules.postgres_phase.session_provisioning import (
-    UnsafeSessionId,
     deprovision_session,
     provision_session,
 )

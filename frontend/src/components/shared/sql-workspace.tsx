@@ -6,20 +6,28 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { ApiError, executeSql } from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import type { ExecuteResult } from "@/lib/types";
 
-export function SqlWorkspace({ sessionId }: { sessionId: string }) {
+interface SqlWorkspaceProps {
+  sessionId: string;
+  execute: (sessionId: string, sql: string) => Promise<ExecuteResult>;
+  placeholder?: string;
+  rows?: number;
+}
+
+/** Shared across every SQL-submitting phase (Postgres, Warehouse, Lake) -
+ * the UI is identical; only which endpoint `execute` calls differs. */
+export function SqlWorkspace({ sessionId, execute, placeholder, rows = 8 }: SqlWorkspaceProps) {
   const [sql, setSql] = useState("");
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<ExecuteResult | null>(null);
 
-  async function runSql() {
+  async function run() {
     if (!sql.trim()) return;
     setRunning(true);
     try {
-      const outcome = await executeSql(sessionId, sql);
-      setResult(outcome);
+      setResult(await execute(sessionId, sql));
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : "Could not run that statement.");
     } finally {
@@ -32,11 +40,11 @@ export function SqlWorkspace({ sessionId }: { sessionId: string }) {
       <Textarea
         value={sql}
         onChange={(event) => setSql(event.target.value)}
-        placeholder="CREATE TABLE clean_transactions ( ... );"
-        rows={8}
+        placeholder={placeholder}
+        rows={rows}
         className="font-mono text-sm"
       />
-      <Button onClick={runSql} disabled={running || !sql.trim()}>
+      <Button onClick={run} disabled={running || !sql.trim()}>
         {running ? "Running..." : "Run"}
       </Button>
 
@@ -48,7 +56,7 @@ export function SqlWorkspace({ sessionId }: { sessionId: string }) {
       )}
 
       {result?.success && result.columns.length > 0 && (
-        <div className="rounded-md border">
+        <div className="max-h-80 overflow-auto rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -70,9 +78,7 @@ export function SqlWorkspace({ sessionId }: { sessionId: string }) {
             </TableBody>
           </Table>
           {result.truncated && (
-            <p className="border-t px-4 py-2 text-xs text-muted-foreground">
-              Truncated to the first 1000 rows.
-            </p>
+            <p className="border-t px-4 py-2 text-xs text-muted-foreground">Truncated to the first 1000 rows.</p>
           )}
         </div>
       )}

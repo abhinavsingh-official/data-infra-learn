@@ -3,6 +3,7 @@ from typing import Iterator
 
 import psycopg
 from psycopg import Connection
+from pymongo import MongoClient
 
 from app.core.config import get_settings
 
@@ -40,3 +41,18 @@ def get_admin_connection() -> Iterator[Connection]:
         yield conn
     finally:
         conn.close()
+
+
+@contextmanager
+def get_mongo_admin_client() -> Iterator[MongoClient]:
+    """Mongo's own root user - provisioning only (creating/dropping
+    per-session scoped users and databases), same two-tier split as the
+    Postgres admin connection above. Never used to touch a session's own
+    data directly except by the grader, which legitimately needs the
+    answer key a session's own restricted user can't see."""
+    settings = get_settings()
+    client: MongoClient = MongoClient(settings.mongo_admin_uri)
+    try:
+        yield client
+    finally:
+        client.close()
