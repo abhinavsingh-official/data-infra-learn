@@ -1,7 +1,9 @@
 import type {
+  CommitBatchResult,
   ExecuteResult,
   GradingReport,
   LakeTask,
+  LakehouseTask,
   MongoExecuteResult,
   NosqlGradingReport,
   NosqlTask,
@@ -159,6 +161,49 @@ export function gradeLakeSession(sessionId: string) {
 
 export function endLakeSession(sessionId: string) {
   return request<{ status: string }>(`/lake-phase/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+}
+
+export function getLakehouseTask() {
+  return request<LakehouseTask>("/lakehouse-phase/task");
+}
+
+export function createLakehouseSession() {
+  return request<{ session_id: string; delta_table_path: string }>("/lakehouse-phase/sessions", {
+    method: "POST",
+  });
+}
+
+export function executeLakehouseSql(sessionId: string, sql: string) {
+  return request<ExecuteResult>(`/lakehouse-phase/sessions/${sessionId}/execute`, {
+    method: "POST",
+    body: JSON.stringify({ sql }),
+  });
+}
+
+export function releaseLakehouseBatch2(sessionId: string) {
+  return request<{ batch_2_row_count: number }>(
+    `/lakehouse-phase/sessions/${sessionId}/release-batch-2`,
+    { method: "POST" },
+  );
+}
+
+export function commitLakehouseBatch(sessionId: string, sql: string) {
+  return request<CommitBatchResult>(`/lakehouse-phase/sessions/${sessionId}/commit-batch`, {
+    method: "POST",
+    body: JSON.stringify({ sql }),
+  });
+}
+
+export function gradeLakehouseSession(sessionId: string) {
+  return request<GradingReport>(`/lakehouse-phase/sessions/${sessionId}/grade`, {
+    method: "POST",
+  });
+}
+
+export function endLakehouseSession(sessionId: string) {
+  return request<{ status: string }>(`/lakehouse-phase/sessions/${sessionId}`, {
     method: "DELETE",
   });
 }

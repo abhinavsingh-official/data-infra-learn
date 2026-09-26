@@ -49,7 +49,7 @@ const PARADIGMS: StorageParadigm[] = [
     tagline: "ACID table semantics on object storage",
     description:
       "Delta/Iceberg-style table semantics on top of the lake layer - batch and incremental append unified under one table format.",
-    available: false,
+    available: true,
   },
 ];
 

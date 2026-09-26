@@ -129,6 +129,26 @@ export interface WarehouseGradingReport {
   findings: WarehouseFinding[];
 }
 
+export interface LakehouseTask {
+  title: string;
+  summary: string;
+  source: Record<string, string>;
+  workflow: string[];
+  required_output: {
+    table: string;
+    columns: Record<string, string>;
+  };
+  hints: string[];
+}
+
+export interface CommitBatchResult {
+  success: boolean;
+  version: number | null;
+  row_count: number | null;
+  error_code: string | null;
+  error_message: string | null;
+}
+
 export interface LakeTask {
   title: string;
   summary: string;

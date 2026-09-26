@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     # output per lake-phase session.
     lake_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "lake_sessions"
 
+    # Module 10 - one DuckDB file plus a real local Delta table directory
+    # per lakehouse-phase session.
+    lakehouse_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "lakehouse_sessions"
+
     @property
     def mongo_admin_uri(self) -> str:
         return (
