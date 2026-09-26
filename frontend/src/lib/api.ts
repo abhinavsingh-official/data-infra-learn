@@ -5,6 +5,7 @@ import type {
   GradingReport,
   LakeTask,
   LakehouseTask,
+  LearnPage,
   MongoExecuteResult,
   NosqlGradingReport,
   NosqlTask,
@@ -211,6 +212,10 @@ export function endLakehouseSession(sessionId: string) {
 
 export function getComparisonView() {
   return request<ComparisonView>("/comparison-view/duplicate-delivery");
+}
+
+export function getLearnPage() {
+  return request<LearnPage>("/learn-page");
 }
 
 export { ApiError };

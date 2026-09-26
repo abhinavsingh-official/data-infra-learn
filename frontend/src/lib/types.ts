@@ -129,6 +129,25 @@ export interface WarehouseGradingReport {
   findings: WarehouseFinding[];
 }
 
+export interface RemediationEntry {
+  error_code: string;
+  why: string;
+  fix: string;
+  tradeoffs: string;
+}
+
+export interface LearnPhase {
+  phase: string;
+  one_liner: string;
+  entries: RemediationEntry[];
+}
+
+export interface LearnPage {
+  overview: string;
+  phases: LearnPhase[];
+  comparison: ComparisonView;
+}
+
 export interface ComparisonEntry {
   paradigm: string;
   source: string;

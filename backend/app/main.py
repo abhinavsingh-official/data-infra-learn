@@ -5,6 +5,7 @@ from app.api.comparison_view import router as comparison_view_router
 from app.api.health import router as health_router
 from app.api.lake_phase import router as lake_phase_router
 from app.api.lakehouse_phase import router as lakehouse_phase_router
+from app.api.learn_page import router as learn_page_router
 from app.api.nosql_phase import router as nosql_phase_router
 from app.api.postgres_phase import router as postgres_phase_router
 from app.api.warehouse_phase import router as warehouse_phase_router
@@ -27,6 +28,7 @@ app.include_router(warehouse_phase_router)
 app.include_router(lake_phase_router)
 app.include_router(lakehouse_phase_router)
 app.include_router(comparison_view_router)
+app.include_router(learn_page_router)
 
 
 if __name__ == "__main__":

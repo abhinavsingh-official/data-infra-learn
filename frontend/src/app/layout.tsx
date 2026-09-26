@@ -31,9 +31,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" className="font-semibold tracking-tight">
               data-infra-learn
             </Link>
-            <span className="text-sm text-muted-foreground">
-              one company&apos;s data, five storage paradigms
-            </span>
+            <nav className="flex items-center gap-4 text-sm">
+              <Link href="/compare" className="text-muted-foreground hover:text-foreground">
+                Compare
+              </Link>
+              <Link href="/learn" className="text-muted-foreground hover:text-foreground">
+                Learn
+              </Link>
+            </nav>
           </div>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>

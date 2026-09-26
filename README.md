@@ -4,7 +4,7 @@ A data-engineering learning platform: one company's data (fintech / digital lend
 
 Planning, architecture decisions, and the component/repo inventory live in the companion repo: [AbhinavSingh189/Portfolio-Upgrade](https://github.com/AbhinavSingh189/Portfolio-Upgrade) — see `PLAN.md`, `ARCHITECTURE_DECISIONS.md`, and `SYSTEM_SPEC.md` there for the full picture. This repo holds the actual code.
 
-**Status:** Modules 1-11 done — all five storage paradigms (Postgres, NoSQL/MongoDB, Warehouse, Data Lake, Lakehouse) working end-to-end behind a shared frontend, plus a cross-platform comparison view (`/compare`) showing the same real operation across all five. Module 12 (Learn page) is next.
+**Status:** All 12 modules of the original plan are done — all five storage paradigms working end-to-end behind a shared frontend, a cross-platform comparison view (`/compare`), and a Learn page (`/learn`) aggregating every phase's remediation content. Next: a full multi-pass review of the whole codebase, then a comprehensive PDF documenting every file.
 
 ## Running locally
 
