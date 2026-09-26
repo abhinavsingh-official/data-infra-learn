@@ -129,6 +129,20 @@ export interface WarehouseGradingReport {
   findings: WarehouseFinding[];
 }
 
+export interface ComparisonEntry {
+  paradigm: string;
+  source: string;
+  code: string;
+  explanation: string;
+}
+
+export interface ComparisonView {
+  operation: string;
+  why_this_operation: string;
+  entries: ComparisonEntry[];
+  real_duplicate_count: number;
+}
+
 export interface LakehouseTask {
   title: string;
   summary: string;

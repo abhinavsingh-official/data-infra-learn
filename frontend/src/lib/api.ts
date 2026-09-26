@@ -1,5 +1,6 @@
 import type {
   CommitBatchResult,
+  ComparisonView,
   ExecuteResult,
   GradingReport,
   LakeTask,
@@ -206,6 +207,10 @@ export function endLakehouseSession(sessionId: string) {
   return request<{ status: string }>(`/lakehouse-phase/sessions/${sessionId}`, {
     method: "DELETE",
   });
+}
+
+export function getComparisonView() {
+  return request<ComparisonView>("/comparison-view/duplicate-delivery");
 }
 
 export { ApiError };

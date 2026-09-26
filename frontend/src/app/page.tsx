@@ -82,6 +82,18 @@ export default function StoragePickerPage() {
           </Link>
         ))}
       </div>
+
+      <Link href="/compare" className="block">
+        <Card className="transition-colors hover:border-foreground/30">
+          <CardHeader>
+            <CardTitle>See how these compare</CardTitle>
+            <CardDescription>
+              The same real operation - deduplicating a retried event - expressed across all five
+              paradigms side by side, with the real reference query from each one.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </Link>
     </div>
   );
 }

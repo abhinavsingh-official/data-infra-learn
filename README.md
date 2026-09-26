@@ -4,7 +4,7 @@ A data-engineering learning platform: one company's data (fintech / digital lend
 
 Planning, architecture decisions, and the component/repo inventory live in the companion repo: [AbhinavSingh189/Portfolio-Upgrade](https://github.com/AbhinavSingh189/Portfolio-Upgrade) — see `PLAN.md`, `ARCHITECTURE_DECISIONS.md`, and `SYSTEM_SPEC.md` there for the full picture. This repo holds the actual code.
 
-**Status:** Modules 1-10 done — Postgres, NoSQL (MongoDB), Warehouse (DuckDB, SCD Type 2), Data Lake (DuckDB, partitioned Parquet, schema-on-read), and Lakehouse (real Delta table via `deltalake`, incremental commits, ACID/time travel) phases all working end-to-end behind a shared frontend. Module 11 (Cross-platform comparison view) is next.
+**Status:** Modules 1-11 done — all five storage paradigms (Postgres, NoSQL/MongoDB, Warehouse, Data Lake, Lakehouse) working end-to-end behind a shared frontend, plus a cross-platform comparison view (`/compare`) showing the same real operation across all five. Module 12 (Learn page) is next.
 
 ## Running locally
 
