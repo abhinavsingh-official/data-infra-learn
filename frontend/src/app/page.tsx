@@ -33,7 +33,7 @@ const PARADIGMS: StorageParadigm[] = [
     tagline: "Star schema, slowly changing dimensions",
     description:
       "Dimensional modeling on top of the same source data - fact/dimension tables, SCD Type 2, analytics-shaped queries.",
-    available: false,
+    available: true,
   },
   {
     slug: "lake",

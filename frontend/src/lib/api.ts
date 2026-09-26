@@ -6,6 +6,9 @@ import type {
   NosqlTask,
   PostgresTask,
   QuerySourceResult,
+  WarehouseExecuteResult,
+  WarehouseGradingReport,
+  WarehouseTask,
 } from "./types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -94,6 +97,40 @@ export function gradeNosqlSession(sessionId: string) {
 
 export function endNosqlSession(sessionId: string) {
   return request<{ status: string }>(`/nosql-phase/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+}
+
+export function getWarehouseTask() {
+  return request<WarehouseTask>("/warehouse-phase/task");
+}
+
+export function createWarehouseSession() {
+  return request<{ session_id: string }>("/warehouse-phase/sessions", { method: "POST" });
+}
+
+export function executeWarehouseSql(sessionId: string, sql: string) {
+  return request<WarehouseExecuteResult>(`/warehouse-phase/sessions/${sessionId}/execute`, {
+    method: "POST",
+    body: JSON.stringify({ sql }),
+  });
+}
+
+export function simulateWarehouseChanges(sessionId: string) {
+  return request<{ mutated_account_count: number }>(
+    `/warehouse-phase/sessions/${sessionId}/simulate-changes`,
+    { method: "POST" },
+  );
+}
+
+export function gradeWarehouseSession(sessionId: string) {
+  return request<WarehouseGradingReport>(`/warehouse-phase/sessions/${sessionId}/grade`, {
+    method: "POST",
+  });
+}
+
+export function endWarehouseSession(sessionId: string) {
+  return request<{ status: string }>(`/warehouse-phase/sessions/${sessionId}`, {
     method: "DELETE",
   });
 }

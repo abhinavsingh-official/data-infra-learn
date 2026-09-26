@@ -40,11 +40,27 @@ class Settings(BaseSettings):
     mongo_superuser: str = "mongo_admin"
     mongo_superuser_password: str = "mongo_admin_dev_password"
 
+    # Module 8 - one DuckDB file per warehouse-phase session, not a
+    # network service, so there's no admin/app split here the way Postgres
+    # and Mongo have - the backend process already has full filesystem
+    # access to any file it created.
+    warehouse_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "warehouse_sessions"
+
     @property
     def mongo_admin_uri(self) -> str:
         return (
             f"mongodb://{self.mongo_superuser}:{self.mongo_superuser_password}"
             f"@{self.mongo_host}:{self.mongo_port}/?authSource=admin"
+        )
+
+    def postgres_attach_conninfo(self, role: str, password: str) -> str:
+        """A libpq-style conninfo string for DuckDB's `ATTACH ... (TYPE
+        postgres)` - a different string shape from the postgres_dsn/
+        postgres_admin_dsn URIs above, which DuckDB's postgres extension
+        doesn't accept."""
+        return (
+            f"host={self.postgres_host} port={self.postgres_port} "
+            f"dbname={self.postgres_db} user={role} password={password}"
         )
 
     @property

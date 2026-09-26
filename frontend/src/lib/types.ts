@@ -88,3 +88,43 @@ export interface NosqlGradingReport {
   total_accounts: number;
   findings: NosqlFinding[];
 }
+
+export interface WarehouseRequiredTable {
+  note: string;
+  columns: Record<string, string>;
+}
+
+export interface WarehouseTask {
+  title: string;
+  summary: string;
+  source: Record<string, string>;
+  required_output: Record<string, WarehouseRequiredTable>;
+  workflow: string[];
+  hint: string;
+}
+
+export interface WarehouseExecuteResult {
+  success: boolean;
+  columns: string[];
+  rows: unknown[][];
+  truncated: boolean;
+  error_code: string | null;
+  error_message: string | null;
+}
+
+export interface WarehouseFinding {
+  error_code: string;
+  entity_id: string;
+  detail: string;
+  why: string;
+  fix: string;
+  tradeoffs: string;
+}
+
+export interface WarehouseGradingReport {
+  passed: boolean;
+  total_accounts: number;
+  total_users: number;
+  total_transactions: number;
+  findings: WarehouseFinding[];
+}
