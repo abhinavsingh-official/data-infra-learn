@@ -5,6 +5,7 @@ __pycache__/
 .pytest_cache/
 node_modules/
 .next/
+logs/
 backend/data/warehouse_sessions/
 backend/data/lake_sessions/
 backend/data/lakehouse_sessions/
