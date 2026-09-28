@@ -76,4 +76,50 @@ WAREHOUSE_PHASE_TASK = {
         "row whether or not anything changed, both look fine on a single load and both fail this "
         "task's actual point - test your ETL by running it twice before you grade."
     ),
+    "dataset_stats": [
+        {"label": "Users", "value": "10,000", "hint": "pg.users - dim_users, SCD Type 1"},
+        {"label": "Accounts", "value": "15,000", "hint": "source_accounts_snapshot - dim_accounts, SCD Type 2"},
+        {"label": "Transactions", "value": "1,000,000", "hint": "pg.transactions - fact_transactions"},
+        {"label": "Accounts mutated on day 2", "value": "~1,188", "hint": "id % 10 = 0 and still active"},
+    ],
+    "starter_sql": (
+        "-- Start by looking at the day-1 snapshot you build from:\n"
+        "SELECT * FROM source_accounts_snapshot LIMIT 20;\n\n"
+        "-- Then build your dimensions and fact table, e.g.:\n"
+        "-- CREATE TABLE dim_users AS\n"
+        "-- SELECT ROW_NUMBER() OVER () AS user_key, external_user_id, full_name, email, kyc_status, country, is_active\n"
+        "-- FROM pg.users;\n"
+    ),
+    "reference_solution": {
+        "sql": (
+            "CREATE TABLE dim_users AS\n"
+            "SELECT ROW_NUMBER() OVER () AS user_key, external_user_id, full_name, email, kyc_status, country, is_active\n"
+            "FROM pg.users;\n\n"
+            "CREATE TABLE dim_accounts AS\n"
+            "SELECT\n"
+            "  ROW_NUMBER() OVER () AS account_key,\n"
+            "  id AS account_id, card_network, account_status, credit_limit,\n"
+            "  now() AS valid_from, CAST(NULL AS TIMESTAMP) AS valid_to, true AS is_current\n"
+            "FROM source_accounts_snapshot;\n\n"
+            "-- Re-run after simulate-changes: close out changed rows, then insert new current ones.\n"
+            "UPDATE dim_accounts da\n"
+            "SET valid_to = now(), is_current = false\n"
+            "FROM source_accounts_snapshot s\n"
+            "WHERE da.account_id = s.id AND da.is_current\n"
+            "  AND (da.account_status != s.account_status OR da.credit_limit != s.credit_limit);\n\n"
+            "INSERT INTO dim_accounts (account_key, account_id, card_network, account_status, credit_limit, valid_from, valid_to, is_current)\n"
+            "SELECT\n"
+            "  (SELECT COALESCE(MAX(account_key), 0) FROM dim_accounts) + ROW_NUMBER() OVER (),\n"
+            "  s.id, s.card_network, s.account_status, s.credit_limit, now(), NULL, true\n"
+            "FROM source_accounts_snapshot s\n"
+            "JOIN dim_accounts da ON da.account_id = s.id AND NOT da.is_current\n"
+            "WHERE NOT EXISTS (SELECT 1 FROM dim_accounts cur WHERE cur.account_id = s.id AND cur.is_current);\n"
+        ),
+        "note": (
+            "The UPDATE closes out exactly the rows whose tracked attributes changed since the last "
+            "load - unchanged accounts never get touched, so re-running this twice in a row inserts "
+            "nothing further. dim_users stays SCD Type 1 on purpose (deliberate contrast): it's always "
+            "overwritten wholesale, no history kept, no valid_from/valid_to at all."
+        ),
+    },
 }

@@ -1,3 +1,14 @@
+export interface DatasetStatDto {
+  label: string;
+  value: string;
+  hint?: string;
+}
+
+export interface ReferenceSolutionDto {
+  sql: string;
+  note?: string;
+}
+
 export interface PostgresTask {
   title: string;
   summary: string;
@@ -10,6 +21,9 @@ export interface PostgresTask {
     note: string;
     columns: Record<string, string>;
   };
+  dataset_stats: DatasetStatDto[];
+  starter_sql: string;
+  reference_solution: ReferenceSolutionDto;
 }
 
 export interface ExecuteResult {
