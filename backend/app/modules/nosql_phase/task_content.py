@@ -107,5 +107,105 @@ NOSQL_PHASE_TASK = {
             "account's events, not embedded raw event lists - build those with a GROUP BY against the "
             "Postgres source before you insert, not by embedding every row and summing client-side."
         ),
+        "steps": [
+            {
+                "title": "1. Naive - one flat document, nothing embedded or aggregated",
+                "sql": (
+                    "// Query the source and insert a document with just the account's own scalars:\n"
+                    "{\n"
+                    '  "insert": "account_profiles",\n'
+                    '  "documents": [\n'
+                    "    {\n"
+                    '      "_id": "1042",\n'
+                    '      "balance_cents": 128350,\n'
+                    '      "credit_limit_cents": 500000\n'
+                    "    }\n"
+                    "  ]\n"
+                    "}\n"
+                ),
+                "note": (
+                    "This document answers nothing on its own - 'what does this account look like' still "
+                    "needs a join back to users for the owner, and another two joins for transactions and "
+                    "rewards. That defeats the entire point of choosing a document store."
+                ),
+            },
+            {
+                "title": "2. + embed owner (1:1, doesn't change independently)",
+                "sql": (
+                    "{\n"
+                    '  "insert": "account_profiles",\n'
+                    '  "documents": [\n'
+                    "    {\n"
+                    '      "_id": "1042",\n'
+                    '      "owner": { "name": "Jordan Diaz", "email": "jordan@example.com" },\n'
+                    '      "balance_cents": 128350,\n'
+                    '      "credit_limit_cents": 500000\n'
+                    "    }\n"
+                    "  ]\n"
+                    "}\n"
+                ),
+                "note": (
+                    "accounts:users is 1:1 and the owner relationship doesn't change independently of the "
+                    "account, so embedding it is safe - no risk of the copy going stale behind the source's "
+                    "back. That's the actual test in 'what do you embed vs. reference?'."
+                ),
+            },
+            {
+                "title": "3. + embed recent_transactions, capped at 20",
+                "sql": (
+                    "{\n"
+                    '  "insert": "account_profiles",\n'
+                    '  "documents": [\n'
+                    "    {\n"
+                    '      "_id": "1042",\n'
+                    '      "owner": { "name": "Jordan Diaz", "email": "jordan@example.com" },\n'
+                    '      "balance_cents": 128350,\n'
+                    '      "credit_limit_cents": 500000,\n'
+                    '      "recent_transactions": [\n'
+                    '        { "event_id": "RRN123", "amount_cents": 4599, "merchant": "Coffee Co", "occurred_at": "2024-03-01T12:00:00Z" }\n'
+                    "        // ... most-recent-first, stop at 20\n"
+                    "      ]\n"
+                    "    }\n"
+                    "  ]\n"
+                    "}\n"
+                ),
+                "note": (
+                    "transactions is large and keeps growing - embedding the full history is the unbounded "
+                    "array anti-pattern MongoDB itself warns about. Capping at 20, most-recent-first, is "
+                    "what keeps the embed bounded instead of reaching for a full reference table."
+                ),
+            },
+            {
+                "title": "4. Final: + aggregate reward_summary and repayment_status instead of embedding raw",
+                "sql": (
+                    "// 1. Query the Postgres source (via query-source) to build each piece:\n"
+                    "SELECT a.id, u.full_name, u.email, a.current_balance, a.credit_limit\n"
+                    "FROM accounts a JOIN users u ON a.user_id = u.id;\n\n"
+                    "// 2. Then insert the assembled documents into Mongo (via execute):\n"
+                    "{\n"
+                    '  "insert": "account_profiles",\n'
+                    '  "documents": [\n'
+                    "    {\n"
+                    '      "_id": "1042",\n'
+                    '      "owner": { "name": "Jordan Diaz", "email": "jordan@example.com" },\n'
+                    '      "balance_cents": 128350,\n'
+                    '      "credit_limit_cents": 500000,\n'
+                    '      "recent_transactions": [\n'
+                    '        { "event_id": "RRN123", "amount_cents": 4599, "merchant": "Coffee Co", "occurred_at": "2024-03-01T12:00:00Z" }\n'
+                    "      ],\n"
+                    '      "reward_summary": { "total_points": 1240.5, "event_count": 37 },\n'
+                    '      "repayment_status": { "outstanding_cents": 32000, "next_due_date": "2024-04-01" }\n'
+                    "    }\n"
+                    "  ]\n"
+                    "}\n"
+                ),
+                "note": (
+                    "reward_events and repayments are independently-queried histories, same shape problem "
+                    "as transactions - but here the fix isn't capping a copy, it's not copying at all: "
+                    "reward_summary and repayment_status are GROUP BY aggregates computed over ALL of the "
+                    "account's events before insert, not a raw list summed client-side."
+                ),
+            },
+        ],
     },
 }

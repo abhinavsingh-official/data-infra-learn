@@ -1,108 +1,126 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { PhaseSlug } from "@/lib/phase-theme";
-import { PHASE_THEME } from "@/lib/phase-theme";
+import { ArrowRight, Database, FlaskConical, ClipboardCheck, Layers } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { PHASE_THEME, type PhaseSlug } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
 
-interface StorageParadigm {
-  slug: PhaseSlug;
-  name: string;
-  tagline: string;
-  description: string;
-  available: boolean;
-}
+const STATS = [
+  { value: "5", label: "Storage paradigms", hint: "Postgres, MongoDB, warehouse, lake, lakehouse" },
+  { value: "1,000,000", label: "Simulated transactions", hint: "one fintech company's data, shared across every paradigm" },
+  { value: "51,495", label: "Raw feed events", hint: "with ~7,753 deliberately injected faults" },
+  { value: "29", label: "Real remediation writeups", hint: "not pass/fail - why it broke, how to fix it, the tradeoffs" },
+];
 
-const PARADIGMS: StorageParadigm[] = [
+const HOW_IT_WORKS = [
   {
-    slug: "postgres",
-    name: "Relational (Postgres)",
-    tagline: "Schema design, constraints, dirty webhook feeds",
-    description:
-      "Load a raw JSONB transaction feed into a clean, constrained schema - nulls, duplicate deliveries, late arrivals, schema drift, and Excel-style ID corruption all included.",
-    available: true,
+    icon: Layers,
+    title: "Pick a storage paradigm",
+    body: "The same fintech data, reshaped five different ways - rows, documents, a star schema, partitioned files, a Delta table.",
   },
   {
-    slug: "nosql",
-    name: "NoSQL (MongoDB)",
-    tagline: "Document modeling, denormalization",
-    description:
-      "Remodel the same fintech data as documents instead of rows - what changes, what you trade away, what eventual consistency actually costs you.",
-    available: true,
+    icon: Database,
+    title: "See the real dataset first",
+    body: "Row counts, known-good result sizes, and the exact edge cases hiding in the feed - before you write a line of code.",
   },
   {
-    slug: "warehouse",
-    name: "Data Warehouse",
-    tagline: "Star schema, slowly changing dimensions",
-    description:
-      "Dimensional modeling on top of the same source data - fact/dimension tables, SCD Type 2, analytics-shaped queries.",
-    available: true,
+    icon: FlaskConical,
+    title: "Write, run, and fix",
+    body: "A starter query gets you moving; a hidden reference solution is there if you get stuck, not before.",
   },
   {
-    slug: "lake",
-    name: "Data Lake",
-    tagline: "Partitioned Parquet, schema-on-read",
-    description:
-      "The same data as partitioned Parquet files queried with DuckDB - schema-on-read tradeoffs instead of schema-on-write.",
-    available: true,
-  },
-  {
-    slug: "lakehouse",
-    name: "Lakehouse",
-    tagline: "ACID table semantics on object storage",
-    description:
-      "Delta/Iceberg-style table semantics on top of the lake layer - batch and incremental append unified under one table format.",
-    available: true,
+    icon: ClipboardCheck,
+    title: "Get a real grading report",
+    body: "Per-edge-case findings with the actual root cause and fix - not just a score.",
   },
 ];
 
-export default function StoragePickerPage() {
+const PARADIGM_PREVIEW: { slug: PhaseSlug; name: string }[] = [
+  { slug: "postgres", name: "Relational" },
+  { slug: "nosql", name: "Document" },
+  { slug: "warehouse", name: "Warehouse" },
+  { slug: "lake", name: "Lake" },
+  { slug: "lakehouse", name: "Lakehouse" },
+];
+
+export default function HomePage() {
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Pick a storage paradigm</h1>
-        <p className="text-muted-foreground">
-          Same underlying fintech data, five different storage systems. Each one asks you to
-          handle the ETL edge cases that actually show up in that paradigm, then grades your
-          submission with a real explanation - why it broke, how to fix it, what the tradeoffs
-          are.
+    <div className="space-y-16">
+      <section className="space-y-6 py-8 text-center">
+        <h1 className="mx-auto max-w-2xl text-4xl font-semibold tracking-tight text-balance">
+          Learn how ETL actually breaks - and how to fix it - across five storage paradigms
+        </h1>
+        <p className="mx-auto max-w-xl text-balance text-muted-foreground">
+          One real fintech dataset, reshaped five different ways. Real edge cases - nulls, drift,
+          duplicates, late arrivals - injected on purpose, graded with a remediation report instead
+          of a bare pass/fail.
         </p>
-      </div>
+        <div className="flex justify-center gap-3 pt-2">
+          <Button size="lg" nativeButton={false} render={<Link href="/start" />}>
+            Start learning
+            <ArrowRight className="size-4" />
+          </Button>
+          <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/compare" />}>
+            See paradigms compared
+          </Button>
+        </div>
+      </section>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {PARADIGMS.map((paradigm) => {
-          const theme = PHASE_THEME[paradigm.slug];
-          return (
-            <Link key={paradigm.slug} href={`/${paradigm.slug}`} className="block">
-              <Card className={cn("h-full border-l-4 transition-colors hover:border-foreground/30", theme.border)}>
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("size-2.5 rounded-full", theme.bgSolid)} />
-                      <CardTitle>{paradigm.name}</CardTitle>
-                    </div>
-                    {!paradigm.available && <Badge variant="secondary">Coming soon</Badge>}
-                  </div>
-                  <CardDescription className={cn("font-medium", theme.text)}>{paradigm.tagline}</CardDescription>
-                </CardHeader>
-                <p className="px-6 pb-6 text-sm text-muted-foreground">{paradigm.description}</p>
-              </Card>
-            </Link>
-          );
-        })}
-      </div>
+      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {STATS.map((stat) => (
+          <Card key={stat.label} className="text-center">
+            <CardContent className="space-y-1 pt-6">
+              <p className="text-2xl font-semibold tabular-nums text-primary">{stat.value}</p>
+              <p className="text-sm font-medium">{stat.label}</p>
+              <p className="text-xs text-muted-foreground">{stat.hint}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
 
-      <Link href="/compare" className="block">
-        <Card className="transition-colors hover:border-foreground/30">
-          <CardHeader>
-            <CardTitle>See how these compare</CardTitle>
-            <CardDescription>
-              The same real operation - deduplicating a retried event - expressed across all five
-              paradigms side by side, with the real reference query from each one.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </Link>
+      <section className="space-y-6">
+        <h2 className="text-center text-xl font-semibold tracking-tight">How it works</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {HOW_IT_WORKS.map((step, index) => (
+            <Card key={step.title} className="relative">
+              <CardContent className="space-y-2 pt-6">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                    {index + 1}
+                  </span>
+                  <step.icon className="size-4 text-muted-foreground" />
+                </div>
+                <p className="font-medium">{step.title}</p>
+                <p className="text-sm text-muted-foreground">{step.body}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4 text-center">
+        <h2 className="text-xl font-semibold tracking-tight">Five paradigms, one real problem each time</h2>
+        <div className="flex flex-wrap justify-center gap-3">
+          {PARADIGM_PREVIEW.map((paradigm) => {
+            const theme = PHASE_THEME[paradigm.slug];
+            return (
+              <span
+                key={paradigm.slug}
+                className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm", theme.border, theme.bg)}
+              >
+                <span className={cn("size-2 rounded-full", theme.bgSolid)} />
+                {paradigm.name}
+              </span>
+            );
+          })}
+        </div>
+        <div>
+          <Button nativeButton={false} render={<Link href="/start" />}>
+            Explore all five
+            <ArrowRight className="size-4" />
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }

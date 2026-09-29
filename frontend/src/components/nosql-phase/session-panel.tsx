@@ -15,7 +15,7 @@ import { GradingReportView } from "./grading-report";
 import { MongoExecuteBox } from "./mongo-execute-box";
 import { SourceQueryBox } from "./source-query-box";
 
-const STEPS = ["Overview", "The task", "Explore & write", "Grade"];
+const STEPS = ["Overview", "Workspace"];
 
 export function SessionPanel({ task }: { task: NosqlTask }) {
   const [step, setStep] = useState(0);
@@ -42,9 +42,7 @@ export function SessionPanel({ task }: { task: NosqlTask }) {
     if (!sessionId) return;
     setGrading(true);
     try {
-      const result = await gradeNosqlSession(sessionId);
-      setReport(result);
-      setStep(3);
+      setReport(await gradeNosqlSession(sessionId));
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : "Grading failed.");
     } finally {
@@ -73,7 +71,7 @@ export function SessionPanel({ task }: { task: NosqlTask }) {
       <CardHeader>
         <Stepper steps={STEPS} currentIndex={step} phase="nosql" />
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         {step === 0 && (
           <div className="space-y-4">
             <div>
@@ -82,121 +80,101 @@ export function SessionPanel({ task }: { task: NosqlTask }) {
             </div>
             <DatasetStats stats={task.dataset_stats} phase="nosql" />
             <div className="flex justify-end">
-              <Button onClick={() => setStep(1)}>Next: the task</Button>
+              <Button onClick={() => setStep(1)}>Open the workspace</Button>
             </div>
           </div>
         )}
 
         {step === 1 && (
-          <div className="space-y-6 text-sm">
-            <section>
-              <h3 className="mb-2 font-medium">Source</h3>
-              <p className="text-muted-foreground">{task.source}</p>
-            </section>
+          <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+            <aside className="space-y-6 text-sm lg:sticky lg:top-4 lg:self-start">
+              <section>
+                <h3 className="mb-2 font-medium">Source</h3>
+                <p className="text-muted-foreground">{task.source}</p>
+              </section>
 
-            <section>
-              <h3 className="mb-2 font-medium">Design questions to answer</h3>
-              <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-                {task.design_questions_to_answer.map((question) => (
-                  <li key={question}>{question}</li>
-                ))}
-              </ul>
-            </section>
+              <section>
+                <h3 className="mb-2 font-medium">Design questions to answer</h3>
+                <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+                  {task.design_questions_to_answer.map((question) => (
+                    <li key={question}>{question}</li>
+                  ))}
+                </ul>
+              </section>
 
-            <section>
-              <h3 className="mb-2 font-medium">
-                Required output: <code>{task.required_output.collection}</code>
-              </h3>
-              <p className="mb-2 text-muted-foreground">{task.required_output.note}</p>
-              <ul className="space-y-1 text-muted-foreground">
-                {Object.entries(task.required_output.document_shape).map(([field, spec]) => (
-                  <li key={field}>
-                    <code className="text-foreground">{field}</code> — {spec}
-                  </li>
-                ))}
-              </ul>
-            </section>
+              <section>
+                <h3 className="mb-2 font-medium">
+                  Required output: <code>{task.required_output.collection}</code>
+                </h3>
+                <p className="mb-2 text-muted-foreground">{task.required_output.note}</p>
+                <ul className="space-y-1 text-muted-foreground">
+                  {Object.entries(task.required_output.document_shape).map(([field, spec]) => (
+                    <li key={field}>
+                      <code className="text-foreground">{field}</code> — {spec}
+                    </li>
+                  ))}
+                </ul>
+              </section>
 
-            <p className="italic text-muted-foreground">{task.hint}</p>
+              <p className="italic text-muted-foreground">{task.hint}</p>
 
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(0)}>
-                Back
+              <Button variant="outline" size="sm" onClick={() => setStep(0)}>
+                Back to overview
               </Button>
-              <Button onClick={() => setStep(2)}>Next: explore &amp; write</Button>
-            </div>
-          </div>
-        )}
+            </aside>
 
-        {step === 2 && (
-          <div className="space-y-4">
-            {!sessionId ? (
-              <div>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Provisions read-only access to the relational source tables and a Mongo database
-                  scoped just to you.
-                </p>
-                <Button onClick={handleStart} disabled={starting}>
-                  {starting ? "Starting..." : "Start Session"}
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium">Session</span>
-                  <Badge variant="outline" className="font-mono text-xs">
-                    {sessionId.slice(0, 12)}...
-                  </Badge>
+            <div className="space-y-4">
+              {!sessionId ? (
+                <div className="rounded-lg border p-4">
+                  <p className="mb-4 text-sm text-muted-foreground">
+                    Provisions read-only access to the relational source tables and a Mongo database
+                    scoped just to you.
+                  </p>
+                  <Button onClick={handleStart} disabled={starting}>
+                    {starting ? "Starting..." : "Start Session"}
+                  </Button>
                 </div>
-                <div>
-                  <h3 className="mb-2 text-sm font-medium">1. Query the Postgres source</h3>
-                  <SourceQueryBox sessionId={sessionId} />
-                </div>
-                <Separator />
-                <div>
-                  <h3 className="mb-2 text-sm font-medium">2. Build account_profiles in Mongo</h3>
-                  <MongoExecuteBox sessionId={sessionId} starterValue={task.starter_command} />
-                </div>
-                <ReferenceSolution
-                  solution={task.reference_solution.sql}
-                  note={task.reference_solution.note}
-                />
-              </div>
-            )}
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium">Session</span>
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {sessionId.slice(0, 12)}...
+                    </Badge>
+                  </div>
+                  <div>
+                    <h3 className="mb-2 text-sm font-medium">1. Query the Postgres source</h3>
+                    <SourceQueryBox sessionId={sessionId} />
+                  </div>
+                  <Separator />
+                  <div>
+                    <h3 className="mb-2 text-sm font-medium">2. Build account_profiles in Mongo</h3>
+                    <MongoExecuteBox sessionId={sessionId} starterValue={task.starter_command} />
+                  </div>
+                  <ReferenceSolution
+                    solution={task.reference_solution.sql}
+                    note={task.reference_solution.note}
+                    steps={task.reference_solution.steps}
+                  />
 
-            <Separator />
-            <div className="flex flex-wrap justify-between gap-2">
-              <Button variant="outline" onClick={() => setStep(1)}>
-                Back
-              </Button>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={handleEnd} disabled={!sessionId || ending}>
-                  {ending ? "Ending..." : "End Session"}
-                </Button>
-                <Button onClick={handleGrade} disabled={!sessionId || grading}>
-                  {grading ? "Grading..." : "Grade Submission"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+                  <Separator />
+                  <div className="flex flex-wrap justify-between gap-2">
+                    <Button variant="outline" onClick={handleEnd} disabled={ending}>
+                      {ending ? "Ending..." : "End Session"}
+                    </Button>
+                    <Button onClick={handleGrade} disabled={grading}>
+                      {grading ? "Grading..." : "Grade Submission"}
+                    </Button>
+                  </div>
 
-        {step === 3 && (
-          <div className="space-y-4">
-            {report ? (
-              <GradingReportView report={report} />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No grading report yet - go back and submit your work first.
-              </p>
-            )}
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(2)}>
-                Back
-              </Button>
-              <Button variant="outline" onClick={handleEnd} disabled={!sessionId || ending}>
-                {ending ? "Ending..." : "End Session"}
-              </Button>
+                  {report && (
+                    <div className="rounded-lg border p-4">
+                      <h3 className="mb-3 font-medium">Grading report</h3>
+                      <GradingReportView report={report} />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
