@@ -8,8 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { ApiError, commitLakehouseBatch } from "@/lib/api";
 import type { CommitBatchResult } from "@/lib/types";
 
-export function CommitBatchBox({ sessionId, label }: { sessionId: string; label: string }) {
-  const [sql, setSql] = useState("");
+interface CommitBatchBoxProps {
+  sessionId: string;
+  label: string;
+  /** Pre-fills the textarea with a runnable-but-incomplete example, same
+   * pattern as SqlWorkspace's starterValue - applied once, on mount. */
+  starterValue?: string;
+}
+
+export function CommitBatchBox({ sessionId, label, starterValue = "" }: CommitBatchBoxProps) {
+  const [sql, setSql] = useState(starterValue);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<CommitBatchResult | null>(null);
 

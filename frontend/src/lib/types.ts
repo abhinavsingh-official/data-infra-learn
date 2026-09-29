@@ -68,6 +68,9 @@ export interface NosqlTask {
     document_shape: Record<string, string>;
   };
   hint: string;
+  dataset_stats: DatasetStatDto[];
+  starter_command: string;
+  reference_solution: ReferenceSolutionDto;
 }
 
 export interface QuerySourceResult {
@@ -115,6 +118,9 @@ export interface WarehouseTask {
   required_output: Record<string, WarehouseRequiredTable>;
   workflow: string[];
   hint: string;
+  dataset_stats: DatasetStatDto[];
+  starter_sql: string;
+  reference_solution: ReferenceSolutionDto;
 }
 
 export interface WarehouseExecuteResult {
@@ -186,6 +192,9 @@ export interface LakehouseTask {
     columns: Record<string, string>;
   };
   hints: string[];
+  dataset_stats: DatasetStatDto[];
+  starter_sql: string;
+  reference_solution: ReferenceSolutionDto;
 }
 
 export interface CommitBatchResult {
@@ -207,4 +216,7 @@ export interface LakeTask {
     columns: Record<string, string>;
   };
   hints: string[];
+  dataset_stats: DatasetStatDto[];
+  starter_sql: string;
+  reference_solution: ReferenceSolutionDto;
 }

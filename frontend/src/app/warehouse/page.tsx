@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TaskDetail } from "@/components/warehouse-phase/task-detail";
 import { SessionPanel } from "@/components/warehouse-phase/session-panel";
 import { getWarehouseTask } from "@/lib/api";
 import type { WarehouseTask } from "@/lib/types";
@@ -36,8 +35,7 @@ export default function WarehousePhasePage() {
 
   return (
     <div className="space-y-6">
-      <TaskDetail task={task} />
-      <SessionPanel />
+      <SessionPanel task={task} />
     </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TaskDetail } from "@/components/nosql-phase/task-detail";
 import { SessionPanel } from "@/components/nosql-phase/session-panel";
 import { getNosqlTask } from "@/lib/api";
 import type { NosqlTask } from "@/lib/types";
@@ -36,8 +35,7 @@ export default function NosqlPhasePage() {
 
   return (
     <div className="space-y-6">
-      <TaskDetail task={task} />
-      <SessionPanel />
+      <SessionPanel task={task} />
     </div>
   );
 }
