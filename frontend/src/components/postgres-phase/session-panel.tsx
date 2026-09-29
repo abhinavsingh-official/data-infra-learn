@@ -14,7 +14,7 @@ import { ApiError, createSession, endSession, executeSql, gradeSession } from "@
 import { GradingReportView } from "@/components/shared/grading-report";
 import type { GradingReport, PostgresTask } from "@/lib/types";
 
-const STEPS = ["Overview", "The task", "Explore & write", "Grade"];
+const STEPS = ["Overview", "Workspace"];
 
 export function SessionPanel({ task }: { task: PostgresTask }) {
   const [step, setStep] = useState(0);
@@ -41,9 +41,7 @@ export function SessionPanel({ task }: { task: PostgresTask }) {
     if (!sessionId) return;
     setGrading(true);
     try {
-      const result = await gradeSession(sessionId);
-      setReport(result);
-      setStep(3);
+      setReport(await gradeSession(sessionId));
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : "Grading failed.");
     } finally {
@@ -72,7 +70,7 @@ export function SessionPanel({ task }: { task: PostgresTask }) {
       <CardHeader>
         <Stepper steps={STEPS} currentIndex={step} phase="postgres" />
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         {step === 0 && (
           <div className="space-y-4">
             <div>
@@ -81,125 +79,108 @@ export function SessionPanel({ task }: { task: PostgresTask }) {
             </div>
             <DatasetStats stats={task.dataset_stats} phase="postgres" />
             <div className="flex justify-end">
-              <Button onClick={() => setStep(1)}>Next: the task</Button>
+              <Button onClick={() => setStep(1)}>Open the workspace</Button>
             </div>
           </div>
         )}
 
         {step === 1 && (
-          <div className="space-y-6 text-sm">
-            <section>
-              <h3 className="mb-2 font-medium">Source: {task.source_table}</h3>
-              <ul className="space-y-1 text-muted-foreground">
-                {Object.entries(task.source_columns).map(([column, description]) => (
-                  <li key={column}>
-                    <code className="text-foreground">{column}</code> — {description}
-                  </li>
-                ))}
-              </ul>
-            </section>
+          // Codecademy/SQLBolt-style split: instructions stay visible on the
+          // left the whole time you're writing, instead of being a step you
+          // navigate away from and have to re-open to re-read.
+          <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+            <aside className="space-y-6 text-sm lg:sticky lg:top-4 lg:self-start">
+              <section>
+                <h3 className="mb-2 font-medium">Source: {task.source_table}</h3>
+                <ul className="space-y-1 text-muted-foreground">
+                  {Object.entries(task.source_columns).map(([column, description]) => (
+                    <li key={column}>
+                      <code className="text-foreground">{column}</code> — {description}
+                    </li>
+                  ))}
+                </ul>
+              </section>
 
-            <section>
-              <h3 className="mb-2 font-medium">Edge cases to handle</h3>
-              <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-                {task.edge_cases_to_handle.map((edgeCase) => (
-                  <li key={edgeCase}>{edgeCase}</li>
-                ))}
-              </ul>
-            </section>
+              <section>
+                <h3 className="mb-2 font-medium">Edge cases to handle</h3>
+                <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+                  {task.edge_cases_to_handle.map((edgeCase) => (
+                    <li key={edgeCase}>{edgeCase}</li>
+                  ))}
+                </ul>
+              </section>
 
-            <section>
-              <h3 className="mb-2 font-medium">
-                Required output: <code>{task.required_output.table}</code>
-              </h3>
-              <p className="mb-2 text-muted-foreground">{task.required_output.note}</p>
-              <ul className="space-y-1 text-muted-foreground">
-                {Object.entries(task.required_output.columns).map(([column, spec]) => (
-                  <li key={column}>
-                    <code className="text-foreground">{column}</code> — {spec}
-                  </li>
-                ))}
-              </ul>
-            </section>
+              <section>
+                <h3 className="mb-2 font-medium">
+                  Required output: <code>{task.required_output.table}</code>
+                </h3>
+                <p className="mb-2 text-muted-foreground">{task.required_output.note}</p>
+                <ul className="space-y-1 text-muted-foreground">
+                  {Object.entries(task.required_output.columns).map(([column, spec]) => (
+                    <li key={column}>
+                      <code className="text-foreground">{column}</code> — {spec}
+                    </li>
+                  ))}
+                </ul>
+              </section>
 
-            <p className="italic text-muted-foreground">{task.hint}</p>
+              <p className="italic text-muted-foreground">{task.hint}</p>
 
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(0)}>
-                Back
+              <Button variant="outline" size="sm" onClick={() => setStep(0)}>
+                Back to overview
               </Button>
-              <Button onClick={() => setStep(2)}>Next: explore &amp; write</Button>
-            </div>
-          </div>
-        )}
+            </aside>
 
-        {step === 2 && (
-          <div className="space-y-4">
-            {!sessionId ? (
-              <div>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Provisions a restricted Postgres role and schema just for you, with read access to
-                  the raw feed above. Nothing else touches your work.
-                </p>
-                <Button onClick={handleStart} disabled={starting}>
-                  {starting ? "Starting..." : "Start Session"}
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium">Session</span>
-                  <Badge variant="outline" className="font-mono text-xs">
-                    {sessionId.slice(0, 12)}...
-                  </Badge>
+            <div className="space-y-4">
+              {!sessionId ? (
+                <div className="rounded-lg border p-4">
+                  <p className="mb-4 text-sm text-muted-foreground">
+                    Provisions a restricted Postgres role and schema just for you, with read access
+                    to the raw feed. Nothing else touches your work.
+                  </p>
+                  <Button onClick={handleStart} disabled={starting}>
+                    {starting ? "Starting..." : "Start Session"}
+                  </Button>
                 </div>
-                <SqlWorkspace
-                  sessionId={sessionId}
-                  execute={executeSql}
-                  placeholder="CREATE TABLE clean_transactions ( ... );"
-                  starterValue={task.starter_sql}
-                  rows={10}
-                />
-                <ReferenceSolution
-                  solution={task.reference_solution.sql}
-                  note={task.reference_solution.note}
-                />
-              </div>
-            )}
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium">Session</span>
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {sessionId.slice(0, 12)}...
+                    </Badge>
+                  </div>
+                  <SqlWorkspace
+                    sessionId={sessionId}
+                    execute={executeSql}
+                    placeholder="CREATE TABLE clean_transactions ( ... );"
+                    starterValue={task.starter_sql}
+                    rows={10}
+                  />
+                  <ReferenceSolution
+                    solution={task.reference_solution.sql}
+                    note={task.reference_solution.note}
+                    steps={task.reference_solution.steps}
+                  />
 
-            <Separator />
-            <div className="flex flex-wrap justify-between gap-2">
-              <Button variant="outline" onClick={() => setStep(1)}>
-                Back
-              </Button>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={handleEnd} disabled={!sessionId || ending}>
-                  {ending ? "Ending..." : "End Session"}
-                </Button>
-                <Button onClick={handleGrade} disabled={!sessionId || grading}>
-                  {grading ? "Grading..." : "Grade Submission"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+                  <Separator />
+                  <div className="flex flex-wrap justify-between gap-2">
+                    <Button variant="outline" onClick={handleEnd} disabled={ending}>
+                      {ending ? "Ending..." : "End Session"}
+                    </Button>
+                    <Button onClick={handleGrade} disabled={grading}>
+                      {grading ? "Grading..." : "Grade Submission"}
+                    </Button>
+                  </div>
 
-        {step === 3 && (
-          <div className="space-y-4">
-            {report ? (
-              <GradingReportView report={report} />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No grading report yet - go back and submit your work first.
-              </p>
-            )}
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(2)}>
-                Back
-              </Button>
-              <Button variant="outline" onClick={handleEnd} disabled={!sessionId || ending}>
-                {ending ? "Ending..." : "End Session"}
-              </Button>
+                  {report && (
+                    <div className="rounded-lg border p-4">
+                      <h3 className="mb-3 font-medium">Grading report</h3>
+                      <GradingReportView report={report} />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

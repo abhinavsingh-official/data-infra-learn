@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,26 +25,33 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <header className="border-b">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-            <Link href="/" className="font-semibold tracking-tight">
-              data-infra-learn
-            </Link>
-            <nav className="flex items-center gap-4 text-sm">
-              <Link href="/compare" className="text-muted-foreground hover:text-foreground">
-                Compare
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <header className="border-b">
+            <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+              <Link href="/" className="font-semibold tracking-tight">
+                data-infra-learn
               </Link>
-              <Link href="/learn" className="text-muted-foreground hover:text-foreground">
-                Learn
-              </Link>
-            </nav>
-          </div>
-        </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
-        <Toaster />
+              <nav className="flex items-center gap-4 text-sm">
+                <Link href="/start" className="text-muted-foreground hover:text-foreground">
+                  Start
+                </Link>
+                <Link href="/compare" className="text-muted-foreground hover:text-foreground">
+                  Compare
+                </Link>
+                <Link href="/learn" className="text-muted-foreground hover:text-foreground">
+                  Learn
+                </Link>
+                <ThemeToggle />
+              </nav>
+            </div>
+          </header>
+          <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

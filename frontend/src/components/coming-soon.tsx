@@ -21,7 +21,7 @@ export function ComingSoon({
           <CardDescription>{roadmapNote}</CardDescription>
         </CardHeader>
       </Card>
-      <Button variant="outline" render={<Link href="/" />}>
+      <Button variant="outline" nativeButton={false} render={<Link href="/start" />}>
         Back to storage picker
       </Button>
     </div>

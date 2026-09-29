@@ -4,9 +4,19 @@ export interface DatasetStatDto {
   hint?: string;
 }
 
+export interface ReferenceSolutionStepDto {
+  title: string;
+  sql: string;
+  note?: string;
+}
+
 export interface ReferenceSolutionDto {
   sql: string;
   note?: string;
+  /** Optional staged breakdown of the same final query, one edge case at a
+   * time - not every phase has this yet, so callers fall back to the plain
+   * sql/note pair when it's absent. */
+  steps?: ReferenceSolutionStepDto[];
 }
 
 export interface PostgresTask {

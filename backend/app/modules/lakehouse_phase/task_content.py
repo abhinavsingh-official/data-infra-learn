@@ -105,5 +105,110 @@ LAKEHOUSE_PHASE_TASK = {
             "`NOT IN (SELECT ... FROM delta_scan(...))` fails with a cryptic cast error at this dataset's "
             "real size, confirmed directly - the anti-join form is the one that actually works."
         ),
+        "steps": [
+            {
+                "title": "1. Naive - commit batch 1 with no in-batch dedup at all",
+                "sql": (
+                    "SELECT\n"
+                    "  COALESCE(payload::JSON->>'event_id', payload::JSON->>'id') AS event_id,\n"
+                    "  CAST((payload::JSON->>'amount')::VARCHAR AS DOUBLE) AS amount,\n"
+                    "  COALESCE(payload::JSON->>'merchant', payload::JSON->>'merchant_name') AS merchant,\n"
+                    "  payload::JSON->>'currency' AS currency,\n"
+                    "  TRY_CAST(payload::JSON->>'event_timestamp' AS TIMESTAMPTZ) AS event_timestamp\n"
+                    "FROM batch_1_events\n"
+                    "WHERE (payload::JSON->'amount') IS NOT NULL;\n"
+                ),
+                "note": (
+                    "This parses every row's payload correctly but assumes batch_1_events itself has no "
+                    "internal repeats. It doesn't hold - the raw feed still contains redelivered events, "
+                    "and this commit would insert every copy of one as a separate row in the Delta table."
+                ),
+            },
+            {
+                "title": "2. + dedupe within the batch (still misses cross-batch duplicates)",
+                "sql": (
+                    "WITH normalized AS (\n"
+                    "  SELECT\n"
+                    "    COALESCE(payload::JSON->>'event_id', payload::JSON->>'id') AS event_id,\n"
+                    "    COALESCE(payload::JSON->>'merchant', payload::JSON->>'merchant_name') AS merchant,\n"
+                    "    payload::JSON->>'currency' AS currency,\n"
+                    "    CAST((payload::JSON->>'amount')::VARCHAR AS DOUBLE) AS amount,\n"
+                    "    TRY_CAST(payload::JSON->>'event_timestamp' AS TIMESTAMPTZ) AS event_timestamp,\n"
+                    "    received_at,\n"
+                    "    row_number() OVER (\n"
+                    "      PARTITION BY COALESCE(payload::JSON->>'event_id', payload::JSON->>'id')\n"
+                    "      ORDER BY received_at DESC\n"
+                    "    ) AS rn\n"
+                    "  FROM batch_1_events\n"
+                    "  WHERE (payload::JSON->'amount') IS NOT NULL\n"
+                    ")\n"
+                    "SELECT event_id, amount, merchant, currency, event_timestamp\n"
+                    "FROM normalized\n"
+                    "WHERE rn = 1 AND event_timestamp >= received_at - INTERVAL '48 hours';\n"
+                ),
+                "note": (
+                    "This is a fully correct commit for batch 1 on its own - row_number() dedupes within "
+                    "the batch and the watermark filter drops late arrivals. It's still not the whole "
+                    "story: if a redelivery of the same event_id happens to fall in batch 2 instead of "
+                    "batch 1, this per-batch query has no way to see that from inside batch 1's commit."
+                ),
+            },
+            {
+                "title": "3. Commit batch 2 the same way - and expose the gap",
+                "sql": (
+                    "-- same normalized CTE as step 2, run against batch_2_events instead:\n"
+                    "SELECT event_id, amount, merchant, currency, event_timestamp\n"
+                    "FROM normalized\n"
+                    "WHERE rn = 1 AND event_timestamp >= received_at - INTERVAL '48 hours';\n"
+                ),
+                "note": (
+                    "Committing batch 2 with the identical per-batch-clean query is the naive version of "
+                    "incremental append - and it's exactly where the gap in step 2 becomes real: any "
+                    "event_id whose redelivery split across both batches now exists as two separate rows "
+                    "in the Delta table, one from each commit, and neither commit's own dedup ever saw both."
+                ),
+            },
+            {
+                "title": "4. Final: + anti-join batch 2 against what's already committed",
+                "sql": (
+                    "-- Commit 1 (against batch_1_events):\n"
+                    "WITH normalized AS (\n"
+                    "  SELECT\n"
+                    "    COALESCE(payload::JSON->>'event_id', payload::JSON->>'id') AS event_id,\n"
+                    "    COALESCE(payload::JSON->>'merchant', payload::JSON->>'merchant_name') AS merchant,\n"
+                    "    payload::JSON->>'currency' AS currency,\n"
+                    "    CAST((payload::JSON->>'amount')::VARCHAR AS DOUBLE) AS amount,\n"
+                    "    TRY_CAST(payload::JSON->>'event_timestamp' AS TIMESTAMPTZ) AS event_timestamp,\n"
+                    "    received_at,\n"
+                    "    row_number() OVER (\n"
+                    "      PARTITION BY COALESCE(payload::JSON->>'event_id', payload::JSON->>'id')\n"
+                    "      ORDER BY received_at DESC\n"
+                    "    ) AS rn\n"
+                    "  FROM batch_1_events\n"
+                    "  WHERE (payload::JSON->'amount') IS NOT NULL\n"
+                    ")\n"
+                    "SELECT event_id, amount, merchant, currency, event_timestamp\n"
+                    "FROM normalized\n"
+                    "WHERE rn = 1 AND event_timestamp >= received_at - INTERVAL '48 hours';\n\n"
+                    "-- Commit 2 (against batch_2_events only, after release-batch-2), anti-joined against\n"
+                    "-- what commit 1 already wrote so a redelivery spanning both batches isn't duplicated:\n"
+                    "WITH normalized AS (\n"
+                    "  SELECT event_id, amount, merchant, currency, event_timestamp\n"
+                    "  FROM (/* same normalization as above, against batch_2_events */) t\n"
+                    ")\n"
+                    "SELECT n.*\n"
+                    "FROM normalized n\n"
+                    "LEFT JOIN delta_scan('<your delta table path>') existing ON existing.event_id = n.event_id\n"
+                    "WHERE existing.event_id IS NULL;\n"
+                ),
+                "note": (
+                    "The fix is a global check, not a better per-batch dedup: LEFT JOIN batch 2's cleaned "
+                    "rows against delta_scan() of what commit 1 already wrote, and keep only the ones with "
+                    "no match. `NOT IN (SELECT event_id FROM delta_scan(...))` looks equivalent but fails "
+                    "with a cryptic cast error at this dataset's real size, confirmed directly - the "
+                    "LEFT JOIN anti-join form is the one that actually works."
+                ),
+            },
+        ],
     },
 }
