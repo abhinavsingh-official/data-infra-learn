@@ -14,12 +14,16 @@ interface SqlWorkspaceProps {
   execute: (sessionId: string, sql: string) => Promise<ExecuteResult>;
   placeholder?: string;
   rows?: number;
+  /** Pre-fills the textarea with a runnable-but-incomplete example so a
+   * learner edits/extends a real query instead of starting from a blank
+   * box. Only applied once, on mount - not re-applied if it changes. */
+  starterValue?: string;
 }
 
 /** Shared across every SQL-submitting phase (Postgres, Warehouse, Lake) -
  * the UI is identical; only which endpoint `execute` calls differs. */
-export function SqlWorkspace({ sessionId, execute, placeholder, rows = 8 }: SqlWorkspaceProps) {
-  const [sql, setSql] = useState("");
+export function SqlWorkspace({ sessionId, execute, placeholder, rows = 8, starterValue = "" }: SqlWorkspaceProps) {
+  const [sql, setSql] = useState(starterValue);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<ExecuteResult | null>(null);
 

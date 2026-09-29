@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TaskDetail } from "@/components/lake-phase/task-detail";
 import { SessionPanel } from "@/components/lake-phase/session-panel";
 import { getLakeTask } from "@/lib/api";
 import type { LakeTask } from "@/lib/types";
@@ -36,8 +35,7 @@ export default function LakePhasePage() {
 
   return (
     <div className="space-y-6">
-      <TaskDetail task={task} />
-      <SessionPanel />
+      <SessionPanel task={task} />
     </div>
   );
 }

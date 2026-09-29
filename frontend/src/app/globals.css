@@ -39,6 +39,15 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-phase-postgres: var(--phase-postgres);
+  --color-phase-nosql: var(--phase-nosql);
+  --color-phase-warehouse: var(--phase-warehouse);
+  --color-phase-lake: var(--phase-lake);
+  --color-phase-lakehouse: var(--phase-lakehouse);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -49,72 +58,105 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Base neutrals kept near-grayscale on purpose - a teaching platform with
+     five color-coded paradigms needs a quiet, consistent canvas or the
+     accents stop meaning anything. Every actual color decision lives below. */
+  --background: oklch(0.99 0.003 220);
+  --foreground: oklch(0.18 0.01 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.18 0.01 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.18 0.01 250);
+  /* Primary brand color: a confident teal - distinct from every one of the
+     five phase accent colors below, so "this is a platform action" (Start
+     Session, primary buttons, the progress stepper) never gets confused
+     with "this is which paradigm you're in." */
+  --primary: oklch(0.5 0.13 195);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.008 220);
+  --secondary-foreground: oklch(0.25 0.02 240);
+  --muted: oklch(0.96 0.006 220);
+  --muted-foreground: oklch(0.48 0.02 240);
+  --accent: oklch(0.94 0.03 195);
+  --accent-foreground: oklch(0.3 0.1 195);
+  --destructive: oklch(0.577 0.22 27);
+  --border: oklch(0.9 0.008 220);
+  --input: oklch(0.9 0.008 220);
+  --ring: oklch(0.5 0.13 195 / 0.5);
+  /* Semantic states - a graded submission needs "this passed" to read as
+     unambiguously different from "this is the primary brand color." */
+  --success: oklch(0.55 0.15 150);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.75 0.15 80);
+  --warning-foreground: oklch(0.2 0.02 80);
+  /* One accent per storage paradigm - used consistently for that phase's
+     badges, progress bar, and primary buttons so a learner starts
+     recognizing "teal-blue = relational, green = document store" the same
+     way Duolingo color-codes its skill tree. Postgres/Mongo's own real
+     brand colors informed the first two; the rest were chosen to stay
+     visually distinct from each other and from the app's own primary teal. */
+  --phase-postgres: oklch(0.5 0.15 255);
+  --phase-nosql: oklch(0.58 0.14 150);
+  --phase-warehouse: oklch(0.72 0.15 70);
+  --phase-lake: oklch(0.62 0.11 220);
+  --phase-lakehouse: oklch(0.53 0.18 300);
+  --chart-1: var(--phase-postgres);
+  --chart-2: var(--phase-nosql);
+  --chart-3: var(--phase-warehouse);
+  --chart-4: var(--phase-lake);
+  --chart-5: var(--phase-lakehouse);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.97 0.006 220);
+  --sidebar-foreground: oklch(0.18 0.01 250);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.03 195);
+  --sidebar-accent-foreground: oklch(0.3 0.1 195);
+  --sidebar-border: oklch(0.9 0.008 220);
+  --sidebar-ring: oklch(0.5 0.13 195 / 0.5);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.16 0.012 250);
+  --foreground: oklch(0.94 0.006 220);
+  --card: oklch(0.21 0.012 250);
+  --card-foreground: oklch(0.94 0.006 220);
+  --popover: oklch(0.21 0.012 250);
+  --popover-foreground: oklch(0.94 0.006 220);
+  --primary: oklch(0.72 0.13 195);
+  --primary-foreground: oklch(0.14 0.02 195);
+  --secondary: oklch(0.27 0.012 250);
+  --secondary-foreground: oklch(0.94 0.006 220);
+  --muted: oklch(0.25 0.012 250);
+  --muted-foreground: oklch(0.68 0.015 230);
+  --accent: oklch(0.3 0.05 195);
+  --accent-foreground: oklch(0.9 0.04 195);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --ring: oklch(0.72 0.13 195 / 0.5);
+  --success: oklch(0.7 0.15 150);
+  --success-foreground: oklch(0.12 0.02 150);
+  --warning: oklch(0.78 0.15 80);
+  --warning-foreground: oklch(0.16 0.02 80);
+  --phase-postgres: oklch(0.68 0.14 255);
+  --phase-nosql: oklch(0.72 0.13 150);
+  --phase-warehouse: oklch(0.78 0.14 70);
+  --phase-lake: oklch(0.74 0.1 220);
+  --phase-lakehouse: oklch(0.68 0.16 300);
+  --chart-1: var(--phase-postgres);
+  --chart-2: var(--phase-nosql);
+  --chart-3: var(--phase-warehouse);
+  --chart-4: var(--phase-lake);
+  --chart-5: var(--phase-lakehouse);
+  --sidebar: oklch(0.19 0.012 250);
+  --sidebar-foreground: oklch(0.94 0.006 220);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: oklch(0.14 0.02 195);
+  --sidebar-accent: oklch(0.3 0.05 195);
+  --sidebar-accent-foreground: oklch(0.9 0.04 195);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.72 0.13 195 / 0.5);
 }
 
 @layer base {

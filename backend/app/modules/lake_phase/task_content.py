@@ -45,4 +45,63 @@ LAKE_PHASE_TASK = {
         "A single COPY TO with no LIMIT/WHERE and PARTITION_BY on a date column is enough - you "
         "don't need to loop day-by-day yourself.",
     ],
+    "dataset_stats": [
+        {"label": "Raw feed rows", "value": "51,495", "hint": "pg.raw_transaction_events"},
+        {"label": "Injected faults", "value": "~7,753", "hint": "roughly 15% of rows carry an edge case"},
+        {"label": "Known-good result size", "value": "49,246 rows", "hint": "clean_transactions, once every edge case is handled"},
+        {"label": "Partition granularity", "value": "Daily", "hint": "PARTITION_BY a date derived from received_at"},
+    ],
+    "starter_sql": (
+        "-- 1. Write: partition the raw feed out as Parquet, payload untouched:\n"
+        "-- COPY (\n"
+        "--   SELECT id, received_at, source_delivery_id, payload,\n"
+        "--          received_at::DATE AS event_date\n"
+        "--   FROM pg.raw_transaction_events\n"
+        "-- ) TO '<your output directory>' (FORMAT PARQUET, PARTITION_BY (event_date));\n\n"
+        "-- 2. Read: parse payload back out at query time.\n"
+        "SELECT id, received_at, payload\n"
+        "FROM read_parquet('<your output directory>/**/*.parquet', hive_partitioning=true, union_by_name=true)\n"
+        "LIMIT 20;\n"
+    ),
+    "reference_solution": {
+        "sql": (
+            "COPY (\n"
+            "  SELECT id, received_at, source_delivery_id, payload,\n"
+            "         received_at::DATE AS event_date\n"
+            "  FROM pg.raw_transaction_events\n"
+            ") TO '<your output directory>' (FORMAT PARQUET, PARTITION_BY (event_date));\n\n"
+            "CREATE TABLE clean_transactions AS\n"
+            "WITH raw AS (\n"
+            "  SELECT id, received_at, payload::JSON AS payload\n"
+            "  FROM read_parquet('<your output directory>/**/*.parquet', hive_partitioning=true, union_by_name=true)\n"
+            "),\n"
+            "normalized AS (\n"
+            "  SELECT\n"
+            "    COALESCE(payload->>'event_id', payload->>'id') AS event_id,\n"
+            "    COALESCE(payload->>'merchant', payload->>'merchant_name') AS merchant,\n"
+            "    payload->>'currency' AS currency,\n"
+            "    CAST((payload->>'amount')::VARCHAR AS DOUBLE) AS amount,\n"
+            "    TRY_CAST(payload->>'event_timestamp' AS TIMESTAMPTZ) AS event_timestamp,\n"
+            "    received_at,\n"
+            "    row_number() OVER (\n"
+            "      PARTITION BY COALESCE(payload->>'event_id', payload->>'id')\n"
+            "      ORDER BY received_at DESC\n"
+            "    ) AS rn\n"
+            "  FROM raw\n"
+            "  WHERE (payload->'amount') IS NOT NULL AND ((payload->'merchant') IS NOT NULL OR (payload->'merchant_name') IS NOT NULL)\n"
+            ")\n"
+            "SELECT event_id, amount, merchant, currency, event_timestamp\n"
+            "FROM normalized\n"
+            "WHERE rn = 1\n"
+            "  AND event_timestamp >= received_at - INTERVAL '48 hours';\n"
+        ),
+        "note": (
+            "The write step keeps payload as a single raw column - flattening its inner fields into "
+            "separate Parquet columns at write time would just move schema-on-write somewhere else. "
+            "TRY_CAST (not a bare cast) handles the ambiguous regional date strings; the row_number() "
+            "dedup and 48-hour watermark filter are the same logic as the relational phase's reference "
+            "solution, just run against files instead of a live table. Excel-style ID corruption still "
+            "needs its own repair step before this query."
+        ),
+    },
 }

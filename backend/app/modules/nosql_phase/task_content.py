@@ -60,4 +60,52 @@ NOSQL_PHASE_TASK = {
         "user. Query the Postgres source and build your Mongo commands from the results; "
         "grade when you're done with POST /nosql-phase/sessions/{id}/grade."
     ),
+    "dataset_stats": [
+        {"label": "Accounts to profile", "value": "15,000", "hint": "one account_profiles document each"},
+        {"label": "Users", "value": "10,000", "hint": "embed as owner, don't reference"},
+        {"label": "Transactions", "value": "1,000,000", "hint": "only the most recent 20 per account get embedded"},
+        {"label": "Reward events / repayments", "value": "200,000 / 150,000", "hint": "aggregate into summaries, don't embed raw"},
+    ],
+    "starter_command": (
+        "// Start by looking at what you're working with:\n"
+        "db.getSiblingDB('admin')\n\n"
+        "// Then build account_profiles with a raw Mongo command, e.g.:\n"
+        "{\n"
+        '  "insert": "account_profiles",\n'
+        '  "documents": [\n'
+        "    // one document per account, shaped per required_output.document_shape\n"
+        "  ]\n"
+        "}\n"
+    ),
+    "reference_solution": {
+        "sql": (
+            "// 1. Query the Postgres source (via query-source) to build each piece:\n"
+            "SELECT a.id, u.full_name, u.email, a.current_balance, a.credit_limit\n"
+            "FROM accounts a JOIN users u ON a.user_id = u.id;\n\n"
+            "// 2. Then insert the assembled documents into Mongo (via execute):\n"
+            "{\n"
+            '  "insert": "account_profiles",\n'
+            '  "documents": [\n'
+            "    {\n"
+            '      "_id": "1042",\n'
+            '      "owner": { "name": "Jordan Diaz", "email": "jordan@example.com" },\n'
+            '      "balance_cents": 128350,\n'
+            '      "credit_limit_cents": 500000,\n'
+            '      "recent_transactions": [\n'
+            '        { "event_id": "RRN123", "amount_cents": 4599, "merchant": "Coffee Co", "occurred_at": "2024-03-01T12:00:00Z" }\n'
+            "      ],\n"
+            '      "reward_summary": { "total_points": 1240.5, "event_count": 37 },\n'
+            '      "repayment_status": { "outstanding_cents": 32000, "next_due_date": "2024-04-01" }\n'
+            "    }\n"
+            "  ]\n"
+            "}\n"
+        ),
+        "note": (
+            "recent_transactions is capped at 20 and ordered most-recent-first, not a full copy of the "
+            "account's transaction history - an unbounded embedded array is the anti-pattern this phase "
+            "is testing for. reward_summary and repayment_status are aggregates computed over ALL of the "
+            "account's events, not embedded raw event lists - build those with a GROUP BY against the "
+            "Postgres source before you insert, not by embedding every row and summing client-side."
+        ),
+    },
 }

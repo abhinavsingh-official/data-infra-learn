@@ -13,8 +13,15 @@ const PLACEHOLDER = `{
   "documents": [{ "_id": "1", "owner": { "name": "...", "email": "..." } }]
 }`;
 
-export function MongoExecuteBox({ sessionId }: { sessionId: string }) {
-  const [commandText, setCommandText] = useState("");
+interface MongoExecuteBoxProps {
+  sessionId: string;
+  /** Pre-fills the textarea with a runnable-but-incomplete example, same
+   * pattern as SqlWorkspace's starterValue - applied once, on mount. */
+  starterValue?: string;
+}
+
+export function MongoExecuteBox({ sessionId, starterValue = "" }: MongoExecuteBoxProps) {
+  const [commandText, setCommandText] = useState(starterValue);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<MongoExecuteResult | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);

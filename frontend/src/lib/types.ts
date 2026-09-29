@@ -1,3 +1,14 @@
+export interface DatasetStatDto {
+  label: string;
+  value: string;
+  hint?: string;
+}
+
+export interface ReferenceSolutionDto {
+  sql: string;
+  note?: string;
+}
+
 export interface PostgresTask {
   title: string;
   summary: string;
@@ -10,6 +21,9 @@ export interface PostgresTask {
     note: string;
     columns: Record<string, string>;
   };
+  dataset_stats: DatasetStatDto[];
+  starter_sql: string;
+  reference_solution: ReferenceSolutionDto;
 }
 
 export interface ExecuteResult {
@@ -54,6 +68,9 @@ export interface NosqlTask {
     document_shape: Record<string, string>;
   };
   hint: string;
+  dataset_stats: DatasetStatDto[];
+  starter_command: string;
+  reference_solution: ReferenceSolutionDto;
 }
 
 export interface QuerySourceResult {
@@ -101,6 +118,9 @@ export interface WarehouseTask {
   required_output: Record<string, WarehouseRequiredTable>;
   workflow: string[];
   hint: string;
+  dataset_stats: DatasetStatDto[];
+  starter_sql: string;
+  reference_solution: ReferenceSolutionDto;
 }
 
 export interface WarehouseExecuteResult {
@@ -172,6 +192,9 @@ export interface LakehouseTask {
     columns: Record<string, string>;
   };
   hints: string[];
+  dataset_stats: DatasetStatDto[];
+  starter_sql: string;
+  reference_solution: ReferenceSolutionDto;
 }
 
 export interface CommitBatchResult {
@@ -193,4 +216,7 @@ export interface LakeTask {
     columns: Record<string, string>;
   };
   hints: string[];
+  dataset_stats: DatasetStatDto[];
+  starter_sql: string;
+  reference_solution: ReferenceSolutionDto;
 }

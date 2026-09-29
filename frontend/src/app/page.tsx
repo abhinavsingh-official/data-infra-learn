@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { PhaseSlug } from "@/lib/phase-theme";
+import { PHASE_THEME } from "@/lib/phase-theme";
+import { cn } from "@/lib/utils";
 
 interface StorageParadigm {
-  slug: string;
+  slug: PhaseSlug;
   name: string;
   tagline: string;
   description: string;
@@ -67,20 +70,26 @@ export default function StoragePickerPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {PARADIGMS.map((paradigm) => (
-          <Link key={paradigm.slug} href={`/${paradigm.slug}`} className="block">
-            <Card className="h-full transition-colors hover:border-foreground/30">
-              <CardHeader>
-                <div className="flex items-center justify-between gap-2">
-                  <CardTitle>{paradigm.name}</CardTitle>
-                  {!paradigm.available && <Badge variant="secondary">Coming soon</Badge>}
-                </div>
-                <CardDescription>{paradigm.tagline}</CardDescription>
-              </CardHeader>
-              <p className="px-6 pb-6 text-sm text-muted-foreground">{paradigm.description}</p>
-            </Card>
-          </Link>
-        ))}
+        {PARADIGMS.map((paradigm) => {
+          const theme = PHASE_THEME[paradigm.slug];
+          return (
+            <Link key={paradigm.slug} href={`/${paradigm.slug}`} className="block">
+              <Card className={cn("h-full border-l-4 transition-colors hover:border-foreground/30", theme.border)}>
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className={cn("size-2.5 rounded-full", theme.bgSolid)} />
+                      <CardTitle>{paradigm.name}</CardTitle>
+                    </div>
+                    {!paradigm.available && <Badge variant="secondary">Coming soon</Badge>}
+                  </div>
+                  <CardDescription className={cn("font-medium", theme.text)}>{paradigm.tagline}</CardDescription>
+                </CardHeader>
+                <p className="px-6 pb-6 text-sm text-muted-foreground">{paradigm.description}</p>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
 
       <Link href="/compare" className="block">

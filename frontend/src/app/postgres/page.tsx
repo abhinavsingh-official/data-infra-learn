@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TaskDetail } from "@/components/postgres-phase/task-detail";
 import { SessionPanel } from "@/components/postgres-phase/session-panel";
 import { getPostgresTask } from "@/lib/api";
 import type { PostgresTask } from "@/lib/types";
@@ -36,8 +35,7 @@ export default function PostgresPhasePage() {
 
   return (
     <div className="space-y-6">
-      <TaskDetail task={task} />
-      <SessionPanel />
+      <SessionPanel task={task} />
     </div>
   );
 }

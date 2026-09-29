@@ -45,4 +45,67 @@ POSTGRES_PHASE_TASK = {
             "event_timestamp": "timestamptz",
         },
     },
+    "dataset_stats": [
+        {"label": "Raw feed rows", "value": "51,495", "hint": "public.raw_transaction_events"},
+        {"label": "Injected faults", "value": "~7,753", "hint": "roughly 15% of rows carry an edge case"},
+        {"label": "Known-good result size", "value": "49,246 rows", "hint": "clean_transactions, once every edge case is handled"},
+        {"label": "Users / accounts already loaded", "value": "10,000 / 15,000", "hint": "reference tables you can join against"},
+    ],
+    "starter_sql": (
+        "-- Start by looking at the shape of the raw payload:\n"
+        "SELECT id, received_at, source_delivery_id, payload\n"
+        "FROM public.raw_transaction_events\n"
+        "LIMIT 20;\n\n"
+        "-- Then design clean_transactions and load it, e.g.:\n"
+        "-- CREATE TABLE clean_transactions (\n"
+        "--   event_id text PRIMARY KEY,\n"
+        "--   amount numeric NOT NULL,\n"
+        "--   merchant text,\n"
+        "--   currency text,\n"
+        "--   event_timestamp timestamptz\n"
+        "-- );\n"
+    ),
+    "reference_solution": {
+        "sql": (
+            "CREATE TABLE clean_transactions (\n"
+            "  event_id text PRIMARY KEY,\n"
+            "  amount numeric NOT NULL,\n"
+            "  merchant text,\n"
+            "  currency text,\n"
+            "  event_timestamp timestamptz\n"
+            ");\n\n"
+            "WITH normalized AS (\n"
+            "  SELECT\n"
+            "    COALESCE(payload->>'event_id', payload->>'id') AS event_id,\n"
+            "    COALESCE(payload->>'merchant', payload->>'merchant_name') AS merchant,\n"
+            "    payload->>'currency' AS currency,\n"
+            "    CASE\n"
+            "      WHEN payload->>'amount' ~ '^[0-9]+$'\n"
+            "        AND (payload ? 'amount_is_minor_unit' OR length(payload->>'amount') > 4)\n"
+            "        THEN (payload->>'amount')::numeric / 100\n"
+            "      ELSE (payload->>'amount')::numeric\n"
+            "    END AS amount,\n"
+            "    (payload->>'event_timestamp')::timestamptz AS event_timestamp,\n"
+            "    received_at,\n"
+            "    row_number() OVER (\n"
+            "      PARTITION BY COALESCE(payload->>'event_id', payload->>'id')\n"
+            "      ORDER BY received_at DESC\n"
+            "    ) AS rn\n"
+            "  FROM public.raw_transaction_events\n"
+            "  WHERE payload ? 'amount' AND payload ? 'merchant' OR payload ? 'merchant_name'\n"
+            ")\n"
+            "INSERT INTO clean_transactions (event_id, amount, merchant, currency, event_timestamp)\n"
+            "SELECT event_id, amount, merchant, currency, event_timestamp\n"
+            "FROM normalized\n"
+            "WHERE rn = 1\n"
+            "  AND event_timestamp >= received_at - interval '48 hours';\n"
+        ),
+        "note": (
+            "Key ideas: COALESCE handles the renamed field and missing-field cases together; "
+            "row_number() over the business event_id (not source_delivery_id) dedupes redeliveries, "
+            "keeping the most recently received copy; the watermark filter drops anything that arrived "
+            "more than 48 hours after its own event_timestamp. Excel-style ID corruption and ambiguous "
+            "date strings still need their own repair step before this query - that part is left to you."
+        ),
+    },
 }
