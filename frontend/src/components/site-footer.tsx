@@ -29,7 +29,12 @@ export function SiteFooter() {
           </div>
         </div>
         <p className="mt-8 border-t pt-6 text-xs text-muted-foreground">
-          Synthetic data only - no real transactions, users, or companies.
+          Synthetic data only - no real transactions, users, or companies. Homepage photos by
+          Emile Perron and Luke Chesser via{" "}
+          <a href="https://unsplash.com" className="underline hover:text-foreground">
+            Unsplash
+          </a>
+          , used under the Unsplash License.
         </p>
       </div>
     </footer>
