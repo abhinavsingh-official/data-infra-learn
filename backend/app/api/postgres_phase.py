@@ -7,6 +7,7 @@ from app.core.db import get_admin_connection
 from app.modules.grading.report import grade_submission
 from app.modules.postgres_phase import session_registry
 from app.modules.postgres_phase.session_provisioning import role_name, deprovision_session, provision_session
+from app.modules.postgres_phase.skill_tree import POSTGRES_SKILL_TREE
 from app.modules.postgres_phase.sql_execution import execute_submission
 from app.modules.postgres_phase.task_content import POSTGRES_PHASE_TASK
 
@@ -30,6 +31,11 @@ def _cleanup_expired_sessions() -> None:
 @router.get("/task")
 def get_task() -> dict:
     return POSTGRES_PHASE_TASK
+
+
+@router.get("/skill-tree")
+def get_skill_tree() -> dict:
+    return POSTGRES_SKILL_TREE
 
 
 @router.post("/sessions")
