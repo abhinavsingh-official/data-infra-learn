@@ -48,7 +48,7 @@ POSTGRES_PHASE_TASK = {
     "dataset_stats": [
         {"label": "Raw feed rows", "value": "51,495", "hint": "public.raw_transaction_events"},
         {"label": "Injected faults", "value": "~7,753", "hint": "roughly 15% of rows carry an edge case"},
-        {"label": "Known-good result size", "value": "49,246 rows", "hint": "clean_transactions, once every edge case is handled"},
+        {"label": "Known-good result size", "value": "46,238 rows", "hint": "clean_transactions from the reference query above - before also repairing Excel-corrupted IDs and ambiguous dates, which climbs higher still"},
         {"label": "Users / accounts already loaded", "value": "10,000 / 15,000", "hint": "reference tables you can join against"},
     ],
     "starter_sql": (
@@ -85,14 +85,14 @@ POSTGRES_PHASE_TASK = {
             "        THEN (payload->>'amount')::numeric / 100\n"
             "      ELSE (payload->>'amount')::numeric\n"
             "    END AS amount,\n"
-            "    (payload->>'event_timestamp')::timestamptz AS event_timestamp,\n"
+            "    (payload->>'timestamp')::timestamptz AS event_timestamp,\n"
             "    received_at,\n"
             "    row_number() OVER (\n"
             "      PARTITION BY COALESCE(payload->>'event_id', payload->>'id')\n"
             "      ORDER BY received_at DESC\n"
             "    ) AS rn\n"
             "  FROM public.raw_transaction_events\n"
-            "  WHERE payload ? 'amount' AND payload ? 'merchant' OR payload ? 'merchant_name'\n"
+            "  WHERE payload ? 'amount' AND (payload ? 'merchant' OR payload ? 'merchant_name')\n"
             ")\n"
             "INSERT INTO clean_transactions (event_id, amount, merchant, currency, event_timestamp)\n"
             "SELECT event_id, amount, merchant, currency, event_timestamp\n"
@@ -124,13 +124,15 @@ POSTGRES_PHASE_TASK = {
                     "  (payload->>'amount')::numeric AS amount,\n"
                     "  payload->>'merchant' AS merchant,\n"
                     "  payload->>'currency' AS currency,\n"
-                    "  (payload->>'event_timestamp')::timestamptz AS event_timestamp\n"
+                    "  (payload->>'timestamp')::timestamptz AS event_timestamp\n"
                     "FROM public.raw_transaction_events;\n"
                 ),
                 "note": (
-                    "This is the query you'd write if the feed really were clean. It isn't - this "
-                    "crashes the instant a payload uses 'merchant_name' instead of 'merchant', or has "
-                    "no event_id at all. Every step below fixes one specific way it breaks."
+                    "This is the query you'd write if the feed really were clean. It isn't - run it "
+                    "for real and it crashes almost immediately, though which error you hit first "
+                    "depends on row order: a duplicate event_id from a redelivery violating the "
+                    "primary key, a NULL amount violating NOT NULL, or a cast error on a malformed "
+                    "value. Every step below fixes one specific way it breaks."
                 ),
             },
             {
@@ -142,7 +144,7 @@ POSTGRES_PHASE_TASK = {
                     "  (payload->>'amount')::numeric AS amount,\n"
                     "  COALESCE(payload->>'merchant', payload->>'merchant_name') AS merchant,\n"
                     "  payload->>'currency' AS currency,\n"
-                    "  (payload->>'event_timestamp')::timestamptz AS event_timestamp\n"
+                    "  (payload->>'timestamp')::timestamptz AS event_timestamp\n"
                     "FROM public.raw_transaction_events\n"
                     "WHERE payload ? 'amount' AND (payload ? 'merchant' OR payload ? 'merchant_name');\n"
                 ),
@@ -161,7 +163,7 @@ POSTGRES_PHASE_TASK = {
                     "    (payload->>'amount')::numeric AS amount,\n"
                     "    COALESCE(payload->>'merchant', payload->>'merchant_name') AS merchant,\n"
                     "    payload->>'currency' AS currency,\n"
-                    "    (payload->>'event_timestamp')::timestamptz AS event_timestamp,\n"
+                    "    (payload->>'timestamp')::timestamptz AS event_timestamp,\n"
                     "    received_at,\n"
                     "    row_number() OVER (\n"
                     "      PARTITION BY COALESCE(payload->>'event_id', payload->>'id')\n"
@@ -218,14 +220,14 @@ POSTGRES_PHASE_TASK = {
                     "        THEN (payload->>'amount')::numeric / 100\n"
                     "      ELSE (payload->>'amount')::numeric\n"
                     "    END AS amount,\n"
-                    "    (payload->>'event_timestamp')::timestamptz AS event_timestamp,\n"
+                    "    (payload->>'timestamp')::timestamptz AS event_timestamp,\n"
                     "    received_at,\n"
                     "    row_number() OVER (\n"
                     "      PARTITION BY COALESCE(payload->>'event_id', payload->>'id')\n"
                     "      ORDER BY received_at DESC\n"
                     "    ) AS rn\n"
                     "  FROM public.raw_transaction_events\n"
-                    "  WHERE payload ? 'amount' AND payload ? 'merchant' OR payload ? 'merchant_name'\n"
+                    "  WHERE payload ? 'amount' AND (payload ? 'merchant' OR payload ? 'merchant_name')\n"
                     ")\n"
                     "INSERT INTO clean_transactions (event_id, amount, merchant, currency, event_timestamp)\n"
                     "SELECT event_id, amount, merchant, currency, event_timestamp\n"
