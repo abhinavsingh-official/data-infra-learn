@@ -32,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <header className="border-b">
-            <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
               <Link href="/" className="font-semibold tracking-tight">
                 Learndata
               </Link>
@@ -50,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </nav>
             </div>
           </header>
-          <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
+          <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">{children}</main>
           <SiteFooter />
           <Toaster />
         </ThemeProvider>

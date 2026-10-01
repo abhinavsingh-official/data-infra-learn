@@ -58,43 +58,44 @@
 }
 
 :root {
-  /* White canvas, gold/yellow kept as a highlight accent only (primary
-     actions, numbers, underlines) - not a wash over the whole background.
-     Corrected back from a fuller warm-cream treatment that "changed the
-     theme too much"; white+yellow was the actual, narrower ask. */
+  /* White canvas, vivid red as the primary accent - confirmed directly
+     ("use red"), matching the reference design's own #ff1018-family accent.
+     Warehouse's phase color moved off its old gold hue (now free) back to
+     amber, since red is now the primary and needs to stay visually its
+     own thing from every phase accent. */
   --background: oklch(1 0 0);
   --foreground: oklch(0.2 0.02 50);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.2 0.02 50);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.02 50);
-  --primary: oklch(0.78 0.15 85);
-  --primary-foreground: oklch(0.25 0.06 85);
+  --primary: oklch(0.55 0.22 25);
+  --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.96 0.015 70);
   --secondary-foreground: oklch(0.3 0.03 60);
   --muted: oklch(0.96 0.01 70);
   --muted-foreground: oklch(0.48 0.02 55);
-  --accent: oklch(0.92 0.05 85);
-  --accent-foreground: oklch(0.3 0.08 85);
+  --accent: oklch(0.93 0.04 25);
+  --accent-foreground: oklch(0.35 0.15 25);
   --destructive: oklch(0.577 0.22 27);
   --border: oklch(0.9 0.025 65);
   --input: oklch(0.9 0.025 65);
-  --ring: oklch(0.78 0.15 85 / 0.5);
+  --ring: oklch(0.55 0.22 25 / 0.5);
   /* Semantic states - a graded submission needs "this passed" to read as
      unambiguously different from "this is the primary brand color." */
   --success: oklch(0.55 0.15 150);
   --success-foreground: oklch(0.99 0 0);
-  --warning: oklch(0.7 0.18 50);
-  --warning-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.7 0.18 80);
+  --warning-foreground: oklch(0.2 0.02 80);
   /* One accent per storage paradigm - used consistently for that phase's
      badges, progress bar, and primary buttons so a learner starts
      recognizing "blue = relational, green = document store" the same way
      Duolingo color-codes its skill tree. Postgres/Mongo's own real brand
-     colors informed the first two; warehouse shifted toward orange (was
-     too close to the new gold primary) to stay visually distinct. */
+     colors informed the first two; warehouse back to amber now that the
+     primary moved to red and the old gold hue is free again. */
   --phase-postgres: oklch(0.5 0.15 255);
   --phase-nosql: oklch(0.58 0.14 150);
-  --phase-warehouse: oklch(0.65 0.19 40);
+  --phase-warehouse: oklch(0.72 0.15 70);
   --phase-lake: oklch(0.62 0.11 220);
   --phase-lakehouse: oklch(0.53 0.18 300);
   --chart-1: var(--phase-postgres);
@@ -106,44 +107,44 @@
   --sidebar: oklch(0.95 0.025 70);
   --sidebar-foreground: oklch(0.22 0.025 50);
   --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: oklch(0.25 0.06 85);
-  --sidebar-accent: oklch(0.92 0.05 85);
-  --sidebar-accent-foreground: oklch(0.3 0.08 85);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.04 25);
+  --sidebar-accent-foreground: oklch(0.35 0.15 25);
   --sidebar-border: oklch(0.9 0.025 65);
-  --sidebar-ring: oklch(0.78 0.15 85 / 0.5);
+  --sidebar-ring: oklch(0.55 0.22 25 / 0.5);
 }
 
 .dark {
   /* Near-black, per a reference design the user liked directly - not pure
      #000 (the reference's own spec calls that out explicitly), cards one
-     step lighter than the page so they read as distinct surfaces. Kept our
-     existing gold primary rather than the reference's red accent, since red
-     wasn't explicitly requested - flag if that's actually wanted too. */
+     step lighter than the page so they read as distinct surfaces. Red
+     confirmed as the primary accent (matching the reference's own
+     #ff1018-family color), not kept as gold. */
   --background: oklch(0.1 0.004 50);
   --foreground: oklch(0.94 0.005 70);
   --card: oklch(0.14 0.006 55);
   --card-foreground: oklch(0.94 0.005 70);
   --popover: oklch(0.14 0.006 55);
   --popover-foreground: oklch(0.94 0.005 70);
-  --primary: oklch(0.78 0.15 85);
-  --primary-foreground: oklch(0.16 0.04 85);
+  --primary: oklch(0.6 0.22 25);
+  --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.17 0.006 55);
   --secondary-foreground: oklch(0.94 0.005 70);
   --muted: oklch(0.16 0.005 55);
   --muted-foreground: oklch(0.62 0.01 65);
-  --accent: oklch(0.2 0.05 85);
-  --accent-foreground: oklch(0.9 0.05 85);
+  --accent: oklch(0.24 0.07 25);
+  --accent-foreground: oklch(0.9 0.08 25);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.78 0.15 85 / 0.5);
+  --ring: oklch(0.6 0.22 25 / 0.5);
   --success: oklch(0.7 0.15 150);
   --success-foreground: oklch(0.12 0.02 150);
-  --warning: oklch(0.75 0.18 50);
-  --warning-foreground: oklch(0.16 0.02 50);
+  --warning: oklch(0.75 0.18 80);
+  --warning-foreground: oklch(0.16 0.02 80);
   --phase-postgres: oklch(0.68 0.14 255);
   --phase-nosql: oklch(0.72 0.13 150);
-  --phase-warehouse: oklch(0.75 0.17 45);
+  --phase-warehouse: oklch(0.78 0.14 70);
   --phase-lake: oklch(0.74 0.1 220);
   --phase-lakehouse: oklch(0.68 0.16 300);
   --chart-1: var(--phase-postgres);
@@ -154,9 +155,9 @@
   --sidebar: oklch(0.23 0.02 55);
   --sidebar-foreground: oklch(0.94 0.015 70);
   --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: oklch(0.2 0.04 85);
-  --sidebar-accent: oklch(0.32 0.05 85);
-  --sidebar-accent-foreground: oklch(0.9 0.05 85);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.24 0.07 25);
+  --sidebar-accent-foreground: oklch(0.9 0.08 25);
   --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.78 0.15 85 / 0.5);
 }

@@ -45,7 +45,7 @@ export default function HomePage() {
           aria-hidden
           className="absolute left-[15%] bottom-[-12rem] size-[32rem] rounded-full bg-primary opacity-20 blur-[140px]"
         />
-        <div className="relative mx-auto grid w-full max-w-5xl items-center gap-12 px-6 lg:grid-cols-2">
+        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-6 lg:grid-cols-2">
           <div className="space-y-5">
             <h1 className="text-6xl leading-[0.95] font-normal tracking-tight text-balance">
               Learn data engineering by fixing what actually breaks
