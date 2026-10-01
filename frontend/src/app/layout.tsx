@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Data Infra Learn",
+  title: "Learndata",
   description: "Learn how ETL actually breaks, one storage paradigm at a time.",
 };
 
@@ -30,11 +30,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <header className="border-b">
-            <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
               <Link href="/" className="font-semibold tracking-tight">
-                data-infra-learn
+                Learndata
               </Link>
               <nav className="flex items-center gap-4 text-sm">
                 <Link href="/start" className="text-muted-foreground hover:text-foreground">
@@ -50,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </nav>
             </div>
           </header>
-          <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
+          <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">{children}</main>
           <SiteFooter />
           <Toaster />
         </ThemeProvider>
