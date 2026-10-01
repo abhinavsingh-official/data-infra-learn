@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowRight, Database, FlaskConical, ClipboardCheck, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { QueryDemo } from "@/components/query-demo";
+import { PARADIGM_ICONS } from "@/components/paradigm-icons";
 import { PHASE_THEME, type PhaseSlug } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
 
@@ -15,13 +17,13 @@ const STATS = [
 const HOW_IT_WORKS = [
   {
     icon: Layers,
-    title: "Pick a storage paradigm",
-    body: "The same fintech data, reshaped five different ways - rows, documents, a star schema, partitioned files, a Delta table.",
+    title: "Learn the fundamentals first",
+    body: "Joins, WHERE, GROUP BY, ORDER BY - small, hand-sized exercises before the real dataset shows up.",
   },
   {
     icon: Database,
-    title: "See the real dataset first",
-    body: "Row counts, known-good result sizes, and the exact edge cases hiding in the feed - before you write a line of code.",
+    title: "Then the real dataset",
+    body: "The same million-row fintech feed, with the real edge cases that actually show up in production.",
   },
   {
     icon: FlaskConical,
@@ -35,40 +37,43 @@ const HOW_IT_WORKS = [
   },
 ];
 
-const PARADIGM_PREVIEW: { slug: PhaseSlug; name: string }[] = [
-  { slug: "postgres", name: "Relational" },
-  { slug: "nosql", name: "Document" },
-  { slug: "warehouse", name: "Warehouse" },
-  { slug: "lake", name: "Lake" },
-  { slug: "lakehouse", name: "Lakehouse" },
+const PARADIGM_PREVIEW: { slug: PhaseSlug; name: string; tagline: string }[] = [
+  { slug: "postgres", name: "Relational", tagline: "Postgres - schemas, joins, constraints" },
+  { slug: "nosql", name: "Document", tagline: "MongoDB - the same data, remodeled" },
+  { slug: "warehouse", name: "Warehouse", tagline: "Star schemas, slowly changing dimensions" },
+  { slug: "lake", name: "Lake", tagline: "Partitioned Parquet, schema-on-read" },
+  { slug: "lakehouse", name: "Lakehouse", tagline: "ACID tables on object storage" },
 ];
 
 export default function HomePage() {
   return (
-    <div className="space-y-16">
-      <section className="space-y-6 py-8 text-center">
-        <h1 className="mx-auto max-w-2xl text-4xl font-semibold tracking-tight text-balance">
-          Learn how ETL actually breaks - and how to fix it - across five storage paradigms
-        </h1>
-        <p className="mx-auto max-w-xl text-balance text-muted-foreground">
-          One real fintech dataset, reshaped five different ways. Real edge cases - nulls, drift,
-          duplicates, late arrivals - injected on purpose, graded with a remediation report instead
-          of a bare pass/fail.
-        </p>
-        <div className="flex justify-center gap-3 pt-2">
-          <Button size="lg" nativeButton={false} render={<Link href="/start" />}>
-            Start learning
-            <ArrowRight className="size-4" />
-          </Button>
-          <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/compare" />}>
-            See paradigms compared
-          </Button>
+    <div className="space-y-20">
+      <section className="grid items-center gap-10 py-8 lg:grid-cols-[1.1fr_1fr]">
+        <div className="space-y-6">
+          <h1 className="max-w-xl text-4xl font-semibold tracking-tight text-balance">
+            Learn how ETL actually breaks - and how to fix it - across five storage paradigms
+          </h1>
+          <p className="max-w-lg text-balance text-muted-foreground">
+            Start with the fundamentals - joins, filters, aggregation - then take on one real
+            fintech dataset's actual mess: nulls, drift, duplicates, late arrivals. Graded with
+            a remediation report, not a bare pass/fail.
+          </p>
+          <div className="flex gap-3 pt-2">
+            <Button size="lg" nativeButton={false} render={<Link href="/start" />}>
+              Start learning
+              <ArrowRight className="size-4" />
+            </Button>
+            <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/compare" />}>
+              See paradigms compared
+            </Button>
+          </div>
         </div>
+        <QueryDemo />
       </section>
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {STATS.map((stat) => (
-          <Card key={stat.label} className="text-center">
+          <Card key={stat.label} className="border-2 text-center shadow-[0_3px_0_0] shadow-border">
             <CardContent className="space-y-1 pt-6">
               <p className="text-2xl font-semibold tabular-nums text-primary">{stat.value}</p>
               <p className="text-sm font-medium">{stat.label}</p>
@@ -82,7 +87,7 @@ export default function HomePage() {
         <h2 className="text-center text-xl font-semibold tracking-tight">How it works</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {HOW_IT_WORKS.map((step, index) => (
-            <Card key={step.title} className="relative">
+            <Card key={step.title} className="relative border-2 shadow-[0_3px_0_0] shadow-border">
               <CardContent className="space-y-2 pt-6">
                 <div className="flex items-center gap-2">
                   <span className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
@@ -98,23 +103,37 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="space-y-4 text-center">
-        <h2 className="text-xl font-semibold tracking-tight">Five paradigms, one real problem each time</h2>
-        <div className="flex flex-wrap justify-center gap-3">
+      <section className="space-y-6">
+        <div className="space-y-2 text-center">
+          <h2 className="text-xl font-semibold tracking-tight">Five paradigms, one real dataset</h2>
+          <p className="mx-auto max-w-lg text-sm text-balance text-muted-foreground">
+            The same fintech data, reshaped five different ways - see how differently each
+            paradigm actually models and visualizes it.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {PARADIGM_PREVIEW.map((paradigm) => {
             const theme = PHASE_THEME[paradigm.slug];
+            const Icon = PARADIGM_ICONS[paradigm.slug];
             return (
-              <span
-                key={paradigm.slug}
-                className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm", theme.border, theme.bg)}
-              >
-                <span className={cn("size-2 rounded-full", theme.bgSolid)} />
-                {paradigm.name}
-              </span>
+              <Link key={paradigm.slug} href={`/${paradigm.slug}`} className="block">
+                <Card
+                  className={cn(
+                    "h-full border-2 text-center shadow-[0_3px_0_0] transition-transform hover:-translate-y-0.5",
+                    theme.border,
+                  )}
+                >
+                  <CardContent className={cn("flex flex-col items-center gap-2 pt-6", theme.text)}>
+                    <Icon className="size-12" />
+                    <p className="font-medium text-foreground">{paradigm.name}</p>
+                    <p className="text-xs text-muted-foreground">{paradigm.tagline}</p>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>
-        <div>
+        <div className="text-center">
           <Button nativeButton={false} render={<Link href="/start" />}>
             Explore all five
             <ArrowRight className="size-4" />
