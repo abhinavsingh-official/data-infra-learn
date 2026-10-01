@@ -6,7 +6,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="grid gap-8 sm:grid-cols-3">
           <div className="space-y-2">
-            <p className="font-semibold tracking-tight">data-infra-learn</p>
+            <p className="font-semibold tracking-tight">Learndata</p>
             <p className="text-sm text-muted-foreground">
               One real fintech dataset, five storage paradigms, real ETL edge cases - learn
               by fixing what actually breaks.

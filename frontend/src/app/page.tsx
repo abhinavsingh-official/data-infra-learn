@@ -40,40 +40,33 @@ const TECH_LOGOS = [
 export default function HomePage() {
   return (
     <div className="space-y-24">
-      <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden">
-        <Image
-          src="/images/hero-code.jpg"
-          alt="A laptop showing real code on a desk"
-          width={2400}
-          height={1350}
-          priority
-          className="h-[560px] w-full object-cover"
+      <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-background py-20">
+        <div
+          aria-hidden
+          className="absolute left-[15%] bottom-[-12rem] size-[32rem] rounded-full bg-primary opacity-20 blur-[140px]"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
-        <div className="absolute inset-0 flex items-center">
-          <div className="mx-auto w-full max-w-5xl px-6">
-            <div className="max-w-xl space-y-5">
-              <h1 className="text-5xl font-semibold tracking-tight text-balance">
-                Learn data engineering by fixing what actually breaks
-              </h1>
-              <p className="max-w-md text-lg text-balance text-muted-foreground">
-                Fundamentals first, then one real million-row dataset across five storage
-                paradigms - graded with a real fix, not just a score.
-              </p>
-              <div className="flex gap-3 pt-2">
-                <Button size="lg" nativeButton={false} render={<Link href="/start" />}>
-                  Start learning
-                  <ArrowRight className="size-4" />
-                </Button>
-                <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/compare" />}>
-                  Compare paradigms
-                </Button>
-              </div>
+        <div className="relative mx-auto grid w-full max-w-5xl items-center gap-12 px-6 lg:grid-cols-2">
+          <div className="space-y-5">
+            <h1 className="text-6xl leading-[0.95] font-normal tracking-tight text-balance">
+              Learn data engineering by fixing what actually breaks
+            </h1>
+            <p className="max-w-md text-lg text-balance text-muted-foreground">
+              Fundamentals first, then one real million-row dataset across five storage
+              paradigms - graded with a real fix, not just a score.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <Button size="lg" nativeButton={false} render={<Link href="/start" />}>
+                Start learning
+                <ArrowRight className="size-4" />
+              </Button>
+              <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/compare" />}>
+                Compare paradigms
+              </Button>
             </div>
           </div>
-        </div>
-        <div className="absolute right-[max(1.5rem,calc(50%-40rem+1.5rem))] bottom-8 hidden w-80 lg:block xl:w-96">
-          <QueryDemo />
+          <div className="relative">
+            <QueryDemo />
+          </div>
         </div>
       </section>
 

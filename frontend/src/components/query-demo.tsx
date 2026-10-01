@@ -108,25 +108,25 @@ export function QueryDemo() {
   const showing = phase === "before" ? example.before : phase === "after" ? example.after : null;
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-card text-left shadow-lg">
-      <div className="flex items-center gap-1.5 bg-muted/50 px-4 py-2.5">
-        <span className="size-2.5 rounded-full bg-destructive/40" />
-        <span className="size-2.5 rounded-full bg-warning/50" />
-        <span className="size-2.5 rounded-full bg-success/50" />
-        <span className="ml-2 text-xs font-medium text-muted-foreground">{example.label}</span>
+    <div className="overflow-hidden rounded-2xl bg-card text-left shadow-2xl">
+      <div className="flex items-center gap-2 bg-muted/50 px-5 py-3.5">
+        <span className="size-3 rounded-full bg-destructive/40" />
+        <span className="size-3 rounded-full bg-warning/50" />
+        <span className="size-3 rounded-full bg-success/50" />
+        <span className="ml-2 text-sm font-medium text-muted-foreground">{example.label}</span>
       </div>
-      <div className="min-h-36 space-y-3 p-4 font-mono text-sm">
+      <div className="min-h-72 space-y-4 p-6 font-mono text-base">
         <p className="whitespace-pre-wrap">
           {example.query.slice(0, typedChars)}
           {phase === "typing" && <span className="animate-pulse">▍</span>}
         </p>
         {showing && (
-          <div className="space-y-1.5 border-t pt-3">
-            <p className={cn("text-xs font-sans", phase === "before" ? "text-destructive" : "text-success")}>
+          <div className="space-y-2 border-t pt-4">
+            <p className={cn("text-sm font-sans", phase === "before" ? "text-destructive" : "text-success")}>
               {showing.note}
             </p>
             {showing.rows.map((row, i) => (
-              <div key={i} className="flex gap-3 text-xs text-muted-foreground">
+              <div key={i} className="flex gap-4 text-sm text-muted-foreground">
                 {row.map((cell, j) => (
                   <span key={j} className={cn(j === 0 && "text-foreground")}>{cell}</span>
                 ))}
