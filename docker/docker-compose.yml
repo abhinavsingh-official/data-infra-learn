@@ -11,6 +11,9 @@ services:
       # not a hardcoded value in the init script.
       POSTGRES_APP_USER: ${POSTGRES_APP_USER:-app_role}
       POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:-app_role_dev_password}
+      # Read by docker/init/02_auth_role.sh - Module 15's Auth.js role.
+      AUTH_DB_USER: ${AUTH_DB_USER:-auth_role}
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:-auth_role_dev_password}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
