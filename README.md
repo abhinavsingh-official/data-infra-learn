@@ -1,8 +1,8 @@
 # data-infra-learn
 
-A data-engineering learning platform: one company's data (fintech / digital lending / credit-card-rewards style), built end-to-end across five storage paradigms — Postgres, MongoDB (NoSQL), a DuckDB-based data warehouse, a DuckDB-based data lake, and a DuckDB-based lakehouse — connected under one frontend. Real ETL edge cases are injected into the data and graded with remediation-first feedback (why it broke, how to fix it, and the tradeoffs between valid fixes).
+A data-engineering learning platform: one company's data (fintech / digital lending / credit-card-rewards style), built end-to-end across five storage paradigms — Postgres, MongoDB (NoSQL), and a PySpark-based data warehouse, data lake, and lakehouse — connected under one frontend. Real ETL edge cases are injected into the data and graded with remediation-first feedback (why it broke, how to fix it, and the tradeoffs between valid fixes).
 
-Planning, architecture decisions, and the component/repo inventory live in the companion repo: [AbhinavSingh189/Portfolio-Upgrade](https://github.com/AbhinavSingh189/Portfolio-Upgrade) — see `PLAN.md`, `ARCHITECTURE_DECISIONS.md`, and `SYSTEM_SPEC.md` there for the full picture. This repo holds the actual code.
+Planning, architecture decisions, and the component/repo inventory live in the companion repo: [abhinavsingh-official/Portfolio-Upgrade](https://github.com/abhinavsingh-official/Portfolio-Upgrade) — see `PLAN.md`, `ARCHITECTURE_DECISIONS.md`, and `SYSTEM_SPEC.md` there for the full picture. This repo holds the actual code.
 
 **Status:** All 12 modules of the original plan are done — all five storage paradigms working end-to-end behind a shared frontend, a cross-platform comparison view (`/compare`), and a Learn page (`/learn`) aggregating every phase's remediation content. A full five-pass codebase review is complete, and a comprehensive walkthrough PDF lives in the companion repo at `Portfolio-Upgrade/docs/data-infra-learn-documentation.pdf`.
 
