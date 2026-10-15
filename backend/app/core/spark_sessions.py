@@ -1,0 +1,243 @@
+"""Module 19: PySpark session infrastructure shared across Warehouse,
+Lake, and Lakehouse phases - the replacement for duckdb_sessions.py
+(ARCHITECTURE_DECISIONS.md §3.1/3.2).
+
+Architecture, confirmed by actually running each piece before relying on
+it (not assumed from docs):
+
+- **One shared, long-lived SparkSession per backend process** (JVM
+  startup is real and expensive - ARCHITECTURE_DECISIONS.md §3.2's
+  mitigation against spinning up a new one per visitor).
+- **Per-exercise-session isolation via `SparkSession.newSession()`** -
+  confirmed directly: it gives a genuinely separate temp-view namespace
+  and current-database setting per session object, while sharing the one
+  underlying SparkContext/JVM. This is the real Spark API feature the
+  architecture decision's "temp-view/catalog-namespace level" isolation
+  was describing.
+- **Managed tables and databases are NOT session-isolated the way temp
+  views are** - confirmed directly: the catalog (CREATE DATABASE/CREATE
+  TABLE) is shared across every session sharing one SparkContext, same as
+  two sessions sharing one Postgres instance. Isolation instead comes
+  from giving every exercise session its own uniquely-named database
+  (`session_<id>`) and switching to it with `USE` once at provisioning -
+  the same "shared instance, separate namespace per tenant" pattern the
+  Postgres phases already use with per-session schemas.
+- **Every managed table needs `USING DELTA` explicitly** - confirmed
+  directly: a vanilla CREATE TABLE AS SELECT with no USING clause tries
+  Hive's SerDe path and fails outright under this setup (no Hive support
+  configured), and even `spark.sql.sources.default = delta` doesn't make
+  Databricks' implicit-Delta behavior happen on vanilla OSS Spark - that
+  default is a Databricks-managed-runtime behavior, not something
+  delta-spark alone provides. UPDATE/DELETE/MERGE only work on Delta
+  tables anyway (not plain parquet), so every exercise needing them has a
+  concrete reason to say USING DELTA, not just a workaround.
+- **No `pg.*`-qualified names like DuckDB's ATTACH gave** - Spark temp
+  views are always single-part names (no schema qualification), so the
+  live source tables are exposed as plain `users`/`accounts`/
+  `transactions`/`reward_events`/`repayments` temp views instead of
+  `pg.users` etc. - a real, deliberate content change from the DuckDB-era
+  task descriptions and reference solutions, not an oversight."""
+
+import os
+import threading
+from collections import defaultdict
+from dataclasses import dataclass, field
+from decimal import Decimal
+from typing import Any
+
+from psycopg import Connection
+
+from app.core.config import get_settings
+from app.core.pg_readonly_sessions import (
+    READABLE_SOURCE_TABLES,
+    deprovision_pg_readonly_session,
+    make_role_name,
+    provision_pg_readonly_session,
+)
+from app.core.session_ids import validate_session_id
+
+MAX_RETURNED_ROWS = 1000
+
+# Keyed by "<phase>:<session_id>", same reasoning as duckdb_sessions'
+# session_locks - different phases generate ids independently.
+session_locks: dict[str, threading.Lock] = defaultdict(threading.Lock)
+
+_global_spark = None
+_global_spark_lock = threading.Lock()
+
+
+def _set_java_and_python_env() -> None:
+    """Must happen before the JVM/py4j subprocess ever launches - found by
+    testing directly that PySpark's worker processes otherwise inherit
+    whatever bare `python3` resolves to on PATH (this machine's system
+    Python, 3.14), not the venv interpreter actually running this
+    process, and crash with PYTHON_VERSION_MISMATCH."""
+    import sys
+
+    settings = get_settings()
+    os.environ.setdefault("JAVA_HOME", settings.spark_java_home)
+    os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
+    os.environ.setdefault("PYSPARK_DRIVER_PYTHON", sys.executable)
+
+
+def _build_global_spark():
+    _set_java_and_python_env()
+    # Imported after the env vars above are set, not at module load time -
+    # pyspark reads JAVA_HOME when it actually launches the JVM, not at
+    # import time, but keeping the order explicit here avoids relying on
+    # exactly when that happens.
+    from delta import configure_spark_with_delta_pip
+    from pyspark.sql import SparkSession
+
+    settings = get_settings()
+    settings.spark_warehouse_dir.mkdir(parents=True, exist_ok=True)
+    builder = (
+        SparkSession.builder.appName("data-infra-learn")
+        .master("local[*]")
+        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        .config("spark.sql.warehouse.dir", str(settings.spark_warehouse_dir))
+        .config("spark.ui.enabled", "false")
+        # Low-spec-machine requirement (CODE_STANDARDS.md) - the default
+        # 200 shuffle partitions is tuned for a real cluster, not a single
+        # local process grading hand-sized exercise data.
+        .config("spark.sql.shuffle.partitions", "4")
+        .config("spark.driver.memory", "2g")
+    )
+    # configure_spark_with_delta_pip sets spark.jars.packages itself
+    # (overwriting, not merging, any prior value) - found by testing
+    # directly: setting the Postgres JDBC driver package via .config()
+    # before this call got silently clobbered, and every JDBC source read
+    # failed with ClassNotFoundException. extra_packages is delta-spark's
+    # own documented way to add more packages alongside Delta's own.
+    builder = configure_spark_with_delta_pip(
+        builder, extra_packages=["org.postgresql:postgresql:42.7.4"]
+    )
+    return builder.getOrCreate()
+
+
+def get_global_spark():
+    """Lazily builds the one shared SparkSession on first use (real JVM
+    startup cost, paid once per backend process, not per request) -
+    double-checked locking so concurrent first requests don't race to
+    build two."""
+    global _global_spark
+    if _global_spark is None:
+        with _global_spark_lock:
+            if _global_spark is None:
+                _global_spark = _build_global_spark()
+                _global_spark.sparkContext.setLogLevel("ERROR")
+    return _global_spark
+
+
+def session_db_name(phase_prefix: str, session_id: str) -> str:
+    validate_session_id(session_id)
+    return f"{phase_prefix}_{session_id}"
+
+
+def session_lock(phase_prefix: str, session_id: str) -> threading.Lock:
+    return session_locks[f"{phase_prefix}:{session_id}"]
+
+
+def pg_role_name(phase_prefix: str, session_id: str) -> str:
+    return make_role_name(f"{phase_prefix}_session_", session_id)
+
+
+def provision_pg_source_views(spark_session, pg_role: str, pg_password: str) -> None:
+    """Registers the five shared relational source tables as live,
+    read-only temp views (Spark's JDBC data source, re-queries Postgres
+    on demand - not a one-time copy) - the direct equivalent of the old
+    DuckDB ATTACH, minus the `pg.` qualifier (see module docstring)."""
+    settings = get_settings()
+    for table in READABLE_SOURCE_TABLES:
+        df = (
+            spark_session.read.format("jdbc")
+            .option("url", settings.postgres_jdbc_url)
+            .option("dbtable", f"public.{table}")
+            .option("user", pg_role)
+            .option("password", pg_password)
+            .option("driver", "org.postgresql.Driver")
+            .load()
+        )
+        df.createOrReplaceTempView(table)
+
+
+def provision_phase_session(pg_conn: Connection, phase_prefix: str, session_id: str):
+    """Shared provisioning core: a read-only Postgres role (reusing
+    pg_readonly_sessions.py unchanged - it's engine-agnostic), a fresh
+    per-session database in the shared SparkSession's catalog, and the
+    five source tables registered as live temp views. Returns (spark_
+    session, pg_password) - the caller's own phase-specific provisioning
+    does whatever additional per-phase setup it needs (e.g. warehouse_
+    phase's source_accounts_snapshot bronze copy) on top of this."""
+    role = pg_role_name(phase_prefix, session_id)
+    password = provision_pg_readonly_session(pg_conn, role)
+
+    spark = get_global_spark()
+    session_spark = spark.newSession()
+    db = session_db_name(phase_prefix, session_id)
+    session_spark.sql(f"CREATE DATABASE IF NOT EXISTS {db}")
+    session_spark.sql(f"USE {db}")
+    provision_pg_source_views(session_spark, role, password)
+    return session_spark, password
+
+
+def deprovision_phase_session(pg_conn: Connection, phase_prefix: str, session_id: str) -> None:
+    deprovision_pg_readonly_session(pg_conn, pg_role_name(phase_prefix, session_id))
+    spark = get_global_spark()
+    db = session_db_name(phase_prefix, session_id)
+    # A throwaway session for the DROP - dropping the database doesn't
+    # need the original session's own temp-view state, just catalog
+    # access, and the original session object may already be gone from
+    # the caller's registry by the time this runs.
+    spark.newSession().sql(f"DROP DATABASE IF EXISTS {db} CASCADE")
+
+
+@dataclass
+class SparkExecutionResult:
+    success: bool
+    columns: list[str] = field(default_factory=list)
+    rows: list[tuple[Any, ...]] = field(default_factory=list)
+    truncated: bool = False
+    error_code: str | None = None
+    error_message: str | None = None
+
+
+def contains_multiple_statements(sql_text: str) -> bool:
+    """Same heuristic and same reasoning as every other phase's execution
+    layer (Postgres/DuckDB) - a stateless single-execute()-per-request
+    endpoint risks silently losing a later statement's results."""
+    return ";" in sql_text.strip().rstrip(";")
+
+
+def _jsonable_value(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return float(value)
+    return value
+
+
+def execute_spark_submission(session_spark, lock: threading.Lock, sql_text: str) -> SparkExecutionResult:
+    """Runs exactly one SQL statement against the session's own Spark-
+    session object (already USE'd into its own database at provisioning,
+    a setting that persists on that session object across calls -
+    confirmed directly, not assumed)."""
+    if contains_multiple_statements(sql_text):
+        return SparkExecutionResult(
+            success=False,
+            error_code="MULTIPLE_STATEMENTS",
+            error_message="Submit one SQL statement per request.",
+        )
+    with lock:
+        try:
+            df = session_spark.sql(sql_text)
+            columns = df.columns
+            collected = df.take(MAX_RETURNED_ROWS + 1)
+            truncated = len(collected) > MAX_RETURNED_ROWS
+            if truncated:
+                collected = collected[:MAX_RETURNED_ROWS]
+            rows = [tuple(_jsonable_value(v) for v in row) for row in collected]
+            return SparkExecutionResult(success=True, columns=columns, rows=rows, truncated=truncated)
+        except Exception as e:  # noqa: BLE001 - Spark raises its own broad exception hierarchy, same
+            # resilience contract as every other phase's execute(): a bad
+            # submission must come back structured, never crash the request.
+            return SparkExecutionResult(success=False, error_code=type(e).__name__, error_message=str(e).strip())

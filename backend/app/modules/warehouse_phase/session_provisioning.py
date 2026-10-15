@@ -1,73 +1,50 @@
-"""Module 8.2: per-session provisioning - a Postgres role scoped to
-read-only access on the five source tables (via app.core.pg_readonly_
-sessions, shared with nosql_phase), and a dedicated DuckDB file with the
-Postgres source pre-attached and a bronze-layer snapshot of `accounts`
-already copied in. See MODULE_8_PLAN.md for why `accounts` gets a real
-local snapshot (it's the mutation target for the SCD2 exercise) while
-users/transactions/etc. don't need one - they're never mutated, so the
-user's ETL can read them straight from the live `pg` attachment.
+"""Module 19 rewrite of Module 8.2's provisioning, now on PySpark instead
+of DuckDB (see app.core.spark_sessions for the shared engine layer this
+builds on). Still a read-only Postgres role plus a bronze-layer snapshot
+of `accounts` the session owns - same reasoning as before (MODULE_8_
+PLAN.md): `accounts` is the SCD2 exercise's mutation target, so it needs
+a real local copy; users/transactions/etc. don't, since they're never
+mutated and can stay live JDBC-backed temp views."""
 
-The DuckDB-connection mechanics (opening a session's file, attaching
-Postgres, the per-session lock) live in app.core.duckdb_sessions -
-shared with lake_phase (Module 9), the second phase needing the
-identical mechanism."""
-
-import duckdb
 from psycopg import Connection
 
-from app.core.config import get_settings
-from app.core.duckdb_sessions import attach_postgres_source, open_duckdb_file, session_locks
-from app.core.pg_readonly_sessions import (
-    deprovision_pg_readonly_session as _deprovision_pg_readonly_session,
+from app.core.spark_sessions import (
+    deprovision_phase_session,
+    execute_spark_submission,
+    pg_role_name as _pg_role_name,
+    provision_phase_session,
+    session_lock as _session_lock,
 )
-from app.core.pg_readonly_sessions import (
-    make_role_name,
-    provision_pg_readonly_session as _provision_pg_readonly_session,
-)
-from app.core.session_ids import validate_session_id
 
-PG_ROLE_PREFIX = "warehouse_session_"
-_LOCK_PREFIX = "warehouse"
+PHASE_PREFIX = "warehouse"
 
 
 def pg_role_name(session_id: str) -> str:
-    return make_role_name(PG_ROLE_PREFIX, session_id)
-
-
-def db_path(session_id: str):
-    validate_session_id(session_id)
-    return get_settings().warehouse_sessions_dir / f"{session_id}.duckdb"
+    return _pg_role_name(PHASE_PREFIX, session_id)
 
 
 def session_lock(session_id: str):
-    return session_locks[f"{_LOCK_PREFIX}:{session_id}"]
+    return _session_lock(PHASE_PREFIX, session_id)
 
 
-def open_session_db(session_id: str) -> duckdb.DuckDBPyConnection:
-    return open_duckdb_file(db_path(session_id))
-
-
-def provision_session(pg_conn: Connection, session_id: str) -> str:
-    """Creates the read-only Postgres role, then a fresh DuckDB file with
-    `pg` attached and `source_accounts_snapshot` (the bronze layer)
-    already copied in. Returns the generated Postgres role password -
-    the caller stores it so later requests can re-attach `pg`."""
-    role = pg_role_name(session_id)
-    password = _provision_pg_readonly_session(pg_conn, role)
-
-    path = db_path(session_id)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    con = open_session_db(session_id)
-    try:
-        attach_postgres_source(con, role, password)
-        con.execute("CREATE TABLE source_accounts_snapshot AS SELECT * FROM pg.accounts")
-    finally:
-        con.close()
-    return password
+def provision_session(pg_conn: Connection, session_id: str):
+    """Returns (spark_session, pg_password) - the caller (the API layer)
+    stores both in session_registry so later requests reuse the exact
+    same Spark session object (see session_registry.py's docstring)."""
+    session_spark, password = provision_phase_session(pg_conn, PHASE_PREFIX, session_id)
+    # USING DELTA, not a bare CTAS - see spark_sessions.py's module
+    # docstring on why every managed table here needs this explicit.
+    # Deliberately not just "SELECT * FROM accounts" copied verbatim -
+    # grading (report.py) and the exercise's own required_output key this
+    # table by `id`, which the real schema also calls `id` already, so no
+    # rename is needed here, just the engine/format choice.
+    session_spark.sql("CREATE TABLE source_accounts_snapshot USING DELTA AS SELECT * FROM accounts")
+    return session_spark, password
 
 
 def deprovision_session(pg_conn: Connection, session_id: str) -> None:
-    _deprovision_pg_readonly_session(pg_conn, pg_role_name(session_id))
-    path = db_path(session_id)
-    path.unlink(missing_ok=True)
-    path.with_suffix(".mutations.json").unlink(missing_ok=True)
+    deprovision_phase_session(pg_conn, PHASE_PREFIX, session_id)
+
+
+def execute(session_spark, session_id: str, sql_text: str):
+    return execute_spark_submission(session_spark, session_lock(session_id), sql_text)
