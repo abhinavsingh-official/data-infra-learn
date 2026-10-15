@@ -31,14 +31,15 @@ from psycopg import Connection, sql
 from app.core.config import get_settings
 from app.core.db import get_admin_connection
 from app.core.session_ids import validate_session_id
+from app.modules.mongo_databases_track.skill_tree import MONGO_DATABASES_SKILL_TREE
 from app.modules.postgres_phase.session_provisioning import STATEMENT_TIMEOUT
 from app.modules.postgres_phase.skill_tree import POSTGRES_SKILL_TREE
 from app.modules.postgres_phase.sql_execution import execute_submission
 from app.modules.sql_databases_track.skill_tree import SQL_DATABASES_SKILL_TREE
 
-# Postgres (Module 14) and SQL Databases (Module 18) have skill trees so
-# far - the remaining paradigms join this registry in Module 20 when
-# their own trees are built, not before. Keyed by track slug, not
+# Postgres (Module 14), SQL Databases (Module 18), and MongoDB Databases
+# (Module 20) have skill trees so far - the remaining paradigms join this
+# registry as their own trees get built. Keyed by track slug, not
 # literally "paradigm" anymore since Module 18 split SQL into two tracks
 # under one umbrella - kept the param name for API-contract stability
 # (POST /progress/nodes/{paradigm}/{node_id}/check), but it really means
@@ -46,7 +47,14 @@ from app.modules.sql_databases_track.skill_tree import SQL_DATABASES_SKILL_TREE
 _SKILL_TREES: dict[str, dict] = {
     "postgres": POSTGRES_SKILL_TREE,
     "sql-databases": SQL_DATABASES_SKILL_TREE,
+    "mongo-databases": MONGO_DATABASES_SKILL_TREE,
 }
+
+# A submitted "sql" string means a raw JSON Mongo command document, not
+# SQL text, for any track slug in this set - see mongo_node_practice.py.
+# Kept here (next to _SKILL_TREES) since it's the same "which track is
+# this" concern, just answered for a different reason.
+MONGO_PARADIGMS: frozenset[str] = frozenset({"mongo-databases"})
 
 
 def find_skill_node(paradigm: str, node_id: str) -> dict | None:
