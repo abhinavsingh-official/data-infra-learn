@@ -16,10 +16,10 @@ interface StorageParadigm {
 const PARADIGMS: StorageParadigm[] = [
   {
     slug: "postgres",
-    name: "Relational (Postgres)",
-    tagline: "Schema design, constraints, dirty webhook feeds",
+    name: "SQL (Fundamentals + Postgres)",
+    tagline: "Generic SQL, then Postgres-specific depth",
     description:
-      "Load a raw JSONB transaction feed into a clean, constrained schema - nulls, duplicate deliveries, late arrivals, schema drift, and Excel-style ID corruption all included.",
+      "Not one flat paradigm - an umbrella over two tracks: database-agnostic fundamentals (WHERE, JOINs, GROUP BY), then Postgres's own deep internals on a real million-row dirty webhook feed.",
     available: true,
   },
   {
@@ -72,8 +72,9 @@ export default function StartPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         {PARADIGMS.map((paradigm) => {
           const theme = PHASE_THEME[paradigm.slug];
+          const href = paradigm.slug === "postgres" ? "/sql" : `/${paradigm.slug}`;
           return (
-            <Link key={paradigm.slug} href={`/${paradigm.slug}`} className="block">
+            <Link key={paradigm.slug} href={href} className="block">
               <Card className={cn("h-full border-l-4 transition-colors hover:border-foreground/30", theme.border)}>
                 <CardHeader>
                   <div className="flex items-center justify-between gap-2">

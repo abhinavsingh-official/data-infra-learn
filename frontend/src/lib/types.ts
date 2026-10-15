@@ -19,6 +19,74 @@ export interface ReferenceSolutionDto {
   steps?: ReferenceSolutionStepDto[];
 }
 
+export interface SkillNodeSchemaColumnDto {
+  column: string;
+  type: string;
+  note?: string;
+}
+
+export interface SkillNodePracticeTableDto {
+  name: string;
+  schema: SkillNodeSchemaColumnDto[];
+  rows: Record<string, unknown>[];
+}
+
+export interface SkillNodePracticeDto {
+  prompt: string;
+  /** Single-table nodes (every Postgres-track node, Module 14/16) use
+   * schema/example_rows directly. Multi-table nodes (the SQL Databases
+   * track's JOIN node, Module 18) use `tables` instead - present either
+   * schema/example_rows or tables, never assume both are set. */
+  schema?: SkillNodeSchemaColumnDto[];
+  example_rows?: Record<string, unknown>[];
+  tables?: SkillNodePracticeTableDto[];
+  expected_output_rows: Record<string, unknown>[];
+  starter_sql?: string;
+}
+
+export interface SkillNodeCombineDto {
+  prompt: string;
+  note: string;
+}
+
+export interface SkillNodeDto {
+  id: string;
+  type: "intro" | "skill" | "review" | "capstone";
+  title: string;
+  body?: string;
+  teach?: { sql: string; note: string };
+  practice?: SkillNodePracticeDto;
+  combine?: SkillNodeCombineDto;
+  prompt?: string;
+  task_ref?: string;
+  note?: string;
+}
+
+export interface SkillTreeDto {
+  paradigm: string;
+  nodes: SkillNodeDto[];
+}
+
+export interface NodeCheckResult {
+  passed: boolean;
+  error_code: string | null;
+  error_message: string | null;
+  actual_rows: Record<string, unknown>[];
+  expected_rows: Record<string, unknown>[];
+  mismatch: string | null;
+  progress?: ProgressDto;
+}
+
+export interface ProgressDto {
+  xp_total: number;
+  current_streak: number;
+  longest_streak: number;
+  badges: string[];
+  completed_nodes: Record<string, string[]>;
+  newly_awarded_xp?: number;
+  new_badges?: string[];
+}
+
 export interface PostgresTask {
   title: string;
   summary: string;

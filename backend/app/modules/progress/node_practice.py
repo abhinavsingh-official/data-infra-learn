@@ -1,12 +1,21 @@
-"""Module 16: node-scoped grading - runs a learner's single SQL
+"""Module 16/18: node-scoped grading - runs a learner's single SQL
 statement against a private, per-check copy of just that node's own
-example rows (not the real 51,495-row shared feed), then diffs the
-result against the node's recorded expected_output_rows. Reuses
-postgres_phase's own role-isolation mechanics (session_provisioning's
-pattern) and execute_submission directly rather than reinventing them -
-the only real difference is this role's raw_transaction_events table is
-a small private copy it owns, loaded with just this node's example rows,
-instead of a GRANT onto the real shared table."""
+example rows (not a real shared dataset), then diffs the result against
+the node's recorded expected_output_rows. Reuses postgres_phase's own
+role-isolation mechanics (session_provisioning's pattern) and
+execute_submission directly rather than reinventing them - the only real
+difference is this role's own tables are small private copies it owns,
+loaded with just this node's example rows, instead of a GRANT onto a
+real shared table.
+
+Module 18 generalized this from a single hardcoded raw_transaction_events
+table (Module 16's original Postgres-only shape) to an arbitrary list of
+tables, each driven entirely by its own `schema` list (column name + SQL
+type) - needed for the new SQL Databases track's JOIN node, which needs
+two small tables, not one. The schema list was already authored for
+every node (originally just for UI display) and happens to describe
+exactly the DDL needed, so this reuses it as the single source of truth
+instead of maintaining a second, parallel column list."""
 
 import json
 import math
@@ -25,10 +34,19 @@ from app.core.session_ids import validate_session_id
 from app.modules.postgres_phase.session_provisioning import STATEMENT_TIMEOUT
 from app.modules.postgres_phase.skill_tree import POSTGRES_SKILL_TREE
 from app.modules.postgres_phase.sql_execution import execute_submission
+from app.modules.sql_databases_track.skill_tree import SQL_DATABASES_SKILL_TREE
 
-# Only Postgres has a skill tree so far (Module 14) - other paradigms join
-# this registry in Module 20 when their own trees are built, not before.
-_SKILL_TREES: dict[str, dict] = {"postgres": POSTGRES_SKILL_TREE}
+# Postgres (Module 14) and SQL Databases (Module 18) have skill trees so
+# far - the remaining paradigms join this registry in Module 20 when
+# their own trees are built, not before. Keyed by track slug, not
+# literally "paradigm" anymore since Module 18 split SQL into two tracks
+# under one umbrella - kept the param name for API-contract stability
+# (POST /progress/nodes/{paradigm}/{node_id}/check), but it really means
+# "track slug" today.
+_SKILL_TREES: dict[str, dict] = {
+    "postgres": POSTGRES_SKILL_TREE,
+    "sql-databases": SQL_DATABASES_SKILL_TREE,
+}
 
 
 def find_skill_node(paradigm: str, node_id: str) -> dict | None:
@@ -55,7 +73,19 @@ def _dsn(role: str, password: str) -> str:
     return f"postgresql://{role}:{password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
 
 
-def _provision_practice_role(conn: Connection, check_id: str, example_rows: list[dict]) -> str:
+def _practice_tables(practice: dict) -> list[dict]:
+    """A practice block declares one or more tables. Module 16's original
+    content only ever had one (always named raw_transaction_events) and
+    never said so explicitly - `tables` lets new content (Module 18) name
+    its own table(s) and have more than one, while this single-table
+    fallback keeps every existing node working unchanged."""
+    if "tables" in practice:
+        return practice["tables"]
+    table_name = practice.get("table_name", "raw_transaction_events")
+    return [{"name": table_name, "schema": practice["schema"], "rows": practice["example_rows"]}]
+
+
+def _provision_practice_role(conn: Connection, check_id: str, tables: list[dict]) -> str:
     validate_session_id(check_id)
     role = _role_name(check_id)
     password = _generate_password()
@@ -77,20 +107,23 @@ def _provision_practice_role(conn: Connection, check_id: str, example_rows: list
     conn.commit()
 
     # Owned by the role itself (its own schema), so no GRANT is needed -
-    # unlike the real session flow, which grants SELECT onto the one
-    # shared public.raw_transaction_events table instead.
+    # unlike the real session flow, which grants SELECT onto a real
+    # shared table instead.
     with psycopg.connect(_dsn(role, password)) as practice_conn:
-        practice_conn.execute(
-            "CREATE TABLE raw_transaction_events "
-            "(id bigint, received_at timestamptz, source_delivery_id text, payload jsonb)"
-        )
-        with practice_conn.cursor() as cur:
-            for row in example_rows:
-                cur.execute(
-                    "INSERT INTO raw_transaction_events (id, received_at, source_delivery_id, payload) "
-                    "VALUES (%s, %s, %s, %s)",
-                    (row["id"], row["received_at"], row.get("source_delivery_id"), json.dumps(row["payload"])),
-                )
+        for table in tables:
+            columns = table["schema"]
+            column_ddl = ", ".join(f'"{c["column"]}" {c["type"]}' for c in columns)
+            practice_conn.execute(f'CREATE TABLE "{table["name"]}" ({column_ddl})')
+            column_names = [c["column"] for c in columns]
+            placeholders = ", ".join(["%s"] * len(column_names))
+            quoted_names = ", ".join(f'"{name}"' for name in column_names)
+            with practice_conn.cursor() as cur:
+                for row in table["rows"]:
+                    values = tuple(
+                        json.dumps(row[name]) if isinstance(row.get(name), (dict, list)) else row.get(name)
+                        for name in column_names
+                    )
+                    cur.execute(f'INSERT INTO "{table["name"]}" ({quoted_names}) VALUES ({placeholders})', values)
         practice_conn.commit()
 
     return password
@@ -167,7 +200,7 @@ def check_node_submission(paradigm: str, node_id: str, sql_text: str) -> dict:
     check_id = secrets.token_hex(16)
 
     with get_admin_connection() as conn:
-        password = _provision_practice_role(conn, check_id, practice["example_rows"])
+        password = _provision_practice_role(conn, check_id, _practice_tables(practice))
     try:
         result = execute_submission(_role_name(check_id), password, sql_text)
         if not result.success:
