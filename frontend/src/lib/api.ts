@@ -7,10 +7,13 @@ import type {
   LakehouseTask,
   LearnPage,
   MongoExecuteResult,
+  NodeCheckResult,
   NosqlGradingReport,
   NosqlTask,
   PostgresTask,
+  ProgressDto,
   QuerySourceResult,
+  SkillTreeDto,
   WarehouseExecuteResult,
   WarehouseGradingReport,
   WarehouseTask,
@@ -45,8 +48,43 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+// Progress/XP calls go through this app's own /api/progress/* proxy, not
+// straight to the FastAPI base URL - the backend needs the Auth.js
+// session-token cookie forwarded as a header, and that cookie is
+// httpOnly (can't be read from client-side JS), so a server-side proxy
+// route is what actually reads it (see app/api/progress/[...path]/route.ts).
+async function requestLocal<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  });
+  if (!response.ok) {
+    const detail = await response
+      .json()
+      .then((body: { detail?: string }) => body.detail)
+      .catch(() => undefined);
+    throw new ApiError(detail ?? `Request to ${path} failed with status ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
 export function getPostgresTask() {
   return request<PostgresTask>("/postgres-phase/task");
+}
+
+export function getSkillTree(paradigm: string) {
+  return request<SkillTreeDto>(`/${paradigm}-phase/skill-tree`);
+}
+
+export function getMyProgress() {
+  return requestLocal<ProgressDto>("/api/progress/me");
+}
+
+export function checkNode(paradigm: string, nodeId: string, sql: string) {
+  return requestLocal<NodeCheckResult>(`/api/progress/nodes/${paradigm}/${nodeId}/check`, {
+    method: "POST",
+    body: JSON.stringify({ sql }),
+  });
 }
 
 export function createSession() {

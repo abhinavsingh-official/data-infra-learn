@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SiteFooter } from "@/components/site-footer";
 import { UserMenu } from "@/components/user-menu";
+import { XpBadge } from "@/components/progress/xp-badge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 <Link href="/learn" className="text-muted-foreground hover:text-foreground">
                   Learn
                 </Link>
+                <XpBadge />
                 <ThemeToggle />
                 <UserMenu />
               </nav>

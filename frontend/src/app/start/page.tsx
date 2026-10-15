@@ -72,8 +72,9 @@ export default function StartPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         {PARADIGMS.map((paradigm) => {
           const theme = PHASE_THEME[paradigm.slug];
+          const href = paradigm.slug === "postgres" ? "/postgres/skill-tree" : `/${paradigm.slug}`;
           return (
-            <Link key={paradigm.slug} href={`/${paradigm.slug}`} className="block">
+            <Link key={paradigm.slug} href={href} className="block">
               <Card className={cn("h-full border-l-4 transition-colors hover:border-foreground/30", theme.border)}>
                 <CardHeader>
                   <div className="flex items-center justify-between gap-2">
