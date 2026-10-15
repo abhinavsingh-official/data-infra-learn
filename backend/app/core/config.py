@@ -54,6 +54,17 @@ class Settings(BaseSettings):
     # per lakehouse-phase session.
     lakehouse_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "lakehouse_sessions"
 
+    # Module 19 - PySpark replaces DuckDB for Warehouse/Lake/Lakehouse
+    # (ARCHITECTURE_DECISIONS.md §3.1). PySpark needs a JVM; this machine's
+    # system Python has none installed system-wide, so this points at the
+    # Homebrew-installed JDK directly rather than relying on a symlinked
+    # /Library/Java install (never set up - see MODULE_19_PLAN.md).
+    spark_java_home: str = "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+    # One shared on-disk location for every session's managed Delta
+    # tables, namespaced by per-session database name underneath it - not
+    # one dir per phase, since all three phases share the one SparkSession.
+    spark_warehouse_dir: Path = Path(__file__).resolve().parents[2] / "data" / "spark_warehouse"
+
     @property
     def mongo_admin_uri(self) -> str:
         return (
@@ -70,6 +81,14 @@ class Settings(BaseSettings):
             f"host={self.postgres_host} port={self.postgres_port} "
             f"dbname={self.postgres_db} user={role} password={password}"
         )
+
+    @property
+    def postgres_jdbc_url(self) -> str:
+        """Spark's JDBC data source wants a plain `jdbc:postgresql://...`
+        URL with user/password as separate .option() calls - a different
+        shape from the postgres_dsn/postgres_admin_dsn URIs above, which
+        are psycopg connection strings, not JDBC ones."""
+        return f"jdbc:postgresql://{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
     @property
     def postgres_dsn(self) -> str:

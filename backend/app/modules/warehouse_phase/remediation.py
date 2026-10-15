@@ -6,12 +6,12 @@ approach exists."""
 REMEDIATION = {
     "ERR_MISSING_DIM_USER_ROW": {
         "why": "A user from the source has no row in dim_users at all.",
-        "fix": "Drive dim_users from pg.users itself (SELECT * FROM pg.users), not from a table that filters some users out.",
+        "fix": "Drive dim_users from users itself (SELECT * FROM users), not from a table that filters some users out.",
         "tradeoffs": "N/A - every user should always have a dimension row; there's no valid reason to exclude one.",
     },
     "ERR_DIM_USER_MISMATCH": {
-        "why": "A dim_users row exists for this user but one or more fields don't match pg.users.",
-        "fix": "Copy full_name/email/kyc_status/country/is_active directly from pg.users - not a stale or partially-mapped copy.",
+        "why": "A dim_users row exists for this user but one or more fields don't match users.",
+        "fix": "Copy full_name/email/kyc_status/country/is_active directly from users - not a stale or partially-mapped copy.",
         "tradeoffs": "N/A - a correctness bug, not a design choice.",
     },
     "ERR_MISSING_DIM_ACCOUNT_ROW": {
@@ -87,8 +87,8 @@ REMEDIATION = {
         ),
     },
     "ERR_MISSING_FACT_ROW": {
-        "why": "A transaction from pg.transactions has no row in fact_transactions.",
-        "fix": "Drive fact_transactions from pg.transactions itself, not from a join that could drop rows (e.g. an inner join against a dimension missing a key).",
+        "why": "A transaction from transactions has no row in fact_transactions.",
+        "fix": "Drive fact_transactions from transactions itself, not from a join that could drop rows (e.g. an inner join against a dimension missing a key).",
         "tradeoffs": "N/A - every transaction should always have a fact row.",
     },
     "ERR_FACT_ROW_MISMATCH": {

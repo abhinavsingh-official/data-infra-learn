@@ -5,11 +5,10 @@ from pydantic import BaseModel
 
 from app.core.db import get_admin_connection
 from app.modules.warehouse_phase import session_registry
-from app.modules.warehouse_phase.duckdb_execution import execute_submission
 from app.modules.warehouse_phase.report import grade_submission
 from app.modules.warehouse_phase.session_provisioning import (
     deprovision_session,
-    pg_role_name,
+    execute,
     provision_session,
 )
 from app.modules.warehouse_phase.simulate_changes import apply_mutations
@@ -42,17 +41,17 @@ def create_session() -> dict:
     _cleanup_expired_sessions()
     session_id = secrets.token_hex(16)
     with get_admin_connection() as conn:
-        pg_password = provision_session(conn, session_id)
-    session_registry.register(session_id, pg_password)
+        session_spark, pg_password = provision_session(conn, session_id)
+    session_registry.register(session_id, pg_password, session_spark)
     return {"session_id": session_id}
 
 
 @router.post("/sessions/{session_id}/execute")
-def execute(session_id: str, body: ExecuteRequest) -> dict:
+def execute_endpoint(session_id: str, body: ExecuteRequest) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    result = execute_submission(session_id, pg_role_name(session_id), record.pg_password, body.sql)
+    result = execute(record.spark_session, session_id, body.sql)
     return {
         "success": result.success,
         "columns": result.columns,
@@ -68,7 +67,7 @@ def simulate_changes(session_id: str) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    mutations = apply_mutations(session_id)
+    mutations = apply_mutations(record.spark_session, session_id)
     return {"mutated_account_count": len(mutations)}
 
 
@@ -77,7 +76,7 @@ def grade(session_id: str) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    report = grade_submission(session_id, record.pg_password)
+    report = grade_submission(record.spark_session, session_id)
     return {
         "passed": report.passed,
         "total_accounts": report.total_accounts,

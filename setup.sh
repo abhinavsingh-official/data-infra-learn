@@ -30,9 +30,28 @@ for service in postgres mongo; do
   done
 done
 
+if ! command -v java >/dev/null 2>&1; then
+  echo "Java isn't installed - PySpark (Module 19, Warehouse/Lake/Lakehouse phases) needs a JRE/JDK." >&2
+  echo "Install one, e.g.: brew install openjdk@17" >&2
+  echo "Then set spark_java_home in .env to its install path if it's not auto-detected." >&2
+  exit 1
+fi
+
+# PySpark 3.5.x doesn't support Python 3.13+ yet (its bundled cloudpickle
+# can't serialize closures under the newer interpreter - confirmed by
+# actually hitting this during Module 19, not assumed from a compat
+# table). python3.12 specifically, not just "python3" - found via `brew
+# install python@3.12` if this exact command isn't already on PATH.
+PYTHON_BIN="python3.12"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+  echo "python3.12 isn't on PATH - PySpark doesn't yet support newer Python versions." >&2
+  echo "Install it, e.g.: brew install python@3.12" >&2
+  exit 1
+fi
+
 if [ ! -d backend/.venv ]; then
-  echo "Creating Python virtualenv..."
-  python3 -m venv backend/.venv
+  echo "Creating Python virtualenv (${PYTHON_BIN})..."
+  "$PYTHON_BIN" -m venv backend/.venv
 fi
 
 echo "Installing backend dependencies..."

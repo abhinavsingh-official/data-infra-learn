@@ -78,7 +78,7 @@ export function SessionPanel({ task }: { task: WarehouseTask }) {
       setSessionId(null);
       setReport(null);
       setStep(0);
-      toast("Session ended - your DuckDB file and Postgres read-only role were torn down.");
+      toast("Session ended - your Spark session's database and Postgres read-only role were torn down.");
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : "Could not end the session.");
     } finally {
@@ -160,8 +160,9 @@ export function SessionPanel({ task }: { task: WarehouseTask }) {
               {!sessionId ? (
                 <div className="rounded-lg border p-4">
                   <p className="mb-4 text-sm text-muted-foreground">
-                    Provisions a DuckDB file with the Postgres source already attached as{" "}
-                    <code>pg</code>, plus a local <code>source_accounts_snapshot</code> to build from.
+                    Provisions a Spark SQL session with the five relational source tables already
+                    registered as live views, plus a local Delta <code>source_accounts_snapshot</code>{" "}
+                    to build from.
                   </p>
                   <Button onClick={handleStart} disabled={starting}>
                     {starting ? "Starting..." : "Start Session"}
@@ -178,7 +179,7 @@ export function SessionPanel({ task }: { task: WarehouseTask }) {
                   <SqlWorkspace
                     sessionId={sessionId}
                     execute={executeWarehouseSql}
-                    placeholder="CREATE TABLE dim_users AS SELECT ... FROM pg.users"
+                    placeholder="CREATE TABLE dim_users USING DELTA AS SELECT ... FROM users"
                     starterValue={task.starter_sql}
                     rows={6}
                   />
