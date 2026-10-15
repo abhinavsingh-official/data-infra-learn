@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from app.core.db import get_connection
 from app.core.session_auth import resolve_user
-from app.modules.progress import node_practice, store
+from app.modules.progress import mongo_node_practice, node_practice, store
 
 router = APIRouter(prefix="/progress", tags=["progress"])
 
@@ -41,7 +41,10 @@ def check_node(
     if node is None or node.get("type") != "skill" or "practice" not in node:
         raise HTTPException(status_code=404, detail=f"No practice node '{node_id}' for paradigm '{paradigm}'")
 
-    result = node_practice.check_node_submission(paradigm, node_id, body.sql)
+    if paradigm in node_practice.MONGO_PARADIGMS:
+        result = mongo_node_practice.check_mongo_node_submission(paradigm, node_id, body.sql)
+    else:
+        result = node_practice.check_node_submission(paradigm, node_id, body.sql)
     if result["passed"]:
         with get_connection() as conn:
             result["progress"] = store.record_node_completion(conn, user_id, paradigm, node_id, node["type"])
