@@ -6,12 +6,10 @@ from pydantic import BaseModel
 from app.core.db import get_admin_connection
 from app.modules.lakehouse_phase import session_registry
 from app.modules.lakehouse_phase.commit_batch import commit_batch
-from app.modules.lakehouse_phase.duckdb_execution import execute_submission
 from app.modules.lakehouse_phase.report import grade_submission
 from app.modules.lakehouse_phase.session_provisioning import (
-    delta_table_dir,
     deprovision_session,
-    pg_role_name,
+    execute,
     provision_session,
     release_batch_two,
 )
@@ -48,17 +46,17 @@ def create_session() -> dict:
     _cleanup_expired_sessions()
     session_id = secrets.token_hex(16)
     with get_admin_connection() as conn:
-        pg_password = provision_session(conn, session_id)
-    session_registry.register(session_id, pg_password)
-    return {"session_id": session_id, "delta_table_path": str(delta_table_dir(session_id))}
+        session_spark, pg_password = provision_session(conn, session_id)
+    session_registry.register(session_id, pg_password, session_spark)
+    return {"session_id": session_id}
 
 
 @router.post("/sessions/{session_id}/execute")
-def execute(session_id: str, body: ExecuteRequest) -> dict:
+def execute_endpoint(session_id: str, body: ExecuteRequest) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    result = execute_submission(session_id, pg_role_name(session_id), record.pg_password, body.sql)
+    result = execute(record.spark_session, session_id, body.sql)
     return {
         "success": result.success,
         "columns": result.columns,
@@ -74,7 +72,7 @@ def release_batch_2(session_id: str) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    count = release_batch_two(session_id, pg_role_name(session_id), record.pg_password)
+    count = release_batch_two(record.spark_session, session_id)
     return {"batch_2_row_count": count}
 
 
@@ -83,7 +81,7 @@ def commit(session_id: str, body: CommitBatchRequest) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    result = commit_batch(session_id, pg_role_name(session_id), record.pg_password, body.sql)
+    result = commit_batch(record.spark_session, session_id, body.sql)
     return {
         "success": result.success,
         "version": result.version,
@@ -98,7 +96,7 @@ def grade(session_id: str) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    report = grade_submission(session_id)
+    report = grade_submission(record.spark_session)
     return {
         "passed": report.passed,
         "total_clean_rows": report.total_clean_rows,
