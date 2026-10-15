@@ -5,12 +5,11 @@ from pydantic import BaseModel
 
 from app.core.db import get_admin_connection
 from app.modules.lake_phase import session_registry
-from app.modules.lake_phase.duckdb_execution import execute_submission
 from app.modules.lake_phase.report import grade_submission
 from app.modules.lake_phase.session_provisioning import (
     deprovision_session,
+    execute,
     output_dir,
-    pg_role_name,
     provision_session,
 )
 from app.modules.lake_phase.task_content import LAKE_PHASE_TASK
@@ -42,17 +41,17 @@ def create_session() -> dict:
     _cleanup_expired_sessions()
     session_id = secrets.token_hex(16)
     with get_admin_connection() as conn:
-        pg_password = provision_session(conn, session_id)
-    session_registry.register(session_id, pg_password)
+        session_spark, pg_password = provision_session(conn, session_id)
+    session_registry.register(session_id, pg_password, session_spark)
     return {"session_id": session_id, "output_dir": str(output_dir(session_id))}
 
 
 @router.post("/sessions/{session_id}/execute")
-def execute(session_id: str, body: ExecuteRequest) -> dict:
+def execute_endpoint(session_id: str, body: ExecuteRequest) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    result = execute_submission(session_id, pg_role_name(session_id), record.pg_password, body.sql)
+    result = execute(record.spark_session, session_id, body.sql)
     return {
         "success": result.success,
         "columns": result.columns,
@@ -68,7 +67,7 @@ def grade(session_id: str) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    report = grade_submission(session_id, record.pg_password)
+    report = grade_submission(record.spark_session, session_id)
     return {
         "passed": report.passed,
         "total_clean_rows": report.total_clean_rows,
