@@ -8,10 +8,9 @@ that text is identical too, not re-authored here."""
 REMEDIATION = {
     "ERR_LAKEHOUSE_NOT_DELTA": {
         "why": (
-            "clean_transactions has no _delta_log directory - it isn't a real Delta table, just "
-            "plain Parquet (or nothing was committed at all). Since only the platform's own "
-            "commit-batch endpoint can create the Delta table, this means commit-batch was never "
-            "called successfully."
+            "clean_transactions doesn't exist in this session's catalog at all - nothing was "
+            "committed. Since only the platform's own commit-batch endpoint can create it, this "
+            "means commit-batch was never called successfully."
         ),
         "fix": "Submit your cleaning SELECT to POST /lakehouse-phase/sessions/{id}/commit-batch, not a raw CREATE TABLE via /execute.",
         "tradeoffs": "N/A - this is the only way this phase's required output can exist.",

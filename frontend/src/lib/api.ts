@@ -216,7 +216,7 @@ export function getLakehouseTask() {
 }
 
 export function createLakehouseSession() {
-  return request<{ session_id: string; delta_table_path: string }>("/lakehouse-phase/sessions", {
+  return request<{ session_id: string }>("/lakehouse-phase/sessions", {
     method: "POST",
   });
 }
