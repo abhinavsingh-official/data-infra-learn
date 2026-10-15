@@ -1,18 +1,25 @@
-"""Module 9.4: the lake-phase grading report generator. Reuses
-grading.report.grade_clean_transactions directly for the required-output
-contract and ground truth (identical to Module 5's, since the task
-deliberately asks for the same clean_transactions shape) and adds two
+"""Module 19 rewrite of Module 9.4's lake-phase grading report generator,
+now against the session's own Spark session object instead of a DuckDB
+file connection. Still reuses grading.report.grade_clean_transactions
+directly for the required-output contract/ground truth (unchanged -
+engine-agnostic, takes a polars DataFrame), with the same two
 lake-specific structural checks on top: was the output genuinely
 partitioned, and was payload actually deferred to read time rather than
 flattened at write time."""
 
-import duckdb
 import polars as pl
 
-from app.core.duckdb_sessions import attach_postgres_source
 from app.modules.grading.report import Finding, GradingReport, grade_clean_transactions
 from app.modules.lake_phase.remediation import REMEDIATION as LAKE_REMEDIATION
-from app.modules.lake_phase.session_provisioning import open_session_db, output_dir, pg_role_name
+from app.modules.lake_phase.session_provisioning import output_dir
+
+_CLEAN_TRANSACTIONS_SCHEMA = {
+    "event_id": pl.Utf8,
+    "amount": pl.Float64,
+    "merchant": pl.Utf8,
+    "currency": pl.Utf8,
+    "event_timestamp": pl.Datetime,
+}
 
 
 def _make_lake_finding(error_code: str, detail: str) -> Finding:
@@ -29,15 +36,11 @@ def _check_partitioning(session_id: str) -> Finding | None:
     return None
 
 
-def _check_not_preflattened(session_id: str) -> Finding | None:
+def _check_not_preflattened(session_spark, session_id: str) -> Finding | None:
     sample_file = next(output_dir(session_id).rglob("*.parquet"), None)
     if sample_file is None:
         return None  # no files at all - _check_partitioning already covers this case
-    con = duckdb.connect(":memory:")
-    try:
-        columns = {row[0] for row in con.execute(f"DESCRIBE SELECT * FROM read_parquet('{sample_file}')").fetchall()}
-    finally:
-        con.close()
+    columns = set(session_spark.read.parquet(str(sample_file)).columns)
     if "payload" not in columns:
         return _make_lake_finding(
             "ERR_LAKE_PAYLOAD_PREFLATTENED", f"Written Parquet columns: {sorted(columns)} - no payload column."
@@ -45,44 +48,27 @@ def _check_not_preflattened(session_id: str) -> Finding | None:
     return None
 
 
-def _table_exists(con: duckdb.DuckDBPyConnection, table: str) -> bool:
-    return bool(
-        con.execute(
-            "SELECT 1 FROM information_schema.tables WHERE table_name = ? AND table_schema = 'main'", [table]
-        ).fetchone()
-    )
-
-
-def _fetch_clean_transactions(session_id: str, pg_role: str, pg_password: str) -> pl.DataFrame:
-    con = open_session_db(session_id)
-    try:
-        attach_postgres_source(con, pg_role, pg_password)
-        if not _table_exists(con, "clean_transactions"):
-            return pl.DataFrame(
-                schema={"event_id": pl.Utf8, "amount": pl.Float64, "merchant": pl.Utf8, "currency": pl.Utf8, "event_timestamp": pl.Datetime}
-            )
-        result = con.execute("SELECT event_id, amount, merchant, currency, event_timestamp FROM clean_transactions")
-        columns = [d[0] for d in result.description]
-        rows = result.fetchall()
-    finally:
-        con.close()
+def _fetch_clean_transactions(session_spark) -> pl.DataFrame:
+    if not session_spark.catalog.tableExists("clean_transactions"):
+        return pl.DataFrame(schema=_CLEAN_TRANSACTIONS_SCHEMA)
+    rows = session_spark.sql(
+        "SELECT event_id, amount, merchant, currency, event_timestamp FROM clean_transactions"
+    ).collect()
     if not rows:
-        return pl.DataFrame(
-            schema={"event_id": pl.Utf8, "amount": pl.Float64, "merchant": pl.Utf8, "currency": pl.Utf8, "event_timestamp": pl.Datetime}
-        )
-    return pl.DataFrame(rows, schema=columns, orient="row")
+        return pl.DataFrame(schema=_CLEAN_TRANSACTIONS_SCHEMA)
+    return pl.DataFrame([row.asDict() for row in rows], schema=_CLEAN_TRANSACTIONS_SCHEMA, orient="row")
 
 
-def grade_submission(session_id: str, pg_password: str) -> GradingReport:
+def grade_submission(session_spark, session_id: str) -> GradingReport:
     lake_findings: list[Finding] = []
     partition_finding = _check_partitioning(session_id)
     if partition_finding:
         lake_findings.append(partition_finding)
-    preflattened_finding = _check_not_preflattened(session_id)
+    preflattened_finding = _check_not_preflattened(session_spark, session_id)
     if preflattened_finding:
         lake_findings.append(preflattened_finding)
 
-    clean_df = _fetch_clean_transactions(session_id, pg_role_name(session_id), pg_password)
+    clean_df = _fetch_clean_transactions(session_spark)
     report = grade_clean_transactions(clean_df)
     report.structural_findings = lake_findings + report.structural_findings
     return report

@@ -23,7 +23,9 @@ POSTGRES_PHASE_TASK = {
     "edge_cases_to_handle": [
         "Some payloads are missing a required field entirely (amount, merchant, currency, or timestamp).",
         "Some events are redelivered - same event_id inside the payload, different source_delivery_id and received_at.",
-        "Some events arrive well past a 48-hour watermark relative to their own event timestamp.",
+        "Some events arrive well past a 48-hour watermark relative to their own event timestamp - late, "
+        "not invalid, so they still belong in clean_transactions; a load that only scans a rolling time "
+        "window would silently lose them.",
         "Some payloads use a renamed field ('merchant_name' instead of 'merchant'), have an extra field not seen before ('risk_flag'), or represent 'amount' as an integer in the smallest currency unit instead of a decimal string.",
         "Some IDs are corrupted the way Excel corrupts long numeric text (scientific notation, stripped leading zeros), and some timestamps are ambiguous regional date strings instead of proper ISO timestamps.",
     ],
@@ -48,7 +50,7 @@ POSTGRES_PHASE_TASK = {
     "dataset_stats": [
         {"label": "Raw feed rows", "value": "51,495", "hint": "public.raw_transaction_events"},
         {"label": "Injected faults", "value": "~7,753", "hint": "roughly 15% of rows carry an edge case"},
-        {"label": "Known-good result size", "value": "46,238 rows", "hint": "clean_transactions from the reference query above - before also repairing Excel-corrupted IDs and ambiguous dates, which climbs higher still"},
+        {"label": "Known-good result size", "value": "47,755 rows", "hint": "clean_transactions from the reference query above (late arrivals kept, not dropped) - before also repairing Excel-corrupted IDs and ambiguous dates, which climbs higher still"},
         {"label": "Users / accounts already loaded", "value": "10,000 / 15,000", "hint": "reference tables you can join against"},
     ],
     "starter_sql": (
@@ -93,19 +95,20 @@ POSTGRES_PHASE_TASK = {
             "    ) AS rn\n"
             "  FROM public.raw_transaction_events\n"
             "  WHERE payload ? 'amount' AND (payload ? 'merchant' OR payload ? 'merchant_name')\n"
+            "    AND payload ? 'currency' AND payload ? 'timestamp'\n"
             ")\n"
             "INSERT INTO clean_transactions (event_id, amount, merchant, currency, event_timestamp)\n"
             "SELECT event_id, amount, merchant, currency, event_timestamp\n"
             "FROM normalized\n"
-            "WHERE rn = 1\n"
-            "  AND event_timestamp >= received_at - interval '48 hours';\n"
+            "WHERE rn = 1;\n"
         ),
         "note": (
             "Key ideas: COALESCE handles the renamed field and missing-field cases together; "
             "row_number() over the business event_id (not source_delivery_id) dedupes redeliveries, "
-            "keeping the most recently received copy; the watermark filter drops anything that arrived "
-            "more than 48 hours after its own event_timestamp. Excel-style ID corruption and ambiguous "
-            "date strings still need their own repair step before this query - that part is left to you."
+            "keeping the most recently received copy; scanning the whole raw table by id (not a rolling "
+            "received_at time window) is what keeps a late-arriving event from being silently lost - it's "
+            "late, not invalid, so it stays in. Excel-style ID corruption and ambiguous date strings "
+            "still need their own repair step before this query - that part is left to you."
         ),
         "steps": [
             {
@@ -171,6 +174,7 @@ POSTGRES_PHASE_TASK = {
                     "    ) AS rn\n"
                     "  FROM public.raw_transaction_events\n"
                     "  WHERE payload ? 'amount' AND (payload ? 'merchant' OR payload ? 'merchant_name')\n"
+                    "    AND payload ? 'currency' AND payload ? 'timestamp'\n"
                     ")\n"
                     "INSERT INTO clean_transactions (event_id, amount, merchant, currency, event_timestamp)\n"
                     "SELECT event_id, amount, merchant, currency, event_timestamp\n"
@@ -185,18 +189,20 @@ POSTGRES_PHASE_TASK = {
                 ),
             },
             {
-                "title": "4. + drop arrivals past the 48-hour watermark",
+                "title": "4. Don't lose arrivals past the 48-hour watermark",
                 "sql": (
-                    "-- same normalized CTE as step 3, plus one more filter on the final SELECT:\n"
+                    "-- same normalized CTE as step 3, nothing changes in the query itself - the point "
+                    "-- of this step is what NOT to add:\n"
                     "SELECT event_id, amount, merchant, currency, event_timestamp\n"
                     "FROM normalized\n"
-                    "WHERE rn = 1\n"
-                    "  AND event_timestamp >= received_at - interval '48 hours';\n"
+                    "WHERE rn = 1;\n"
                 ),
                 "note": (
-                    "A late-arriving event isn't malformed - it's just too old to trust by the time it "
-                    "showed up. Comparing received_at against the event's own event_timestamp (not "
-                    "against 'now') is what makes this watermark check replay-safe."
+                    "A late-arriving event isn't malformed - it's just slower than usual. The tempting "
+                    "mistake here is adding a filter like `event_timestamp >= received_at - interval '48 "
+                    "hours'` to 'clean up' late data - that permanently and silently drops it instead of "
+                    "processing it late. Scanning the whole raw table by its own id (not a rolling "
+                    "received_at time window) is what actually keeps a late arrival from being lost."
                 ),
             },
             {
@@ -228,12 +234,12 @@ POSTGRES_PHASE_TASK = {
                     "    ) AS rn\n"
                     "  FROM public.raw_transaction_events\n"
                     "  WHERE payload ? 'amount' AND (payload ? 'merchant' OR payload ? 'merchant_name')\n"
+                    "    AND payload ? 'currency' AND payload ? 'timestamp'\n"
                     ")\n"
                     "INSERT INTO clean_transactions (event_id, amount, merchant, currency, event_timestamp)\n"
                     "SELECT event_id, amount, merchant, currency, event_timestamp\n"
                     "FROM normalized\n"
-                    "WHERE rn = 1\n"
-                    "  AND event_timestamp >= received_at - interval '48 hours';\n"
+                    "WHERE rn = 1;\n"
                 ),
                 "note": (
                     "The last real-world wrinkle: some amounts arrive as integer minor units (cents) "

@@ -160,8 +160,8 @@ POSTGRES_SKILL_TREE = {
             "practice": {
                 "prompt": (
                     "This event's own timestamp is 2026-07-27T04:59:08+00, but it wasn't received "
-                    "until 2026-07-29T09:59:08+00 - about 53 hours later. It's past the 48-hour "
-                    "watermark; it should not appear in clean_transactions."
+                    "until 2026-07-29T09:59:08+00 - about 53 hours later, past the 48-hour watermark. "
+                    "It's late, not invalid - it should still appear in clean_transactions."
                 ),
                 "schema": _SCHEMA,
                 "example_rows": [
@@ -176,11 +176,16 @@ POSTGRES_SKILL_TREE = {
                         },
                     }
                 ],
-                "expected_output_rows": [],
+                "expected_output_rows": [
+                    {
+                        "event_id": "100000233768", "amount": 3142.77, "merchant": "Mcintosh, Rodriguez and Greene",
+                        "currency": "USD", "event_timestamp": "2026-07-27T04:59:08.256386+00",
+                    }
+                ],
             },
             "combine": {
-                "prompt": "Everything so far, plus this late arrival that should get silently dropped.",
-                "note": "Running total: still 4 rows out - the late arrival correctly contributes nothing.",
+                "prompt": "Everything so far, plus this late arrival, which still belongs in the output.",
+                "note": "Running total: 4 rows out - the late arrival is included, not silently dropped.",
             },
         },
         {
@@ -216,7 +221,7 @@ POSTGRES_SKILL_TREE = {
             "combine": {
                 "prompt": "The full mixed set from every lesson in this tree, loaded in one pass.",
                 "note": (
-                    "Running total: 5 rows out of 7 input rows - this is the same shape as the real "
+                    "Running total: 6 rows out of 7 input rows - this is the same shape as the real "
                     "task, just seven rows instead of 51,495."
                 ),
             },

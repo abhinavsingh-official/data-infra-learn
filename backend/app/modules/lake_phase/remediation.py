@@ -27,7 +27,7 @@ REMEDIATION = {
             "point of the exercise: it just moves schema-on-write to a new storage format instead "
             "of deferring interpretation to read time."
         ),
-        "fix": "Write payload as-is (a string or DuckDB JSON column) at write time; parse payload->>'field' at read time, inside the query that builds clean_transactions.",
+        "fix": "Write payload as-is (a raw string column) at write time; parse it with get_json_object(payload, '$.field') at read time, inside the query that builds clean_transactions.",
         "tradeoffs": (
             "Schema-on-write (flattening at write time) is faster to query later and catches "
             "malformed data immediately, at the cost of failing/rejecting writes when the schema "
