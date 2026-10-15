@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { BookOpen, Check, Flag, Lock, RotateCcw, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LessonNodeModal } from "@/components/postgres-phase/lesson-node-modal";
+import { LessonNodeModal } from "@/components/shared/lesson-node-modal";
 import type { ProgressDto, SkillNodeDto, SkillTreeDto } from "@/lib/types";
 
 /** A node that isn't individually gradable (intro/review/capstone) is
