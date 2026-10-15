@@ -20,6 +20,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { ApiError, checkNode } from "@/lib/api";
 import type { NodeCheckResult, SkillNodeDto } from "@/lib/types";
 
+// The capstone node's "Begin the full capstone" link used to be
+// hardcoded to /postgres (the only capstone that existed when this
+// modal was written) - Module 20 added a second one (NoSQL), so this
+// maps a node's own task_ref to its real capstone route instead.
+const CAPSTONE_HREF: Record<string, string> = {
+  postgres: "/postgres",
+  nosql: "/nosql/capstone",
+};
+
 function cellText(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (typeof value === "object") return JSON.stringify(value);
@@ -94,6 +103,10 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
   }
 
   const isGradable = node.type === "skill" && node.practice;
+  // Mongo Databases track nodes submit a JSON command document through
+  // the exact same textarea/field as SQL text (see mongo_node_practice.py's
+  // docstring) - only the placeholder needs to say so.
+  const isMongoTrack = paradigm === "mongo-databases";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -121,7 +134,7 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
         {node.type === "capstone" && (
           <div className="space-y-3">
             <p className="text-sm leading-relaxed text-muted-foreground">{node.note}</p>
-            <Link href="/postgres" className={buttonVariants()}>
+            <Link href={CAPSTONE_HREF[node.task_ref ?? ""] ?? "/start"} className={buttonVariants()}>
               Begin the full capstone
             </Link>
           </div>
@@ -170,9 +183,13 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
               <Textarea
                 value={sql}
                 onChange={(e) => setSql(e.target.value)}
-                rows={6}
+                rows={isMongoTrack ? 8 : 6}
                 className="font-mono text-sm"
-                placeholder="Write a SELECT against raw_transaction_events..."
+                placeholder={
+                  isMongoTrack
+                    ? '{ "find": "...", "filter": {} }'
+                    : "Write a SELECT against raw_transaction_events..."
+                }
               />
 
               <Button onClick={handleCheck} disabled={checking}>

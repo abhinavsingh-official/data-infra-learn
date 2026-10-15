@@ -15,6 +15,7 @@ from app.modules.nosql_phase.session_provisioning import (
     provision_mongo_session,
     provision_pg_readonly_session,
 )
+from app.modules.nosql_phase.skill_tree import NOSQL_SKILL_TREE
 from app.modules.nosql_phase.task_content import NOSQL_PHASE_TASK
 from app.modules.postgres_phase.sql_execution import execute_submission as execute_pg_sql
 
@@ -43,6 +44,11 @@ def _cleanup_expired_sessions() -> None:
 @router.get("/task")
 def get_task() -> dict:
     return NOSQL_PHASE_TASK
+
+
+@router.get("/skill-tree")
+def get_skill_tree() -> dict:
+    return NOSQL_SKILL_TREE
 
 
 @router.post("/sessions")
