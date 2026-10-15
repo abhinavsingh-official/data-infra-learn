@@ -103,6 +103,14 @@ def _build_global_spark():
         # local process grading hand-sized exercise data.
         .config("spark.sql.shuffle.partitions", "4")
         .config("spark.driver.memory", "2g")
+        # Spark's default session timezone is the JVM's local timezone,
+        # not UTC - confirmed directly as the root cause of a real bug in
+        # the lake phase's watermark check (every JDBC-read Postgres
+        # TIMESTAMPTZ silently shifted by this machine's +5:30 offset
+        # relative to anything computed natively in Spark, corrupting any
+        # comparison between the two). Postgres/DuckDB/the rest of this
+        # project all operate in UTC; Spark must too.
+        .config("spark.sql.session.timeZone", "UTC")
     )
     # configure_spark_with_delta_pip sets spark.jars.packages itself
     # (overwriting, not merging, any prior value) - found by testing
@@ -143,7 +151,45 @@ def pg_role_name(phase_prefix: str, session_id: str) -> str:
     return make_role_name(f"{phase_prefix}_session_", session_id)
 
 
-def provision_pg_source_views(spark_session, pg_role: str, pg_password: str) -> None:
+def _source_query(pg_conn: Connection, table: str) -> str:
+    """Builds the exact SELECT this table's JDBC read uses, converting
+    every `timestamptz` column to a UTC-naive timestamp server-side via
+    `AT TIME ZONE 'UTC'`.
+
+    This is load-bearing, not cosmetic - found the hard way via the lake
+    phase's watermark check silently misbehaving. Confirmed directly,
+    one variable at a time: `spark.sql.session.timeZone = "UTC"`, a JDBC
+    `sessionInitStatement` of `SET TIME ZONE 'UTC'` (confirmed to
+    genuinely execute on the real scan connection, not skipped), the JVM
+    system property `-Duser.timezone=UTC`, and disabling the PGJDBC
+    driver's binary transfer - none of them fixed it. What actually
+    reproduced the bug: a single-row, server-side-filtered read (e.g.
+    `WHERE id = 14`) came back correct; an unfiltered full-table read of
+    the exact same column came back shifted by this machine's local
+    +5:30 offset. Converting the column server-side, before the driver
+    ever serializes it, sidesteps whatever client-side ambiguity causes
+    that - confirmed directly to fix the full-table case too.
+
+    Introspects the real column list via information_schema rather than
+    hardcoding every table's columns by hand (6 tables, ~60 columns
+    combined) - self-updating if a table's schema changes, only needs to
+    know the engine-level fact that timestamptz columns need this
+    treatment, not memorize the schema."""
+    with pg_conn.cursor() as cur:
+        cur.execute(
+            "SELECT column_name, data_type FROM information_schema.columns "
+            "WHERE table_schema = 'public' AND table_name = %s ORDER BY ordinal_position",
+            (table,),
+        )
+        columns = cur.fetchall()
+    select_list = ", ".join(
+        f"\"{name}\" AT TIME ZONE 'UTC' AS \"{name}\"" if data_type == "timestamp with time zone" else f'"{name}"'
+        for name, data_type in columns
+    )
+    return f"(SELECT {select_list} FROM public.{table}) t"
+
+
+def provision_pg_source_views(spark_session, pg_conn: Connection, pg_role: str, pg_password: str) -> None:
     """Registers the five shared relational source tables as live,
     read-only temp views (Spark's JDBC data source, re-queries Postgres
     on demand - not a one-time copy) - the direct equivalent of the old
@@ -153,7 +199,7 @@ def provision_pg_source_views(spark_session, pg_role: str, pg_password: str) -> 
         df = (
             spark_session.read.format("jdbc")
             .option("url", settings.postgres_jdbc_url)
-            .option("dbtable", f"public.{table}")
+            .option("dbtable", _source_query(pg_conn, table))
             .option("user", pg_role)
             .option("password", pg_password)
             .option("driver", "org.postgresql.Driver")
@@ -178,7 +224,7 @@ def provision_phase_session(pg_conn: Connection, phase_prefix: str, session_id: 
     db = session_db_name(phase_prefix, session_id)
     session_spark.sql(f"CREATE DATABASE IF NOT EXISTS {db}")
     session_spark.sql(f"USE {db}")
-    provision_pg_source_views(session_spark, role, password)
+    provision_pg_source_views(session_spark, pg_conn, role, password)
     return session_spark, password
 
 

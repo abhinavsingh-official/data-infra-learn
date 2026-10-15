@@ -84,8 +84,33 @@ def _fetch_ground_truth() -> list[dict[str, Any]]:
             return cur.fetchall()
 
 
-def _check_fault(fault_type: str, event_id: str, clean_by_event_id: dict[str, dict]) -> Finding | None:
+# Fault types whose own remediation explicitly allows "reject-and-log"
+# (the row is legitimately absent from clean_transactions, not a bug) -
+# see remediation.py's ERR_NULL_REQUIRED_FIELD/ERR_MALFORMED_EXCEL_
+# CORRUPTION "fix" text. A row tagged with one of these AND also another
+# fault type that expects the row to be present is a real, observed
+# stacked-fault case (found while verifying Module 19's lake-phase port
+# end-to-end against the exact shipped reference solution - every
+# residual ERR_LATE_ARRIVAL and ERR_MALFORMED_AMBIGUOUS_DATE finding
+# traced back to exactly this kind of stack, on two different fault
+# types, which is why this is a general rule applied to every "must be
+# present" check below, not a special case bolted onto just one of them):
+# its absence is already fully explained by the other fault, so flagging
+# it again under a second fault type would be double-counting the same,
+# single, correctly-made exclusion decision as two different bugs.
+_VALID_REJECT_REASONS = {"null_required_field", "malformed_excel_corruption"}
+
+
+def _row_absence_explained(row: dict | None, other_fault_types: set[str]) -> bool:
+    return row is None and bool(other_fault_types & _VALID_REJECT_REASONS)
+
+
+def _check_fault(
+    fault_type: str, event_id: str, clean_by_event_id: dict[str, dict], other_fault_types: set[str]
+) -> Finding | None:
     row = clean_by_event_id.get(event_id)
+    if _row_absence_explained(row, other_fault_types):
+        return None
 
     if fault_type == "null_required_field":
         if row is not None and any(row.get(f) is None for f in ("amount", "merchant", "currency", "event_timestamp")):
@@ -159,11 +184,17 @@ def grade_clean_transactions(clean_df: pl.DataFrame) -> GradingReport:
     clean_by_event_id = {r["event_id"]: r for r in clean_df.to_dicts()} if clean_df.height > 0 else {}
     ground_truth = _fetch_ground_truth()
 
+    fault_types_by_event: dict[str, set[str]] = {}
+    for entry in ground_truth:
+        fault_types_by_event.setdefault(entry["event_id"], set()).add(entry["fault_type"])
+
     for entry in ground_truth:
         fault_type = entry["fault_type"]
+        event_id = entry["event_id"]
         summary = report.fault_type_summary.setdefault(fault_type, {"total": 0, "issues": 0})
         summary["total"] += 1
-        finding = _check_fault(fault_type, entry["event_id"], clean_by_event_id)
+        other_fault_types = fault_types_by_event[event_id] - {fault_type}
+        finding = _check_fault(fault_type, event_id, clean_by_event_id, other_fault_types)
         if finding:
             summary["issues"] += 1
             report.fault_findings.append(finding)

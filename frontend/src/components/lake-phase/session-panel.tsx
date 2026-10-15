@@ -140,8 +140,8 @@ export function SessionPanel({ task }: { task: LakeTask }) {
               {!sessionId ? (
                 <div className="rounded-lg border p-4">
                   <p className="mb-4 text-sm text-muted-foreground">
-                    Provisions a DuckDB file with the Postgres source already attached as{" "}
-                    <code>pg</code>, plus a real local directory for your own Parquet output.
+                    Provisions a Spark SQL session with the five relational source tables already
+                    registered as live views, plus a real local directory for your own Parquet output.
                   </p>
                   <Button onClick={handleStart} disabled={starting}>
                     {starting ? "Starting..." : "Start Session"}
@@ -162,7 +162,7 @@ export function SessionPanel({ task }: { task: LakeTask }) {
                   <SqlWorkspace
                     sessionId={sessionId}
                     execute={executeLakeSql}
-                    placeholder="COPY (SELECT ... FROM pg.raw_transaction_events) TO '<output directory>' (FORMAT PARQUET, PARTITION_BY (event_date))"
+                    placeholder="CREATE TABLE lake_output USING PARQUET PARTITIONED BY (event_date) LOCATION '<output directory>' AS SELECT ... FROM raw_transaction_events"
                     starterValue={task.starter_sql}
                     rows={6}
                   />
