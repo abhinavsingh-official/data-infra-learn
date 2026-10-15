@@ -72,8 +72,14 @@ export function getPostgresTask() {
   return request<PostgresTask>("/postgres-phase/task");
 }
 
-export function getSkillTree(paradigm: string) {
-  return request<SkillTreeDto>(`/${paradigm}-phase/skill-tree`);
+// The route prefix differs by track type - a real "phase" (Postgres) has
+// its own session-provisioning routes alongside /skill-tree, while a
+// fundamentals-only track (SQL Databases, Module 18) only ever needs
+// content + node-check, so it's a lighter "-track" module instead of a
+// full "-phase" one. Callers pass the exact prefix rather than this
+// function guessing a suffix.
+export function getSkillTree(routePrefix: string) {
+  return request<SkillTreeDto>(`/${routePrefix}/skill-tree`);
 }
 
 export function getMyProgress() {

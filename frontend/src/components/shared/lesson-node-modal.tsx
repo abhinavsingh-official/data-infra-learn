@@ -145,13 +145,27 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
             <TabsContent value="practice" className="space-y-4">
               <p className="text-sm">{node.practice.prompt}</p>
 
-              <div>
-                <p className="mb-1 text-xs font-medium text-muted-foreground">
-                  Example input ({node.practice.example_rows.length} row
-                  {node.practice.example_rows.length === 1 ? "" : "s"})
-                </p>
-                <RowTable rows={node.practice.example_rows} />
-              </div>
+              {/* Multi-table nodes (the SQL Databases track's JOIN node) list
+              each table separately; single-table nodes (every other node)
+              fall back to the one example_rows set. */}
+              {node.practice.tables
+                ? node.practice.tables.map((table) => (
+                    <div key={table.name}>
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        {table.name} ({table.rows.length} row{table.rows.length === 1 ? "" : "s"})
+                      </p>
+                      <RowTable rows={table.rows} />
+                    </div>
+                  ))
+                : node.practice.example_rows && (
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        Example input ({node.practice.example_rows.length} row
+                        {node.practice.example_rows.length === 1 ? "" : "s"})
+                      </p>
+                      <RowTable rows={node.practice.example_rows} />
+                    </div>
+                  )}
 
               <Textarea
                 value={sql}

@@ -45,3 +45,41 @@ def test_bad_sql_returns_structured_error_not_a_crash():
     result = check_node_submission("postgres", "node_1_base_load", "SELECT * FROM nonexistent_table")
     assert result["passed"] is False
     assert result["error_code"] is not None
+
+
+def test_sql_databases_where_node_passes():
+    sql = (
+        "SELECT id, merchant_name, transaction_amount FROM transactions "
+        "WHERE transaction_amount > 1000"
+    )
+    result = check_node_submission("sql-databases", "node_1_where", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_sql_databases_join_node_uses_two_private_tables():
+    sql = (
+        "SELECT t.id AS transaction_id, a.card_network, t.transaction_amount "
+        "FROM transactions t JOIN accounts a ON a.id = t.account_id"
+    )
+    result = check_node_submission("sql-databases", "node_2_join", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 3
+
+
+def test_sql_databases_group_order_node_passes():
+    sql = (
+        "SELECT account_id, SUM(transaction_amount) AS total_spent FROM transactions "
+        "GROUP BY account_id ORDER BY total_spent DESC"
+    )
+    result = check_node_submission("sql-databases", "node_3_group_order", sql)
+    assert result["passed"] is True
+
+
+def test_sql_databases_nulls_node_passes():
+    sql = (
+        "SELECT id, COALESCE(merchant_name, 'Unknown merchant') AS merchant_name, transaction_amount "
+        "FROM transactions"
+    )
+    result = check_node_submission("sql-databases", "node_4_nulls", sql)
+    assert result["passed"] is True
