@@ -27,7 +27,6 @@ const STEPS = ["Overview", "Workspace"];
 export function SessionPanel({ task }: { task: LakehouseTask }) {
   const [step, setStep] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [deltaPath, setDeltaPath] = useState<string | null>(null);
   const [batch2Released, setBatch2Released] = useState(false);
   const [starting, setStarting] = useState(false);
   const [releasing, setReleasing] = useState(false);
@@ -38,9 +37,8 @@ export function SessionPanel({ task }: { task: LakehouseTask }) {
   async function handleStart() {
     setStarting(true);
     try {
-      const { session_id, delta_table_path } = await createLakehouseSession();
+      const { session_id } = await createLakehouseSession();
       setSessionId(session_id);
-      setDeltaPath(delta_table_path);
       setBatch2Released(false);
       setReport(null);
     } catch (error) {
@@ -82,7 +80,6 @@ export function SessionPanel({ task }: { task: LakehouseTask }) {
     try {
       await endLakehouseSession(sessionId);
       setSessionId(null);
-      setDeltaPath(null);
       setBatch2Released(false);
       setReport(null);
       setStep(0);
@@ -167,8 +164,8 @@ export function SessionPanel({ task }: { task: LakehouseTask }) {
               {!sessionId ? (
                 <div className="rounded-lg border p-4">
                   <p className="mb-4 text-sm text-muted-foreground">
-                    Provisions a DuckDB file with <code>batch_1_events</code> ready to go - the second
-                    batch arrives only once you ask for it.
+                    Provisions a Spark SQL session with <code>batch_1_events</code> ready to go - the
+                    second batch arrives only once you ask for it.
                   </p>
                   <Button onClick={handleStart} disabled={starting}>
                     {starting ? "Starting..." : "Start Session"}
@@ -182,11 +179,6 @@ export function SessionPanel({ task }: { task: LakehouseTask }) {
                       {sessionId.slice(0, 12)}...
                     </Badge>
                   </div>
-                  <div className="rounded-md border bg-muted/30 p-3">
-                    <p className="mb-1 text-xs font-medium">Your Delta table path</p>
-                    <code className="break-all text-xs">{deltaPath}</code>
-                  </div>
-
                   <CommitBatchBox
                     sessionId={sessionId}
                     label="Commit batch 1 (from batch_1_events)"
@@ -206,11 +198,11 @@ export function SessionPanel({ task }: { task: LakehouseTask }) {
                   <Separator />
 
                   <div>
-                    <p className="mb-2 text-sm font-medium">Inspect your Delta table (delta_scan)</p>
+                    <p className="mb-2 text-sm font-medium">Inspect your Delta table</p>
                     <SqlWorkspace
                       sessionId={sessionId}
                       execute={executeLakehouseSql}
-                      placeholder={`SELECT count(*) FROM delta_scan('${deltaPath}')`}
+                      placeholder="SELECT COUNT(*) FROM clean_transactions -- or: ... VERSION AS OF 0, or DESCRIBE HISTORY clean_transactions"
                       rows={4}
                     />
                   </div>

@@ -1,15 +1,38 @@
-"""Module 10's exercise description. Content, not logic - same pattern
-as the other phases' task_content modules."""
+"""Module 19 rewrite of Module 10's exercise description for PySpark/
+Delta instead of DuckDB + the `deltalake` Python library
+(ARCHITECTURE_DECISIONS.md §3.1). Real content changes, verified by
+actually running every statement against a real session first (see
+MODULE_19_PLAN.md):
+- No more `pg.`-qualified source tables - plain unqualified
+  raw_transaction_events, same reasoning as the warehouse/lake phases.
+- DuckDB's `payload::JSON->>'field'` becomes Spark SQL's
+  `get_json_object(payload, '$.field')`.
+- `TRY_CAST(... AS TIMESTAMPTZ)` alone cannot recover the
+  malformed_ambiguous_date fault's real DD/MM/YYYY-only string on this
+  engine - needs an explicit fallback format, same fix as the lake phase:
+  `COALESCE(TRY_CAST(ts AS TIMESTAMP), try_to_timestamp(ts, 'dd/MM/yyyy'))`.
+- No more `delta_scan('<path>')` - clean_transactions is now a real
+  Spark-catalog table (committed via `saveAsTable`, not a bare path), so
+  it's just referenced directly by name, including for time travel
+  (`clean_transactions VERSION AS OF 0`) and history
+  (`DESCRIBE HISTORY clean_transactions`) - both confirmed working
+  directly on a catalog (not just path-based) Delta table.
+- Late arrivals are kept, not dropped past the 48-hour watermark - same
+  platform-wide fix applied to the Postgres and Lake phases, for the
+  same reason (see MODULE_19_PLAN.md: the curriculum and the shared
+  grader disagreed about this; confirmed with the user which was
+  intended). Rows missing currency or timestamp entirely are still
+  explicitly rejected, the same reject-and-log policy as every other
+  required field."""
 
 LAKEHOUSE_PHASE_TASK = {
     "title": "Commit two real incremental batches to a Delta table",
     "summary": (
         "The same raw feed as the lake phase, but this time your output is a real Delta table - "
         "not just Parquet. You submit the cleaning SQL (same job as every other phase); the "
-        "platform commits your query's result as a genuine, atomic Delta transaction, since "
-        "DuckDB itself can't write Delta and this project deliberately doesn't run arbitrary "
-        "user code to do it either (see MODULE_10_PLAN.md). Two commits, not one - this phase is "
-        "about incremental batch arrival and real ACID guarantees, not a single big load."
+        "platform commits your query's result as a genuine, atomic Delta transaction via Spark's "
+        "own writer. Two commits, not one - this phase is about incremental batch arrival and "
+        "real ACID guarantees, not a single big load."
     ),
     "source": {
         "batch_1_events": "available immediately - half the raw feed (deterministic, not random)",
@@ -36,30 +59,29 @@ LAKEHOUSE_PHASE_TASK = {
         },
     },
     "hints": [
-        "Deduplicating within each batch (e.g. DISTINCT ON per commit) does NOT guarantee global "
-        "uniqueness across batches - if the same event_id's rows happen to land in different "
-        "batches, a per-batch dedup misses it entirely. Real incremental pipelines handle this "
-        "with a merge/upsert against the target table, not just a clean SELECT per batch - worth "
-        "checking your grading report's duplicate_delivery findings even if each batch looked clean.",
-        "You can inspect your Delta table (and its history) through the normal /execute endpoint: "
-        "delta_scan('<path>') for the current state, delta_scan('<path>', version=N) for an "
-        "earlier one. Your session's own path is returned when you create the session.",
-        "Same DuckDB gotchas as the lake phase apply here too: parenthesize (payload->'field') "
-        "before IS NOT NULL, and use TRY_CAST for the ambiguous-date fault, not a bare cast.",
-        "Filtering batch 2 with `event_id NOT IN (SELECT event_id FROM delta_scan(...))` fails "
-        "with a cryptic cast error at this dataset's real size (confirmed directly, reproducible) "
-        "- use a LEFT JOIN against delta_scan(...) and check the joined column IS NULL instead; "
-        "it does the same anti-join and works reliably.",
+        "Deduplicating within each batch does NOT guarantee global uniqueness across batches - if "
+        "the same event_id's rows happen to land in different batches, a per-batch dedup misses it "
+        "entirely. Real incremental pipelines handle this with a merge/anti-join against the target "
+        "table, not just a clean SELECT per batch.",
+        "You can inspect your Delta table (and its history) through the normal /execute endpoint, by "
+        "name: clean_transactions for the current state, clean_transactions VERSION AS OF 0 for an "
+        "earlier one, DESCRIBE HISTORY clean_transactions for the full commit log.",
+        "Same Spark SQL gotchas as the lake phase apply here too: get_json_object(payload, "
+        "'$.field') instead of a bare -> operator, and COALESCE(TRY_CAST(...), try_to_timestamp(..., "
+        "'dd/MM/yyyy')) for the ambiguous-date fault.",
+        "A LEFT JOIN anti-join (keep rows with no match) against clean_transactions is the reliable "
+        "way to check what's already committed before batch 2's commit - simpler to reason about "
+        "than a NOT IN subquery once the target table has real volume.",
     ],
     "dataset_stats": [
         {"label": "Raw feed rows", "value": "51,495", "hint": "split deterministically across both batches"},
         {"label": "Batch 1 rows", "value": "25,747", "hint": "batch_1_events - id % 2 = 0"},
         {"label": "Batch 2 rows", "value": "25,748", "hint": "batch_2_events - id % 2 = 1, released on request"},
-        {"label": "Known-good result size", "value": "49,246 rows", "hint": "clean_transactions across both commits combined"},
+        {"label": "Known-good result size", "value": "47,755 rows", "hint": "clean_transactions across both commits combined (late arrivals kept, not dropped)"},
     ],
     "starter_sql": (
         "-- Commit 1: parse batch_1_events and handle every edge case.\n"
-        "SELECT id, received_at, payload::JSON AS payload\n"
+        "SELECT id, received_at, payload\n"
         "FROM batch_1_events\n"
         "LIMIT 20;\n\n"
         "-- Then submit a full SELECT (event_id, amount, merchant, currency, event_timestamp)\n"
@@ -71,52 +93,68 @@ LAKEHOUSE_PHASE_TASK = {
             "-- Commit 1 (against batch_1_events):\n"
             "WITH normalized AS (\n"
             "  SELECT\n"
-            "    COALESCE(payload::JSON->>'event_id', payload::JSON->>'id') AS event_id,\n"
-            "    COALESCE(payload::JSON->>'merchant', payload::JSON->>'merchant_name') AS merchant,\n"
-            "    payload::JSON->>'currency' AS currency,\n"
-            "    CAST((payload::JSON->>'amount')::VARCHAR AS DOUBLE) AS amount,\n"
-            "    TRY_CAST(payload::JSON->>'event_timestamp' AS TIMESTAMPTZ) AS event_timestamp,\n"
+            "    COALESCE(get_json_object(payload, '$.event_id'), get_json_object(payload, '$.id')) AS event_id,\n"
+            "    COALESCE(get_json_object(payload, '$.merchant'), get_json_object(payload, '$.merchant_name')) AS merchant,\n"
+            "    get_json_object(payload, '$.currency') AS currency,\n"
+            "    CAST(get_json_object(payload, '$.amount') AS DOUBLE) AS amount,\n"
+            "    COALESCE(TRY_CAST(get_json_object(payload, '$.timestamp') AS TIMESTAMP), try_to_timestamp(get_json_object(payload, '$.timestamp'), 'dd/MM/yyyy')) AS event_timestamp,\n"
             "    received_at,\n"
             "    row_number() OVER (\n"
-            "      PARTITION BY COALESCE(payload::JSON->>'event_id', payload::JSON->>'id')\n"
+            "      PARTITION BY COALESCE(get_json_object(payload, '$.event_id'), get_json_object(payload, '$.id'))\n"
             "      ORDER BY received_at DESC\n"
             "    ) AS rn\n"
             "  FROM batch_1_events\n"
-            "  WHERE (payload::JSON->'amount') IS NOT NULL\n"
+            "  WHERE get_json_object(payload, '$.amount') IS NOT NULL\n"
+            "    AND (get_json_object(payload, '$.merchant') IS NOT NULL OR get_json_object(payload, '$.merchant_name') IS NOT NULL)\n"
+            "    AND get_json_object(payload, '$.currency') IS NOT NULL\n"
+            "    AND get_json_object(payload, '$.timestamp') IS NOT NULL\n"
             ")\n"
             "SELECT event_id, amount, merchant, currency, event_timestamp\n"
             "FROM normalized\n"
-            "WHERE rn = 1 AND event_timestamp >= received_at - INTERVAL '48 hours';\n\n"
+            "WHERE rn = 1;\n\n"
             "-- Commit 2 (against batch_2_events only, after release-batch-2), anti-joined against\n"
             "-- what commit 1 already wrote so a redelivery spanning both batches isn't duplicated:\n"
             "WITH normalized AS (\n"
-            "  SELECT event_id, amount, merchant, currency, event_timestamp\n"
-            "  FROM (/* same normalization as above, against batch_2_events */) t\n"
+            "  SELECT\n"
+            "    COALESCE(get_json_object(payload, '$.event_id'), get_json_object(payload, '$.id')) AS event_id,\n"
+            "    COALESCE(get_json_object(payload, '$.merchant'), get_json_object(payload, '$.merchant_name')) AS merchant,\n"
+            "    get_json_object(payload, '$.currency') AS currency,\n"
+            "    CAST(get_json_object(payload, '$.amount') AS DOUBLE) AS amount,\n"
+            "    COALESCE(TRY_CAST(get_json_object(payload, '$.timestamp') AS TIMESTAMP), try_to_timestamp(get_json_object(payload, '$.timestamp'), 'dd/MM/yyyy')) AS event_timestamp,\n"
+            "    row_number() OVER (\n"
+            "      PARTITION BY COALESCE(get_json_object(payload, '$.event_id'), get_json_object(payload, '$.id'))\n"
+            "      ORDER BY received_at DESC\n"
+            "    ) AS rn\n"
+            "  FROM batch_2_events\n"
+            "  WHERE get_json_object(payload, '$.amount') IS NOT NULL\n"
+            "    AND (get_json_object(payload, '$.merchant') IS NOT NULL OR get_json_object(payload, '$.merchant_name') IS NOT NULL)\n"
+            "    AND get_json_object(payload, '$.currency') IS NOT NULL\n"
+            "    AND get_json_object(payload, '$.timestamp') IS NOT NULL\n"
             ")\n"
-            "SELECT n.*\n"
+            "SELECT n.event_id, n.amount, n.merchant, n.currency, n.event_timestamp\n"
             "FROM normalized n\n"
-            "LEFT JOIN delta_scan('<your delta table path>') existing ON existing.event_id = n.event_id\n"
-            "WHERE existing.event_id IS NULL;\n"
+            "LEFT JOIN clean_transactions existing ON existing.event_id = n.event_id\n"
+            "WHERE n.rn = 1 AND existing.event_id IS NULL;\n"
         ),
         "note": (
             "Deduplicating within each batch isn't enough - the same event_id's rows can legitimately "
             "land in different batches, so a per-batch dedup misses it. The LEFT JOIN anti-join against "
-            "delta_scan() at commit-2 time checks global uniqueness against what's already committed; "
-            "`NOT IN (SELECT ... FROM delta_scan(...))` fails with a cryptic cast error at this dataset's "
-            "real size, confirmed directly - the anti-join form is the one that actually works."
+            "clean_transactions at commit-2 time checks global uniqueness against what's already "
+            "committed - a plain table reference now, not a path-based delta_scan(), since "
+            "clean_transactions is a real catalog table once commit 1 has run."
         ),
         "steps": [
             {
                 "title": "1. Naive - commit batch 1 with no in-batch dedup at all",
                 "sql": (
                     "SELECT\n"
-                    "  COALESCE(payload::JSON->>'event_id', payload::JSON->>'id') AS event_id,\n"
-                    "  CAST((payload::JSON->>'amount')::VARCHAR AS DOUBLE) AS amount,\n"
-                    "  COALESCE(payload::JSON->>'merchant', payload::JSON->>'merchant_name') AS merchant,\n"
-                    "  payload::JSON->>'currency' AS currency,\n"
-                    "  TRY_CAST(payload::JSON->>'event_timestamp' AS TIMESTAMPTZ) AS event_timestamp\n"
+                    "  COALESCE(get_json_object(payload, '$.event_id'), get_json_object(payload, '$.id')) AS event_id,\n"
+                    "  CAST(get_json_object(payload, '$.amount') AS DOUBLE) AS amount,\n"
+                    "  COALESCE(get_json_object(payload, '$.merchant'), get_json_object(payload, '$.merchant_name')) AS merchant,\n"
+                    "  get_json_object(payload, '$.currency') AS currency,\n"
+                    "  TRY_CAST(get_json_object(payload, '$.timestamp') AS TIMESTAMP) AS event_timestamp\n"
                     "FROM batch_1_events\n"
-                    "WHERE (payload::JSON->'amount') IS NOT NULL;\n"
+                    "WHERE get_json_object(payload, '$.amount') IS NOT NULL;\n"
                 ),
                 "note": (
                     "This parses every row's payload correctly but assumes batch_1_events itself has no "
@@ -129,28 +167,28 @@ LAKEHOUSE_PHASE_TASK = {
                 "sql": (
                     "WITH normalized AS (\n"
                     "  SELECT\n"
-                    "    COALESCE(payload::JSON->>'event_id', payload::JSON->>'id') AS event_id,\n"
-                    "    COALESCE(payload::JSON->>'merchant', payload::JSON->>'merchant_name') AS merchant,\n"
-                    "    payload::JSON->>'currency' AS currency,\n"
-                    "    CAST((payload::JSON->>'amount')::VARCHAR AS DOUBLE) AS amount,\n"
-                    "    TRY_CAST(payload::JSON->>'event_timestamp' AS TIMESTAMPTZ) AS event_timestamp,\n"
+                    "    COALESCE(get_json_object(payload, '$.event_id'), get_json_object(payload, '$.id')) AS event_id,\n"
+                    "    COALESCE(get_json_object(payload, '$.merchant'), get_json_object(payload, '$.merchant_name')) AS merchant,\n"
+                    "    get_json_object(payload, '$.currency') AS currency,\n"
+                    "    CAST(get_json_object(payload, '$.amount') AS DOUBLE) AS amount,\n"
+                    "    TRY_CAST(get_json_object(payload, '$.timestamp') AS TIMESTAMP) AS event_timestamp,\n"
                     "    received_at,\n"
                     "    row_number() OVER (\n"
-                    "      PARTITION BY COALESCE(payload::JSON->>'event_id', payload::JSON->>'id')\n"
+                    "      PARTITION BY COALESCE(get_json_object(payload, '$.event_id'), get_json_object(payload, '$.id'))\n"
                     "      ORDER BY received_at DESC\n"
                     "    ) AS rn\n"
                     "  FROM batch_1_events\n"
-                    "  WHERE (payload::JSON->'amount') IS NOT NULL\n"
+                    "  WHERE get_json_object(payload, '$.amount') IS NOT NULL\n"
                     ")\n"
                     "SELECT event_id, amount, merchant, currency, event_timestamp\n"
                     "FROM normalized\n"
-                    "WHERE rn = 1 AND event_timestamp >= received_at - INTERVAL '48 hours';\n"
+                    "WHERE rn = 1;\n"
                 ),
                 "note": (
                     "This is a fully correct commit for batch 1 on its own - row_number() dedupes within "
-                    "the batch and the watermark filter drops late arrivals. It's still not the whole "
-                    "story: if a redelivery of the same event_id happens to fall in batch 2 instead of "
-                    "batch 1, this per-batch query has no way to see that from inside batch 1's commit."
+                    "the batch. It's still not the whole story: if a redelivery of the same event_id "
+                    "happens to fall in batch 2 instead of batch 1, this per-batch query has no way to "
+                    "see that from inside batch 1's commit."
                 ),
             },
             {
@@ -159,7 +197,7 @@ LAKEHOUSE_PHASE_TASK = {
                     "-- same normalized CTE as step 2, run against batch_2_events instead:\n"
                     "SELECT event_id, amount, merchant, currency, event_timestamp\n"
                     "FROM normalized\n"
-                    "WHERE rn = 1 AND event_timestamp >= received_at - INTERVAL '48 hours';\n"
+                    "WHERE rn = 1;\n"
                 ),
                 "note": (
                     "Committing batch 2 with the identical per-batch-clean query is the naive version of "
@@ -171,42 +209,17 @@ LAKEHOUSE_PHASE_TASK = {
             {
                 "title": "4. Final: + anti-join batch 2 against what's already committed",
                 "sql": (
-                    "-- Commit 1 (against batch_1_events):\n"
-                    "WITH normalized AS (\n"
-                    "  SELECT\n"
-                    "    COALESCE(payload::JSON->>'event_id', payload::JSON->>'id') AS event_id,\n"
-                    "    COALESCE(payload::JSON->>'merchant', payload::JSON->>'merchant_name') AS merchant,\n"
-                    "    payload::JSON->>'currency' AS currency,\n"
-                    "    CAST((payload::JSON->>'amount')::VARCHAR AS DOUBLE) AS amount,\n"
-                    "    TRY_CAST(payload::JSON->>'event_timestamp' AS TIMESTAMPTZ) AS event_timestamp,\n"
-                    "    received_at,\n"
-                    "    row_number() OVER (\n"
-                    "      PARTITION BY COALESCE(payload::JSON->>'event_id', payload::JSON->>'id')\n"
-                    "      ORDER BY received_at DESC\n"
-                    "    ) AS rn\n"
-                    "  FROM batch_1_events\n"
-                    "  WHERE (payload::JSON->'amount') IS NOT NULL\n"
-                    ")\n"
-                    "SELECT event_id, amount, merchant, currency, event_timestamp\n"
-                    "FROM normalized\n"
-                    "WHERE rn = 1 AND event_timestamp >= received_at - INTERVAL '48 hours';\n\n"
-                    "-- Commit 2 (against batch_2_events only, after release-batch-2), anti-joined against\n"
-                    "-- what commit 1 already wrote so a redelivery spanning both batches isn't duplicated:\n"
-                    "WITH normalized AS (\n"
-                    "  SELECT event_id, amount, merchant, currency, event_timestamp\n"
-                    "  FROM (/* same normalization as above, against batch_2_events */) t\n"
-                    ")\n"
-                    "SELECT n.*\n"
+                    "-- same normalized CTE as step 2/3, plus one more join on the final SELECT:\n"
+                    "SELECT n.event_id, n.amount, n.merchant, n.currency, n.event_timestamp\n"
                     "FROM normalized n\n"
-                    "LEFT JOIN delta_scan('<your delta table path>') existing ON existing.event_id = n.event_id\n"
-                    "WHERE existing.event_id IS NULL;\n"
+                    "LEFT JOIN clean_transactions existing ON existing.event_id = n.event_id\n"
+                    "WHERE n.rn = 1 AND existing.event_id IS NULL;\n"
                 ),
                 "note": (
                     "The fix is a global check, not a better per-batch dedup: LEFT JOIN batch 2's cleaned "
-                    "rows against delta_scan() of what commit 1 already wrote, and keep only the ones with "
-                    "no match. `NOT IN (SELECT event_id FROM delta_scan(...))` looks equivalent but fails "
-                    "with a cryptic cast error at this dataset's real size, confirmed directly - the "
-                    "LEFT JOIN anti-join form is the one that actually works."
+                    "rows against clean_transactions (what commit 1 already wrote), and keep only the "
+                    "ones with no match - a reliable anti-join, not a NOT IN subquery that gets harder to "
+                    "reason about as the target table grows."
                 ),
             },
         ],
