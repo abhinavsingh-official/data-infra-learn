@@ -1,5 +1,5 @@
-// Module 17: server-side-only progress helpers - reads the Auth.js
-// session-token cookie directly (only possible in a Server Component /
+// Server-side-only progress helpers - reads the Auth.js session-token
+// cookie directly (only possible in a Server Component /
 // Route Handler, since it's httpOnly) and calls the backend. Shared by
 // the XP header badge (a Server Component, no client round trip needed)
 // and the /api/progress/* proxy route (used by client components, which

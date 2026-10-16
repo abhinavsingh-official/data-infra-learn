@@ -1,12 +1,10 @@
-"""Module 19 rewrite of Module 10.4's lakehouse-phase grading report
-generator, now against the session's own Spark session object instead
-of DuckDB + the `deltalake` Python library. Reuses grading.report.
+"""The lakehouse-phase grading report generator, run against the
+session's own Spark session object. Reuses grading.report.
 grade_clean_transactions directly for the required-output contract and
-ground truth (unchanged - engine-agnostic), plus the same three
-lakehouse-specific structural checks as before: is this a real Delta
-table, does its history show genuine incremental commits, and does time
-travel actually work (an earlier version doesn't leak later batches'
-rows)."""
+ground truth (engine-agnostic), plus three lakehouse-specific structural
+checks: is this a real Delta table, does its history show genuine
+incremental commits, and does time travel actually work (an earlier
+version doesn't leak later batches' rows)."""
 
 import polars as pl
 
@@ -41,17 +39,15 @@ def _check_time_travel(session_spark, findings: list[Finding]) -> None:
     """Reads the Delta table at the version recorded right after its
     FIRST commit (always version 0 - the platform's own commit_batch()
     always writes with mode='append', and the first append to a
-    not-yet-existing table is version 0, confirmed directly) and checks
-    it contains only event ids that genuinely had a row in batch_1_events,
-    per the ground truth this phase itself controls (id % 2 = 0), not
-    inferred from the user's own submission.
+    not-yet-existing table is version 0) and checks it contains only
+    event ids that genuinely had a row in batch_1_events, per the ground
+    truth this phase itself controls (id % 2 = 0), not inferred from the
+    user's own submission.
 
-    Deliberately NOT "any event id that also has an id % 2 = 1 row is
+    This is not simply "any event id that also has an id % 2 = 1 row is
     leaked" - some real event ids have duplicate-delivery rows spanning
     BOTH batches. Those legitimately belong in version 0, since they
-    genuinely had a batch-1 row too (same reasoning as the original
-    DuckDB version of this check - re-verified on this engine, not
-    assumed to still hold)."""
+    genuinely had a batch-1 row too."""
     try:
         version_0_ids = {
             row["event_id"] for row in session_spark.sql("SELECT event_id FROM clean_transactions VERSION AS OF 0").collect()
@@ -85,12 +81,11 @@ def grade_submission(session_spark) -> GradingReport:
         lakehouse_findings.append(_make_finding("ERR_LAKEHOUSE_NOT_DELTA", "clean_transactions table doesn't exist."))
     else:
         history = session_spark.sql("DESCRIBE HISTORY clean_transactions").collect()
-        # No operation-name filtering here (unlike the original DuckDB
-        # version's "count WRITE ops") - confirmed directly that Spark's
-        # own history labels the very first write "CREATE TABLE AS
-        # SELECT", not "WRITE", when saveAsTable creates the table on its
-        # first call. Every history row is a real commit either way, so
-        # counting all of them is both simpler and correct.
+        # No operation-name filtering here: Spark's own history labels the
+        # very first write "CREATE TABLE AS SELECT", not "WRITE", when
+        # saveAsTable creates the table on its first call. Every history
+        # row is a real commit either way, so counting all of them is both
+        # simpler and correct.
         if len(history) < 2:
             lakehouse_findings.append(
                 _make_finding(

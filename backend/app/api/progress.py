@@ -1,8 +1,8 @@
-"""Module 16: progress + XP API. Auth is a single forwarded header, not a
-cookie read directly - FastAPI has no access to the Next.js cookie jar
-across the process boundary, so the frontend is responsible for
-forwarding its own Auth.js session-token cookie value as this header
-(see core/session_auth.py for why that's a safe, simple lookup)."""
+"""Progress + XP API. Auth is a single forwarded header, not a cookie
+read directly - FastAPI has no access to the Next.js cookie jar across
+the process boundary, so the frontend is responsible for forwarding its
+own Auth.js session-token cookie value as this header (see
+core/session_auth.py for why that's a safe, simple lookup)."""
 
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel

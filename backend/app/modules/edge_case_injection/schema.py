@@ -1,6 +1,5 @@
-"""DDL for the raw staging layer (Module 3). See MODULE_3_PLAN.md for why
-this is a separate JSONB staging table rather than corrupting the
-already-typed clean tables from Module 2."""
+"""DDL for the raw staging layer - a separate JSONB staging table rather
+than corrupting the already-typed clean tables."""
 
 from psycopg import Connection
 

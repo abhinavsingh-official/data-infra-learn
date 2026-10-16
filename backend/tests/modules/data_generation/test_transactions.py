@@ -10,9 +10,9 @@ def test_rrn_is_unique_across_batches():
 
 
 def test_recurring_type_and_channel_always_paired():
-    """Caught by hand during Module 2's build - transaction_type and
-    channel were sampled independently, producing nonsense like a
-    'recurring' type on a 'POS' channel."""
+    """Regression: transaction_type and channel used to be sampled
+    independently, producing nonsense like a 'recurring' type on a
+    'POS' channel."""
     account_ids = [1]
     for batch in generate_transaction_batches(account_ids, total_count=2_000, batch_size=2_000):
         for row in batch:

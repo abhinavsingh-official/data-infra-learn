@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-/** Module 24: the homepage's `QueryDemo` types code out character-by-
- * character in a loop; this is the same typing mechanic extracted as a
- * standalone, one-shot (not looping) piece so a second page can get the
- * same signature motion without cloning QueryDemo's hero-specific
- * before/after state machine. Used on /compare, where five real code
- * snippets already exist as static text - typing them out once on mount
- * is the actual "propagate the animated-demo pattern" ask for Module 24,
- * not a decorative addition. */
+/** The homepage's `QueryDemo` types code out character-by-character in a
+ * loop; this is the same typing mechanic as a standalone, one-shot (not
+ * looping) piece, so a page with its own static code snippets (like
+ * /compare) can get the same motion without cloning QueryDemo's
+ * hero-specific before/after state machine. */
 const MS_PER_CHAR = 10;
 
 export function TypingCode({ code }: { code: string }) {

@@ -1,6 +1,5 @@
-"""Module 5.2: hand-authored remediation writeups, one per error code from
-Module 3's injectors. This is the platform's actual teaching mechanism -
-see PROGRESS.md's remediation-first requirement. Every entry states why
+"""Hand-authored remediation writeups, one per injected fault error code.
+This is the platform's actual teaching mechanism: every entry states why
 it broke, at least one concrete fix, and the tradeoffs between valid
 approaches where more than one exists - never just detection."""
 

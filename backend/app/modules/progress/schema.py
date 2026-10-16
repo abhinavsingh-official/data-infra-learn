@@ -1,6 +1,6 @@
-"""Module 16: progress/XP/badge persistence - a new `progress` Postgres
-schema, parallel to `auth` (Module 15) and separate from the fintech
-simulation data in `public`. Owned by app_role - the backend writes this
+"""Progress/XP/badge persistence - a `progress` Postgres schema,
+parallel to `auth` and separate from the fintech simulation data in
+`public`. Owned by app_role - the backend writes this
 data itself, directly, unlike postgres_phase's per-session roles where
 untrusted user SQL runs; no user-submitted SQL ever touches these
 tables. Cross-schema foreign keys into auth.users since a user must

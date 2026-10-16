@@ -1,14 +1,15 @@
-"""Module 7.3: executes a user-submitted Mongo command as the session's
-own scoped user. Same resilience contract as postgres_phase.sql_execution
-- any failure comes back as a structured result, never an unhandled 500.
+"""Executes a user-submitted Mongo command as the session's own scoped
+user. Same resilience contract as postgres_phase.sql_execution - any
+failure comes back as a structured result, never an unhandled 500.
 
 The submission format is a raw Mongo command document (`{"insert": ...,
 "documents": [...]}`, `{"aggregate": ..., "pipeline": [...], "cursor":
 {}}`, etc.) run via `db.command()` - Mongo's own native command
 interface, not a hand-rolled subset. Safety comes from the connection
 being authenticated as a user scoped to exactly one database (see
-session_provisioning.py), the same way Module 4 trusted Postgres's own
-restricted-role mechanism rather than sandboxing SQL text itself."""
+session_provisioning.py), the same way the Postgres phase trusts
+Postgres's own restricted-role mechanism rather than sandboxing SQL
+text itself."""
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -19,12 +20,12 @@ from pymongo.errors import PyMongoError
 from app.core.config import get_settings
 
 # A submitted command can set an explicit "batchSize"/"cursor.batchSize"
-# well past Mongo's own default 101-document first batch (confirmed by
-# testing directly - the default cap does NOT apply once a caller sets
-# batchSize themselves) - the exact same unbounded-result-set risk found
-# in Module 4's Postgres phase, just reachable through a different knob.
-# Truncated here regardless of what the submitted command asked for,
-# rather than trusting the command's own batchSize to stay reasonable.
+# well past Mongo's own default 101-document first batch - that default
+# cap does NOT apply once a caller sets batchSize themselves, which is
+# the same unbounded-result-set risk the Postgres phase guards against,
+# just reachable through a different knob. Truncated here regardless of
+# what the submitted command asked for, rather than trusting the
+# command's own batchSize to stay reasonable.
 MAX_RETURNED_DOCS = 1000
 
 

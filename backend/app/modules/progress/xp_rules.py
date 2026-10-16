@@ -1,8 +1,7 @@
-"""Module 16: XP, streak, and badge rules - the gamification layer over
-real node completions. Values/thresholds are a first pass (tunable
-later, not grounded in external research the way the curriculum content
-itself is), since this is reward-shaping for a single-learner portfolio
-demo, not a tuned production retention system."""
+"""XP, streak, and badge rules - the gamification layer over real node
+completions. Values/thresholds are a first pass, not grounded in
+external research - this is reward-shaping for a single-learner
+portfolio demo, not a tuned production retention system."""
 
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -29,13 +28,12 @@ XP_BADGES = [
     (500, "xp_500", "Earned 500 XP"),
 ]
 
-# Module 22: one badge per paradigm's real capstone, awarded on that
-# capstone's grading report coming back `passed` (not via the node-check
-# endpoint - the capstone node has no "practice" block of its own; it
-# links out to the real full-scale session/grading flow instead). Keyed
-# by the same paradigm string each phase's skill_tree.py and grade
-# endpoint already use ("postgres", "nosql", "warehouse", "lake",
-# "lakehouse").
+# One badge per paradigm's real capstone, awarded when that capstone's
+# grading report comes back `passed` (not via the node-check endpoint -
+# the capstone node has no "practice" block of its own; it links out to
+# the real full-scale session/grading flow instead). Keyed by the same
+# paradigm string each phase's skill_tree.py and grade endpoint already
+# use ("postgres", "nosql", "warehouse", "lake", "lakehouse").
 CAPSTONE_BADGES: dict[str, tuple[str, str]] = {
     "postgres": ("relational_fundamentals", "Relational Fundamentals"),
     "nosql": ("document_modeler", "Document Modeler"),
@@ -58,9 +56,8 @@ def capstone_badge_for(paradigm: str) -> Badge | None:
 
 def all_badge_definitions() -> list[Badge]:
     """Every badge that can ever be earned, not just the ones a given
-    user already has - the frontend's badge bar (Module 22) shows locked
-    badges too, so it needs the full catalog, not just `progress.badges`
-    rows."""
+    user already has - the frontend's badge bar shows locked badges too,
+    so it needs the full catalog, not just `progress.badges` rows."""
     definitions = [Badge(badge_id, label) for _, badge_id, label in NODE_COUNT_BADGES]
     definitions += [Badge(badge_id, label) for _, badge_id, label in STREAK_BADGES]
     definitions += [Badge(badge_id, label) for _, badge_id, label in XP_BADGES]

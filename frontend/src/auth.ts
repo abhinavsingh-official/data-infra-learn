@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import PostgresAdapter from "@auth/pg-adapter";
 import { Pool } from "pg";
 
-/** Module 15. A dedicated pool using auth_role (NOT app_role - see
+/** A dedicated pool using auth_role (NOT app_role - see
  * docker/init/02_auth_role.sh), whose search_path is pinned to the `auth`
  * schema so the adapter's unqualified queries (SELECT * FROM users, etc.)
  * never collide with this project's own public.users/public.accounts

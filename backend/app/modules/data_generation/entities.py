@@ -1,4 +1,4 @@
-"""Module 2.1: core entity generator - users and accounts."""
+"""Core entity generator - users and accounts."""
 
 import json
 import os
@@ -12,7 +12,7 @@ from faker import Faker
 from app.modules.data_generation.messiness import maybe_empty_or_none, messy_name, messy_phone
 
 # Multi-locale, not just en_US - real name diversity rather than hand-rolled
-# unicode handling. See MODULE_2_PLAN.md's research on Faker's locale system.
+# unicode handling.
 _LOCALES = ["en_US", "en_IN", "hi_IN", "ja_JP", "es_ES", "de_DE"]
 _fake = Faker(_LOCALES)
 
@@ -38,8 +38,7 @@ def _device_fingerprint() -> dict[str, Any]:
 
 def _feature_flags_bits() -> str:
     """16-bit dense flag set (is_premium, is_frozen, is_flagged_fraud,
-    autopay_enabled, ...) as a native Postgres BIT(16), not a workaround -
-    see MODULE_2_PLAN.md."""
+    autopay_enabled, ...) as a native Postgres BIT(16)."""
     return "".join(random.choice("01") for _ in range(16))
 
 

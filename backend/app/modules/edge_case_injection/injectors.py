@@ -1,6 +1,5 @@
-"""The five fault injectors (submodules 3.1-3.5). Each is a pure function
-so it's independently testable - see MODULE_3_PLAN.md for the research
-behind each pattern. Error codes follow an RFC 9457-inspired convention:
+"""The five fault injectors. Each is a pure function so it's independently
+testable. Error codes follow an RFC 9457-inspired convention:
 ERR_<CATEGORY>_<SPECIFIC>, not ad hoc naming."""
 
 import random

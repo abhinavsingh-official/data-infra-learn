@@ -5,7 +5,7 @@ import { fetchProgressServerSide } from "@/lib/server-progress";
  * same as UserMenu, so showing XP/streak in the header costs one extra
  * server-side fetch per request, not a client round trip. Renders
  * nothing for a signed-out visitor - XP only exists once there's a real
- * user id to key it by (Module 16). */
+ * user id to key it by. */
 export async function XpBadge() {
   const progress = await fetchProgressServerSide();
   if (!progress) return null;

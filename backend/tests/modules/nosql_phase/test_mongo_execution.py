@@ -49,9 +49,8 @@ def test_execute_returns_structured_error_for_bad_command_not_a_crash():
 
 def test_execute_truncates_a_batch_size_the_caller_set_themselves():
     """Regression: Mongo's own default 101-document first batch does NOT
-    apply once a caller sets batchSize explicitly (confirmed by testing
-    directly against a real large collection) - the same unbounded-
-    result-set risk found in Module 4's Postgres phase, reachable here
+    apply once a caller sets batchSize explicitly - the same unbounded-
+    result-set risk the Postgres phase guards against, reachable here
     through a different knob. execute_submission must cap it regardless
     of what the submitted command asked for."""
     session_id, password = _new_session()

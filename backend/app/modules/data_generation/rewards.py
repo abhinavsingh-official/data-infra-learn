@@ -1,4 +1,4 @@
-"""Module 2.3: rewards and repayments generator."""
+"""Rewards and repayments generator."""
 
 import random
 import uuid

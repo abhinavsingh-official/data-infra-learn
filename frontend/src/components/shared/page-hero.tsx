@@ -1,13 +1,12 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Module 24: the homepage's full-bleed glow-blob hero, generalized so
- * every other page can get the same visual treatment instead of a plain
- * heading-and-paragraph block - without touching the homepage's own
- * hand-tuned hero (`app/page.tsx`), which stays as-is since it's already
- * shipped and visually signed off. `accentVar` lets a paradigm page pass
- * its own `--phase-*` color instead of the default `--primary` red, so
- * the glow reads as "this paradigm" rather than generic brand chrome. */
+/** A full-bleed glow-blob hero for pages that want the homepage's visual
+ * treatment without a plain heading-and-paragraph block. The homepage
+ * (`app/page.tsx`) keeps its own hand-tuned version instead of using this
+ * directly. `accentVar` lets a paradigm page pass its own `--phase-*`
+ * color instead of the default `--primary` red, so the glow reads as
+ * "this paradigm" rather than generic brand chrome. */
 export function PageHero({
   title,
   description,

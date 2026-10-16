@@ -1,11 +1,9 @@
-"""Module 19 rewrite of Module 9.4's lake-phase grading report generator,
-now against the session's own Spark session object instead of a DuckDB
-file connection. Still reuses grading.report.grade_clean_transactions
-directly for the required-output contract/ground truth (unchanged -
-engine-agnostic, takes a polars DataFrame), with the same two
-lake-specific structural checks on top: was the output genuinely
-partitioned, and was payload actually deferred to read time rather than
-flattened at write time."""
+"""The lake-phase grading report generator, run against the session's own
+Spark session object. Reuses grading.report.grade_clean_transactions
+directly for the required-output contract/ground truth (engine-agnostic,
+takes a polars DataFrame), with two lake-specific structural checks on
+top: was the output genuinely partitioned, and was payload actually
+deferred to read time rather than flattened at write time."""
 
 import polars as pl
 

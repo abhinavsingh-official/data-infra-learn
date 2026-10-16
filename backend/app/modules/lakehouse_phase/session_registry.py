@@ -1,10 +1,8 @@
 """In-memory session_id -> credentials/created_at store for the
 lakehouse phase - same single-process, TTL-based design as the other
-phases' registries.
-
-Module 19: also holds the session's own SparkSession object - see
-warehouse_phase.session_registry's docstring for why that has to be the
-same object reused across requests, not a fresh one each time."""
+phases' registries. Also holds the session's own SparkSession object;
+see warehouse_phase.session_registry for why that has to be the same
+object reused across requests, not a fresh one each time."""
 
 import time
 from dataclasses import dataclass

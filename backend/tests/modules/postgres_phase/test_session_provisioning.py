@@ -69,10 +69,11 @@ def test_two_sessions_cannot_see_each_others_schema():
 def test_session_can_read_raw_feed_but_not_the_answer_key():
     """The exercise is 'ETL this raw feed into your own schema' - a
     session role needs read access to raw_transaction_events, but must
-    never see injected_fault_log (the literal answer key Module 5 grades
-    against). Found by running this: granting the read access broke
+    never see injected_fault_log (the literal answer key the grader
+    checks against). Granting that read access can break
     deprovision_session (DROP ROLE fails while grants on shared objects
-    still exist) - fixed with DROP OWNED BY, tested here too."""
+    still exist) unless it's cleaned up with DROP OWNED BY first - tested
+    here too."""
     session_id = secrets.token_hex(16)
     role = f"session_{session_id}"
 

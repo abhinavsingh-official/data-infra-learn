@@ -8,9 +8,9 @@ _REPORT_PATH = Path(__file__).resolve().parents[3] / "app" / "modules" / "nosql_
 
 def test_every_error_code_emitted_by_report_has_a_remediation_entry():
     """Cross-checks against report.py's real source, not a hardcoded
-    duplicate list - the same pattern as grading/test_remediation.py,
-    and for the same reason: Module 5 found a partial mapping (only the
-    first-thought-of case handled) is worse than none."""
+    duplicate list - the same pattern as grading/test_remediation.py, for
+    the same reason: a partial mapping (only the first-thought-of case
+    handled) is worse than none."""
     source = _REPORT_PATH.read_text()
     codes_in_source = set(re.findall(r'_make_finding\(\s*"([A-Z_]+)"', source))
     assert codes_in_source, "expected to find at least one _make_finding call in report.py"

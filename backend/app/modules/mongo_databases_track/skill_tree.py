@@ -1,25 +1,24 @@
-"""Module 20: the "MongoDB Databases" track - the NoSQL-umbrella sibling
-of sql_databases_track (Module 18), same deliberate scope: generic
-document-model fundamentals (filtering, referencing via $lookup,
-aggregation with $group, and Mongo's own "no NULL, just a missing field"
-semantics) on small, hand-sized data, not the real 15,000-account
-account_profiles capstone - that's nosql_phase's job.
+"""The "MongoDB Databases" track - the NoSQL-umbrella sibling of
+sql_databases_track, with the same scope: generic document-model
+fundamentals (filtering, referencing via $lookup, aggregation with
+$group, and Mongo's own "no NULL, just a missing field" semantics) on
+small, hand-sized data, not the real 15,000-account account_profiles
+capstone - that's nosql_phase's job.
 
-Practice blocks here deliberately reuse the exact same dict keys as
+Practice blocks here reuse the exact same dict keys as
 postgres_phase/sql_databases_track's practice blocks (table_name,
 example_rows, tables/rows, expected_output_rows, starter_sql) even
 though these are documents, not rows - that's what lets node_practice's
-"tables" plumbing and the entire existing frontend (types, modal, result
-table) work completely unchanged. Only the backend check function
+"tables" plumbing and the existing frontend (types, modal, result
+table) work unchanged. Only the backend check function
 (mongo_node_practice.py) and the submitted text's meaning (a JSON Mongo
 command, not SQL) differ; see that module's docstring. A `schema` key is
-simply never present here - Mongo has no fixed-column DDL to declare,
-and the frontend never reads that field for rendering anyway.
+never present here - Mongo has no fixed-column DDL to declare, and the
+frontend never reads that field for rendering anyway.
 
 Every example document and expected output below was captured by
-actually creating these exact collections and running these exact
-commands against real Mongo, then copying the real reply - same
-verify-by-running standard as every other phase/track."""
+creating these exact collections and running these exact commands
+against real Mongo, then copying the real reply."""
 
 MONGO_DATABASES_SKILL_TREE = {
     "paradigm": "mongo-databases",

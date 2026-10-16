@@ -1,7 +1,6 @@
-"""Module 8.4: hand-authored remediation writeups, one per grading check
-in report.py. Same remediation-first requirement as every other phase -
-why it broke, a concrete fix, and the tradeoffs where more than one valid
-approach exists."""
+"""Hand-authored remediation writeups, one per grading check in
+report.py - why it broke, a concrete fix, and the tradeoffs where more
+than one valid approach exists."""
 
 REMEDIATION = {
     "ERR_MISSING_DIM_USER_ROW": {
@@ -82,8 +81,9 @@ REMEDIATION = {
         ),
         "tradeoffs": (
             "Re-running an SCD2 ETL should be idempotent when nothing changed - the same "
-            "'don't silently corrupt on a re-run' principle as Module 4's duplicate-webhook "
-            "handling, just applied to dimension history instead of transaction rows."
+            "'don't silently corrupt on a re-run' principle as the relational phase's "
+            "duplicate-webhook handling, just applied to dimension history instead of "
+            "transaction rows."
         ),
     },
     "ERR_MISSING_FACT_ROW": {

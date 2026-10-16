@@ -6,13 +6,10 @@ import { Background, Controls, ReactFlow, type Edge, type Node } from "@xyflow/r
 import "@xyflow/react/dist/style.css";
 import type { PhaseSlug } from "@/lib/phase-theme";
 
-/** Module 23: the real graph Module 13's plan reserved @xyflow/react for
- * - a go/no-go compatibility spike (a throwaway 3-node graph against this
- * exact Next.js 16/React 19 setup) was run and passed before any of this
- * was built. Each paradigm's own skill tree is a linear path
- * (SkillTreePath); this is the one genuinely graph-shaped view - how the
- * paradigms relate to each other and to the one shared dataset, not a
- * sequence within any single one of them. */
+/** Each paradigm's own skill tree is a linear path (SkillTreePath); this
+ * is the one genuinely graph-shaped view - how the paradigms relate to
+ * each other and to the one shared dataset, not a sequence within any
+ * single one of them. */
 
 const CENTER: Node = {
   id: "dataset",

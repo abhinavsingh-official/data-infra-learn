@@ -1,28 +1,24 @@
-"""Module 11.1/11.3: the cross-platform comparison content. Every code
+"""Content for the cross-platform comparison page (`/compare`). Every code
 sample here except the MongoDB one is copied directly from a real,
 grading-verified reference query already used elsewhere in this codebase
-(see each entry's `source` field) - not written fresh for this page.
-The MongoDB pipeline is the one genuinely new piece, and it was tested
-directly against real seeded data before being added here (see
-MODULE_11_PLAN.md): it produces exactly 49,246 distinct event ids,
-matching every other paradigm's own verified answer.
+(see each entry's `source` field) - not written fresh for this page. The
+MongoDB pipeline is the one genuinely new piece, and it was tested
+directly against real seeded data before being added here: it produces
+exactly 49,246 distinct event ids, matching every other paradigm's own
+verified answer.
 
-Module 23 fixed a real staleness bug caught while building the
-cross-paradigm comparison graph: the Warehouse/Lake/Lakehouse entries
-still showed DuckDB syntax (`pg.` prefixes, `delta_scan()`, `read_parquet()`)
-from before Module 19 moved all three onto real PySpark + Delta - updated
-to the real Spark SQL (`get_json_object`, `row_number() OVER (...)`,
-real Delta tables queried by name) each one actually runs today, copied
-from their own current test files, not rewritten from memory."""
+The Warehouse/Lake/Lakehouse entries run real Spark SQL (`get_json_object`,
+`row_number() OVER (...)`, real Delta tables queried by name) - copied
+from their own current test files, not written from memory."""
 
 COMPARISON = {
     "operation": "Deduplicate transaction events by event_id, keeping the first-arrived delivery",
     "why_this_operation": (
         "duplicate_delivery is a fault type every single phase has to handle - a real webhook-"
-        "retry pattern (Module 3), not a toy example picked for this page. Four of the five "
-        "entries below are copied directly from this project's own passing tests, not written "
-        "fresh - only the MongoDB pipeline is new, and it was verified against real data before "
-        "being added here (see MODULE_11_PLAN.md)."
+        "retry pattern, not a toy example picked for this page. Four of the five entries below "
+        "are copied directly from this project's own passing tests, not written fresh - only "
+        "the MongoDB pipeline is new, and it was verified against real seeded data before being "
+        "added here."
     ),
     "entries": [
         {
@@ -43,7 +39,7 @@ COMPARISON = {
         },
         {
             "paradigm": "NoSQL (MongoDB)",
-            "source": "written for this page - verified directly against real seeded data (see MODULE_11_PLAN.md)",
+            "source": "written for this page - verified directly against real seeded data",
             "code": (
                 "db.raw_events.aggregate([\n"
                 "  { $match: { \"payload.event_id\": { $exists: true } } },\n"

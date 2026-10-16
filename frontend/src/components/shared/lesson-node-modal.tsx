@@ -20,10 +20,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ApiError, checkNode } from "@/lib/api";
 import type { NodeCheckResult, SkillNodeDto } from "@/lib/types";
 
-// The capstone node's "Begin the full capstone" link used to be
-// hardcoded to /postgres (the only capstone that existed when this
-// modal was written) - Module 20 added a second one (NoSQL), so this
-// maps a node's own task_ref to its real capstone route instead.
+// Maps a capstone node's task_ref to its real capstone route, since
+// different paradigms land on different URLs.
 const CAPSTONE_HREF: Record<string, string> = {
   postgres: "/postgres",
   nosql: "/nosql/capstone",

@@ -1,11 +1,10 @@
-"""Module 20: node-scoped grading for the MongoDB Databases track - the
-Mongo-shaped sibling of node_practice.py (Postgres/SQL). Same contract
-(ephemeral, provision -> run -> diff -> teardown, never raises) and
-deliberately kept as its own small module rather than folded into
-node_practice.py, same call this codebase already made for nosql_phase
-vs. postgres_phase: the isolation mechanism is a throwaway Mongo
-database + scoped user (Mongo's own native per-database auth), not a
-Postgres role+schema, so the provisioning code has nothing in common
+"""Node-scoped grading for the MongoDB Databases track - the Mongo-shaped
+sibling of node_practice.py (Postgres/SQL). Same contract (ephemeral,
+provision -> run -> diff -> teardown, never raises), kept as its own
+small module rather than folded into node_practice.py, same as
+nosql_phase vs. postgres_phase: the isolation mechanism is a throwaway
+Mongo database + scoped user (Mongo's own native per-database auth), not
+a Postgres role+schema, so the provisioning code has nothing in common
 with node_practice's beyond the overall shape.
 
 A submitted "SQL" text field is actually a JSON Mongo command document
@@ -28,9 +27,7 @@ from app.core.session_ids import validate_session_id
 from app.modules.nosql_phase.mongo_execution import execute_submission
 from app.modules.progress.node_practice import find_skill_node
 
-# Confirmed directly against a real Mongo instance (same finding
-# nosql_phase.session_provisioning documents) - the error code for
-# "no such user" on a dropUser call.
+# Mongo's error code for "no such user" on a dropUser call.
 _USER_NOT_FOUND = 11
 
 

@@ -1,33 +1,32 @@
-"""Module 19 rewrite of Module 9's exercise description for PySpark/Spark
-SQL instead of DuckDB (ARCHITECTURE_DECISIONS.md §3.1). Real content
-changes, verified by actually running every statement against a real
-session first (see MODULE_19_PLAN.md):
-- No more `pg.`-qualified source table - plain unqualified
-  raw_transaction_events, same reasoning as the warehouse phase.
-- DuckDB's single `COPY (...) TO '<dir>' (FORMAT PARQUET, PARTITION_BY
-  (...))` statement becomes `CREATE TABLE ... USING PARQUET PARTITIONED
-  BY (...) LOCATION '<dir>' AS SELECT ...` - still one statement, still
-  writes real Hive-partitioned Parquet files to the same real directory.
-- DuckDB's `read_parquet('<dir>/**/*.parquet', hive_partitioning=true,
-  union_by_name=true)` becomes Spark SQL's path-based table reference,
-  `` parquet.`<dir>` `` - confirmed directly that Spark auto-discovers the
-  Hive partition column from the directory names, same as DuckDB's
-  hive_partitioning=true did.
-- DuckDB's `payload::JSON->>'field'` becomes Spark SQL's
-  `get_json_object(payload, '$.field')` - Spark has no bare `->`/`->>`
-  JSON operators or a `::JSON` cast; this is its real equivalent.
+"""The exercise description for the lake phase, written against
+PySpark/Spark SQL rather than DuckDB. A few syntax differences from the
+DuckDB/Postgres world are worth calling out:
+- Source table is plain unqualified raw_transaction_events, same as the
+  warehouse phase.
+- Where DuckDB uses a single `COPY (...) TO '<dir>' (FORMAT PARQUET,
+  PARTITION_BY (...))` statement, Spark SQL uses `CREATE TABLE ... USING
+  PARQUET PARTITIONED BY (...) LOCATION '<dir>' AS SELECT ...` - still one
+  statement, still writes real Hive-partitioned Parquet files to the same
+  real directory.
+- Where DuckDB uses `read_parquet('<dir>/**/*.parquet',
+  hive_partitioning=true, union_by_name=true)`, Spark SQL uses a
+  path-based table reference, `` parquet.`<dir>` `` - Spark auto-discovers
+  the Hive partition column from the directory names, same as DuckDB's
+  hive_partitioning=true.
+- Spark SQL has no bare `->`/`->>` JSON operators or a `::JSON` cast the
+  way Postgres/DuckDB do - `get_json_object(payload, '$.field')` is the
+  equivalent.
 - DuckDB has no distinct TIMESTAMPTZ type to TRY_CAST into - Spark's
   plain TIMESTAMP already carries timezone behavior at the session level,
   so this content uses `TRY_CAST(... AS TIMESTAMP)` for the normal ISO
   case.
-- The ambiguous-date fault (`malformed_ambiguous_date`) isn't actually
-  recoverable by TRY_CAST alone on this engine - confirmed directly that
-  Spark's TRY_CAST rejects the fault's real DD/MM/YYYY-only string
-  outright (no time component, slash-separated - not an ISO format at
-  all), unlike DuckDB's more permissive cast. The real fix needs an
-  explicit format: `COALESCE(TRY_CAST(ts AS TIMESTAMP), try_to_timestamp(ts,
-  'dd/MM/yyyy'))` - try the normal ISO parse first, fall back to the
-  known ambiguous-date shape only when that fails."""
+- The ambiguous-date fault (`malformed_ambiguous_date`) isn't recoverable
+  by TRY_CAST alone on this engine - Spark's TRY_CAST rejects the fault's
+  real DD/MM/YYYY-only string outright (no time component, slash-separated
+  - not an ISO format at all), unlike DuckDB's more permissive cast. The
+  fix needs an explicit format: `COALESCE(TRY_CAST(ts AS TIMESTAMP),
+  try_to_timestamp(ts, 'dd/MM/yyyy'))` - try the normal ISO parse first,
+  fall back to the known ambiguous-date shape only when that fails."""
 
 LAKE_PHASE_TASK = {
     "title": "Partition the raw feed as Parquet, then read it back schema-on-read",

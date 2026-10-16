@@ -1,8 +1,6 @@
-"""Module 5.3: the grading report generator. Runs pandera's structural
-checks plus per-fault-type checks (see MODULE_5_PLAN.md for exactly what
-each checks and why some are presence/plausibility rather than
-exact-match), and attaches the hand-authored remediation text to every
-failure - never just a pass/fail."""
+"""The grading report generator. Runs pandera's structural checks plus
+per-fault-type checks, and attaches the hand-authored remediation text to
+every failure - never just a pass/fail."""
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -54,9 +52,8 @@ def _fetch_clean_transactions(role: str, password: str) -> pl.DataFrame:
         with conn.cursor(row_factory=dict_row) as cur:
             # amount::float8 explicitly - Postgres NUMERIC comes back as
             # Python Decimal via psycopg, and polars keeps that dtype
-            # rather than auto-casting to Float64, which made pandera's
-            # float check fail on entirely legitimate data. Found by
-            # running this against a real submission, not assumed.
+            # rather than auto-casting to Float64, which makes pandera's
+            # float check fail on otherwise legitimate data.
             cur.execute(
                 "SELECT event_id, amount::float8 AS amount, merchant, currency, event_timestamp FROM clean_transactions"
             )
@@ -69,8 +66,8 @@ def _fetch_clean_transactions(role: str, password: str) -> pl.DataFrame:
 
 
 def _fetch_ground_truth() -> list[dict[str, Any]]:
-    """Admin connection deliberately - the grader is a trusted process
-    and needs the answer key the user's own session role can't see."""
+    """Uses an admin connection - the grader is a trusted process and
+    needs the answer key the user's own session role can't see."""
     with get_admin_connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
@@ -87,17 +84,13 @@ def _fetch_ground_truth() -> list[dict[str, Any]]:
 # Fault types whose own remediation explicitly allows "reject-and-log"
 # (the row is legitimately absent from clean_transactions, not a bug) -
 # see remediation.py's ERR_NULL_REQUIRED_FIELD/ERR_MALFORMED_EXCEL_
-# CORRUPTION "fix" text. A row tagged with one of these AND also another
-# fault type that expects the row to be present is a real, observed
-# stacked-fault case (found while verifying Module 19's lake-phase port
-# end-to-end against the exact shipped reference solution - every
-# residual ERR_LATE_ARRIVAL and ERR_MALFORMED_AMBIGUOUS_DATE finding
-# traced back to exactly this kind of stack, on two different fault
-# types, which is why this is a general rule applied to every "must be
-# present" check below, not a special case bolted onto just one of them):
-# its absence is already fully explained by the other fault, so flagging
-# it again under a second fault type would be double-counting the same,
-# single, correctly-made exclusion decision as two different bugs.
+# CORRUPTION "fix" text. A row can carry one of these faults AND another
+# fault type that expects the row to be present (a real stacked-fault
+# case) - its absence is already fully explained by the reject-eligible
+# fault, so flagging it again under the second fault type would be
+# double-counting the same exclusion as two different bugs. This is a
+# general rule applied to every "must be present" check below, not a
+# special case for just one of them.
 _VALID_REJECT_REASONS = {"null_required_field", "malformed_excel_corruption"}
 
 
@@ -138,12 +131,10 @@ def _check_fault(
     return None
 
 
-# Maps pandera's actual check names (confirmed by testing directly, not
-# guessed - "not_nullable" and "field_uniqueness" are pandera's real
-# names) to the remediation entry that's actually relevant. A uniqueness
-# violation IS the duplicate-delivery problem, so mapping it to
-# "UNKNOWN" (found while testing a real bad submission) gave useless
-# generic text instead of the real fix.
+# Maps pandera's actual check names ("not_nullable" and "field_uniqueness"
+# are pandera's real names) to the remediation entry that's actually
+# relevant. A uniqueness violation IS the duplicate-delivery problem, so
+# it needs its own mapping rather than falling through to generic text.
 _PANDERA_CHECK_TO_ERROR_CODE = {
     "not_nullable": "ERR_NULL_REQUIRED_FIELD",
     "field_uniqueness": "ERR_DUPLICATE_DELIVERY",
@@ -160,12 +151,12 @@ def _error_code_for_pandera_check(check_name: str) -> str:
 def grade_clean_transactions(clean_df: pl.DataFrame) -> GradingReport:
     """The reusable core: structural (pandera) + per-fault-type checks
     against the real ground truth, given an already-fetched
-    clean_transactions dataframe. Deliberately has no opinion on WHERE
-    clean_df came from - Module 5 (postgres_phase) fetches it via a
-    session's Postgres role; Module 9 (lake_phase) fetches the identical
-    contract from a DuckDB file instead. The required-output shape and
-    the ground truth (injected_fault_log) are the same either way, so
-    this logic is shared rather than reimplemented a second time."""
+    clean_transactions dataframe. Deliberately has no opinion on where
+    clean_df came from - the relational phase fetches it via a session's
+    Postgres role, while the lake phase fetches the identical contract
+    from files instead. The required-output shape and the ground truth
+    (injected_fault_log) are the same either way, so this logic is
+    shared rather than reimplemented per phase."""
     report = GradingReport(total_clean_rows=clean_df.height)
 
     if clean_df.height > 0:

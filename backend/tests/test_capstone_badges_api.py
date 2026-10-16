@@ -1,4 +1,4 @@
-"""Module 22: confirms the real end-to-end wiring from a phase's own
+"""Confirms the real end-to-end wiring from a phase's own
 /grade endpoint to a capstone badge - representative of all five phases
 since the edit is mechanically identical in each, so one real,
 full-stack proof (Postgres, the simplest/fastest phase to provision) is

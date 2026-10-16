@@ -1,18 +1,12 @@
-"""Module 21: deterministic daily rotation + a deliberately simple
-adaptive-difficulty rule.
+"""Deterministic daily rotation plus a simple adaptive-difficulty rule.
 
-"Adaptive difficulty" has no further spec anywhere in this project's
-planning docs beyond the one line in PLAN.md - CURRICULUM_STRUCTURE.md's
-own research paragraph names the feature bundle (streak/accuracy/adaptive
-difficulty) but doesn't define the adaptation rule itself. Rather than
-invent a sophisticated per-attempt accuracy tracker (which would need a
-new table - this project's progress schema only records completions, not
-every attempt), this ties difficulty tier directly to completion count,
-already available via progress.node_completions with zero new schema:
-every 5 completed daily challenges on a track raises its tier by one, up
-to tier 3. This is an honest, simple first pass - like xp_rules.py's own
-documented stance on its XP amounts ("tunable later, not grounded in
-external research"), not a claim this is the sophisticated version."""
+Rather than track per-attempt accuracy (which would need a new table -
+the progress schema only records completions, not every attempt),
+difficulty tier is tied directly to completion count, already available
+via progress.node_completions with zero new schema: every 5 completed
+daily challenges on a track raises its tier by one, up to tier 3. This
+is a simple first pass, similar to xp_rules.py's XP amounts, not a
+claim that it's the most sophisticated possible version."""
 
 from datetime import date
 

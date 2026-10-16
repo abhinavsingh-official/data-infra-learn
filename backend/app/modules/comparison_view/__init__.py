@@ -1,1 +1,1 @@
-# Module 11: read-only cross-platform comparison content - no provisioning, no grading.
+# Read-only cross-platform comparison content - no provisioning, no grading.

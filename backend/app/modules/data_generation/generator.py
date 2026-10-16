@@ -1,6 +1,7 @@
-"""Module 2 orchestrator: creates the schema, generates all five tables in
-the right dependency order, and writes each batch via psycopg3's native
-copy() - not executemany or row-by-row INSERT. See MODULE_2_PLAN.md for why."""
+"""Orchestrator: creates the schema, generates all five tables in the
+right dependency order, and writes each batch via psycopg3's native
+copy() rather than executemany or row-by-row INSERT, since COPY is
+dramatically faster at the row counts this generates."""
 
 import time
 from typing import Any, Sequence

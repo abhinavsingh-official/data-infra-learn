@@ -1,11 +1,9 @@
-"""Module 19 rewrite of Module 8's "day 2" simulation, now against the
-session's own Spark/Delta `source_accounts_snapshot` table instead of a
-DuckDB file (see MODULE_8_PLAN.md for why this exists at all, and
-app.core.spark_sessions for why UPDATE needs a Delta-format table).
-Mutation history is still kept out of band from a sidecar file next to
-the per-session Delta table directory, same reasoning as before -
-plain filesystem state the sandboxed execute() endpoint's SQL has no
-path to reach, not a table the exercise's own SELECT * could stumble on."""
+"""Simulates the "day 2" mutation against the session's own Spark/Delta
+`source_accounts_snapshot` table (see app.core.spark_sessions for why
+UPDATE needs a Delta-format table). Mutation history is kept out of band,
+in a sidecar file next to the per-session Delta table directory - plain
+filesystem state the sandboxed execute() endpoint's SQL has no path to
+reach, not a table the exercise's own SELECT * could stumble on."""
 
 import json
 from dataclasses import asdict, dataclass
@@ -63,10 +61,10 @@ def apply_mutations(session_spark, session_id: str) -> list[AccountMutation]:
             )
             # Read the mutation's ground truth back from what Spark/Delta
             # actually stored, rather than recomputing it independently in
-            # Python - the same cross-boundary float/decimal precision
-            # lesson as Module 8's original DuckDB version of this file
-            # (and Module 5/7's own versions of it), reapplied here on
-            # the new engine rather than assumed to not apply anymore.
+            # Python - avoids drift from any cross-boundary float/decimal
+            # precision difference between the two.
+            # candidate_ids are ints from row["id"] above, never user input,
+            # so splicing them into the query text is safe here.
             ids_literal = ", ".join(str(i) for i in candidate_ids)
             new_rows = session_spark.sql(
                 f"SELECT id, credit_limit FROM source_accounts_snapshot WHERE id IN ({ids_literal})"

@@ -1,8 +1,7 @@
-"""Module 19 rewrite of Module 8.4's grading report generator, now
-against the session's own Spark session object instead of a DuckDB file
-connection. Every check still runs as SQL inside the engine (Spark SQL's
-join engine is the right tool here, same reasoning as the original
-DuckDB version) - only the connection/execution mechanics changed."""
+"""Warehouse-phase grading report generator, running against the
+session's own Spark session object. Every check runs as SQL inside the
+engine - Spark SQL's join engine is the right tool here, same as it
+would be against any other SQL engine."""
 
 from dataclasses import dataclass, field
 

@@ -1,6 +1,6 @@
-"""Baseline realistic variance - always on, low rate (~2-5%). This is NOT
-Module 3's deliberate edge-case injection; see MODULE_2_PLAN.md for the
-distinction. This module answers "real fintech data is messy even with
+"""Baseline realistic variance - always on, low rate (~2-5%). This is
+separate from deliberate edge-case/fault injection elsewhere in the
+pipeline: this module answers "real fintech data is messy even with
 zero pipeline faults", not "here are the graded edge cases"."""
 
 import random
@@ -10,10 +10,9 @@ MESSY_RATE = 0.03
 
 def _typo(text: str) -> str:
     """Genuine human data-entry mistakes - transposed, doubled, or missing
-    letters - not just casing/whitespace. Real dirty-data research (Experian:
-    human error drives >60% of dirty data) treats this as a distinct failure
-    mode from formatting variance, so it gets its own function rather than
-    being folded into messy_name's cosmetic variants."""
+    letters - not just casing/whitespace. Treated as a distinct failure
+    mode from formatting variance, so it gets its own function rather
+    than being folded into messy_name's cosmetic variants."""
     if len(text) < 3:
         return text
     i = random.randint(0, len(text) - 2)

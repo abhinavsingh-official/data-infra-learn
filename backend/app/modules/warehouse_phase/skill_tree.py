@@ -1,12 +1,12 @@
-"""Module 20 Part 2: the Warehouse-phase skill tree - a thin intro+capstone
-wrapper around the existing capstone task (WAREHOUSE_PHASE_TASK), mirroring
-nosql_phase.skill_tree's shape. Deliberately has no step-by-step skill nodes
-of its own: the capstone's reference solution runs against real Spark/Delta
+"""The Warehouse-phase skill tree - a thin intro+capstone wrapper around
+the existing capstone task (WAREHOUSE_PHASE_TASK), mirroring
+nosql_phase.skill_tree's shape. Has no step-by-step skill nodes of its
+own: the capstone's reference solution runs against real Spark/Delta
 (SCD2 via MERGE INTO), not plain Postgres, so it can't be decomposed into
-node_practice.py-gradable steps the way postgres_phase's tree could. The
+node_practice.py-gradable steps the way postgres_phase's tree can. The
 node-by-node fundamentals (Kimball's four-step process, star-schema JOINs,
-first-pass SCD2) live entirely in warehouse_databases_track instead - same
-division of labor the SQL and NoSQL umbrellas already use."""
+first-pass SCD2) live in warehouse_databases_track instead, the same
+division of labor the SQL and NoSQL umbrellas use."""
 
 from app.modules.warehouse_phase.task_content import WAREHOUSE_PHASE_TASK
 

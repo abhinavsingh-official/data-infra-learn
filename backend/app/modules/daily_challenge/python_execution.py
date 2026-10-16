@@ -1,22 +1,17 @@
-"""Module 21: the Daily Challenge's Python half needed a genuinely new
-capability this project never had before - running a learner's own
-Python function and grading its return value. Grepping the whole
-codebase first confirmed there was nothing to reuse: node_practice.py
-and mongo_node_practice.py only ever run submitted SQL text or a JSON
-Mongo command against a real, role-isolated database - neither one
-executes arbitrary code.
+"""Runs a learner's submitted Python function and grades its return
+value against a set of test cases. Neither node_practice.py nor
+mongo_node_practice.py executes arbitrary code - they run submitted SQL
+text or a JSON Mongo command against a real, role-isolated database - so
+this module handles code execution on its own.
 
 Runs in a fresh subprocess (python -I -c <script>), not exec() in-process
 - a crash or infinite loop in submitted code can't take down the FastAPI
 process, and a hard wall-clock timeout via subprocess.run(timeout=...)
-kills it outright. A CPU-time rlimit is set as a second layer. This is
-deliberately NOT a full per-submission container (Docker/gVisor/etc.) -
-that's proportionate to a multi-tenant code judge grading adversarial
-strangers' code, not a local, single-user personal project where the
-"attacker" would only be attacking their own machine. Matches this
-project's existing risk posture (see mongo_execution.py's own docstring:
-real isolation mechanisms suited to the actual threat model, not maximal
-sandboxing for its own sake)."""
+kills it outright. A CPU-time rlimit is set as a second layer. This isn't
+a full per-submission container (Docker/gVisor/etc.) - this is a local,
+single-user project, not a multi-tenant code judge grading adversarial
+strangers' code, so the isolation is scoped to that threat model rather
+than maximal sandboxing for its own sake."""
 
 import json
 import resource

@@ -1,13 +1,6 @@
 """Read-only Postgres session provisioning, shared across every phase
 module that needs to let a session query the same five relational source
-tables without write access - first written for nosql_phase (Module 7),
-extracted here once warehouse_phase (Module 8) needed the exact same
-shape a second time. Unlike session_ids.py (a security invariant that
-must never drift), this is a genuine reuse case, not a premature
-abstraction - CODE_STANDARDS.md's "duplication is fine for phase
-modules" guidance is about avoiding invented generality, not about
-re-typing the same role-provisioning logic a third time once two real
-callers already want it."""
+tables without write access."""
 
 import secrets
 import string
@@ -22,10 +15,8 @@ READABLE_SOURCE_TABLES = [
     "transactions",
     "reward_events",
     "repayments",
-    # Module 3's raw JSONB feed - not sensitive (the actual answer key,
+    # Raw JSONB feed - not sensitive (the actual answer key,
     # injected_fault_log, is a separate table that stays default-deny).
-    # Added for lake_phase (Module 9), which sources from this feed the
-    # same way postgres_phase's own session roles already do.
     "raw_transaction_events",
 ]
 STATEMENT_TIMEOUT = "30s"

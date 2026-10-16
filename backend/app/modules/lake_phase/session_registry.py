@@ -3,7 +3,7 @@ phase - same single-process, TTL-based design as the other phases'
 registries (see postgres_phase.session_registry's docstring for the
 documented distributed-store limitation).
 
-Module 19: also holds the session's own SparkSession object - see
+Also holds the session's own SparkSession object - see
 warehouse_phase.session_registry's docstring for why that has to be the
 same object reused across requests, not a fresh one each time."""
 

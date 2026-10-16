@@ -1,42 +1,37 @@
-"""Module 19: PySpark session infrastructure shared across Warehouse,
-Lake, and Lakehouse phases - the replacement for duckdb_sessions.py
-(ARCHITECTURE_DECISIONS.md §3.1/3.2).
+"""PySpark session infrastructure shared across the Warehouse, Lake, and
+Lakehouse phases.
 
-Architecture, confirmed by actually running each piece before relying on
-it (not assumed from docs):
+Architecture notes:
 
-- **One shared, long-lived SparkSession per backend process** (JVM
-  startup is real and expensive - ARCHITECTURE_DECISIONS.md §3.2's
-  mitigation against spinning up a new one per visitor).
-- **Per-exercise-session isolation via `SparkSession.newSession()`** -
-  confirmed directly: it gives a genuinely separate temp-view namespace
-  and current-database setting per session object, while sharing the one
-  underlying SparkContext/JVM. This is the real Spark API feature the
-  architecture decision's "temp-view/catalog-namespace level" isolation
-  was describing.
+- **One shared, long-lived SparkSession per backend process.** JVM
+  startup is real and expensive, so it's paid once rather than per
+  visitor.
+- **Per-exercise-session isolation via `SparkSession.newSession()`.** It
+  gives a genuinely separate temp-view namespace and current-database
+  setting per session object, while sharing the one underlying
+  SparkContext/JVM.
 - **Managed tables and databases are NOT session-isolated the way temp
-  views are** - confirmed directly: the catalog (CREATE DATABASE/CREATE
-  TABLE) is shared across every session sharing one SparkContext, same as
-  two sessions sharing one Postgres instance. Isolation instead comes
-  from giving every exercise session its own uniquely-named database
+  views are.** The catalog (CREATE DATABASE/CREATE TABLE) is shared
+  across every session sharing one SparkContext, same as two sessions
+  sharing one Postgres instance. Isolation instead comes from giving
+  every exercise session its own uniquely-named database
   (`session_<id>`) and switching to it with `USE` once at provisioning -
   the same "shared instance, separate namespace per tenant" pattern the
-  Postgres phases already use with per-session schemas.
-- **Every managed table needs `USING DELTA` explicitly** - confirmed
-  directly: a vanilla CREATE TABLE AS SELECT with no USING clause tries
-  Hive's SerDe path and fails outright under this setup (no Hive support
-  configured), and even `spark.sql.sources.default = delta` doesn't make
-  Databricks' implicit-Delta behavior happen on vanilla OSS Spark - that
-  default is a Databricks-managed-runtime behavior, not something
-  delta-spark alone provides. UPDATE/DELETE/MERGE only work on Delta
-  tables anyway (not plain parquet), so every exercise needing them has a
-  concrete reason to say USING DELTA, not just a workaround.
-- **No `pg.*`-qualified names like DuckDB's ATTACH gave** - Spark temp
+  Postgres phases use with per-session schemas.
+- **Every managed table needs `USING DELTA` explicitly.** A vanilla
+  CREATE TABLE AS SELECT with no USING clause tries Hive's SerDe path
+  and fails outright under this setup (no Hive support configured), and
+  even `spark.sql.sources.default = delta` doesn't make Databricks'
+  implicit-Delta behavior happen on vanilla OSS Spark - that default is
+  a Databricks-managed-runtime behavior, not something delta-spark alone
+  provides. UPDATE/DELETE/MERGE only work on Delta tables anyway (not
+  plain parquet), so every exercise needing them has a concrete reason
+  to say USING DELTA, not just a workaround.
+- **No `pg.*`-qualified names like DuckDB's ATTACH gave.** Spark temp
   views are always single-part names (no schema qualification), so the
   live source tables are exposed as plain `users`/`accounts`/
   `transactions`/`reward_events`/`repayments` temp views instead of
-  `pg.users` etc. - a real, deliberate content change from the DuckDB-era
-  task descriptions and reference solutions, not an oversight."""
+  `pg.users` etc."""
 
 import os
 import threading
@@ -67,11 +62,11 @@ _global_spark_lock = threading.Lock()
 
 
 def _set_java_and_python_env() -> None:
-    """Must happen before the JVM/py4j subprocess ever launches - found by
-    testing directly that PySpark's worker processes otherwise inherit
-    whatever bare `python3` resolves to on PATH (this machine's system
-    Python, 3.14), not the venv interpreter actually running this
-    process, and crash with PYTHON_VERSION_MISMATCH."""
+    """Must happen before the JVM/py4j subprocess ever launches - PySpark's
+    worker processes otherwise inherit whatever bare `python3` resolves
+    to on PATH (this machine's system Python, 3.14), not the venv
+    interpreter actually running this process, and crash with
+    PYTHON_VERSION_MISMATCH."""
     import sys
 
     settings = get_settings()
@@ -98,26 +93,24 @@ def _build_global_spark():
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
         .config("spark.sql.warehouse.dir", str(settings.spark_warehouse_dir))
         .config("spark.ui.enabled", "false")
-        # Low-spec-machine requirement (CODE_STANDARDS.md) - the default
-        # 200 shuffle partitions is tuned for a real cluster, not a single
-        # local process grading hand-sized exercise data.
+        # The default 200 shuffle partitions is tuned for a real cluster,
+        # not a single local process grading hand-sized exercise data.
         .config("spark.sql.shuffle.partitions", "4")
         .config("spark.driver.memory", "2g")
         # Spark's default session timezone is the JVM's local timezone,
-        # not UTC - confirmed directly as the root cause of a real bug in
-        # the lake phase's watermark check (every JDBC-read Postgres
-        # TIMESTAMPTZ silently shifted by this machine's +5:30 offset
-        # relative to anything computed natively in Spark, corrupting any
-        # comparison between the two). Postgres/DuckDB/the rest of this
-        # project all operate in UTC; Spark must too.
+        # not UTC. Left unset, every JDBC-read Postgres TIMESTAMPTZ
+        # silently shifts by this machine's local offset relative to
+        # anything computed natively in Spark, corrupting any comparison
+        # between the two. Postgres/DuckDB/the rest of this project all
+        # operate in UTC; Spark must too.
         .config("spark.sql.session.timeZone", "UTC")
     )
-    # configure_spark_with_delta_pip sets spark.jars.packages itself
-    # (overwriting, not merging, any prior value) - found by testing
-    # directly: setting the Postgres JDBC driver package via .config()
-    # before this call got silently clobbered, and every JDBC source read
-    # failed with ClassNotFoundException. extra_packages is delta-spark's
-    # own documented way to add more packages alongside Delta's own.
+    # configure_spark_with_delta_pip sets spark.jars.packages itself,
+    # overwriting rather than merging any prior value - setting the
+    # Postgres JDBC driver package via .config() before this call gets
+    # silently clobbered, failing every JDBC source read with
+    # ClassNotFoundException. extra_packages is delta-spark's own
+    # documented way to add more packages alongside Delta's own.
     builder = configure_spark_with_delta_pip(
         builder, extra_packages=["org.postgresql:postgresql:42.7.4"]
     )
@@ -156,19 +149,15 @@ def _source_query(pg_conn: Connection, table: str) -> str:
     every `timestamptz` column to a UTC-naive timestamp server-side via
     `AT TIME ZONE 'UTC'`.
 
-    This is load-bearing, not cosmetic - found the hard way via the lake
-    phase's watermark check silently misbehaving. Confirmed directly,
-    one variable at a time: `spark.sql.session.timeZone = "UTC"`, a JDBC
-    `sessionInitStatement` of `SET TIME ZONE 'UTC'` (confirmed to
-    genuinely execute on the real scan connection, not skipped), the JVM
-    system property `-Duser.timezone=UTC`, and disabling the PGJDBC
-    driver's binary transfer - none of them fixed it. What actually
-    reproduced the bug: a single-row, server-side-filtered read (e.g.
-    `WHERE id = 14`) came back correct; an unfiltered full-table read of
-    the exact same column came back shifted by this machine's local
-    +5:30 offset. Converting the column server-side, before the driver
-    ever serializes it, sidesteps whatever client-side ambiguity causes
-    that - confirmed directly to fix the full-table case too.
+    This is load-bearing, not cosmetic. Setting `spark.sql.session.
+    timeZone = "UTC"`, a JDBC `sessionInitStatement` of `SET TIME ZONE
+    'UTC'`, the JVM system property `-Duser.timezone=UTC`, and disabling
+    the PGJDBC driver's binary transfer all fail to prevent an unfiltered
+    full-table read of a timestamptz column coming back shifted by the
+    local machine's UTC offset (a single-row, server-side-filtered read
+    of the same column is unaffected). Converting the column server-side,
+    before the driver ever serializes it, sidesteps whatever client-side
+    ambiguity causes that.
 
     Introspects the real column list via information_schema rather than
     hardcoding every table's columns by hand (6 tables, ~60 columns
@@ -191,9 +180,9 @@ def _source_query(pg_conn: Connection, table: str) -> str:
 
 def provision_pg_source_views(spark_session, pg_conn: Connection, pg_role: str, pg_password: str) -> None:
     """Registers the five shared relational source tables as live,
-    read-only temp views (Spark's JDBC data source, re-queries Postgres
-    on demand - not a one-time copy) - the direct equivalent of the old
-    DuckDB ATTACH, minus the `pg.` qualifier (see module docstring)."""
+    read-only temp views. Spark's JDBC data source re-queries Postgres on
+    demand rather than copying once, the equivalent of a DuckDB ATTACH
+    minus the `pg.` qualifier (see module docstring)."""
     settings = get_settings()
     for table in READABLE_SOURCE_TABLES:
         df = (
@@ -213,8 +202,8 @@ def provision_phase_session(pg_conn: Connection, phase_prefix: str, session_id: 
     pg_readonly_sessions.py unchanged - it's engine-agnostic), a fresh
     per-session database in the shared SparkSession's catalog, and the
     five source tables registered as live temp views. Returns (spark_
-    session, pg_password) - the caller's own phase-specific provisioning
-    does whatever additional per-phase setup it needs (e.g. warehouse_
+    session, pg_password); the caller's own phase-specific provisioning
+    does whatever additional per-phase setup it needs (e.g. warehouse
     phase's source_accounts_snapshot bronze copy) on top of this."""
     role = pg_role_name(phase_prefix, session_id)
     password = provision_pg_readonly_session(pg_conn, role)
@@ -265,8 +254,7 @@ def _jsonable_value(value: Any) -> Any:
 def execute_spark_submission(session_spark, lock: threading.Lock, sql_text: str) -> SparkExecutionResult:
     """Runs exactly one SQL statement against the session's own Spark-
     session object (already USE'd into its own database at provisioning,
-    a setting that persists on that session object across calls -
-    confirmed directly, not assumed)."""
+    a setting that persists on that session object across calls)."""
     if contains_multiple_statements(sql_text):
         return SparkExecutionResult(
             success=False,

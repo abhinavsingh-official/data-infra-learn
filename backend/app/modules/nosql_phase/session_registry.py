@@ -2,10 +2,8 @@
 phase - a separate registry from postgres_phase's, since a session_id
 here refers to a Mongo database, not a Postgres schema, and a user could
 plausibly have one of each open at once. Same single-process, TTL-based
-design as postgres_phase.session_registry - see that module's docstring
-for the documented distributed-store limitation, which applies equally
-here and isn't repeated per module (CODE_STANDARDS.md: three similar
-modules are fine as three similar modules)."""
+design as postgres_phase.session_registry, including the same
+distributed-store limitation (see that module's docstring)."""
 
 import time
 from dataclasses import dataclass

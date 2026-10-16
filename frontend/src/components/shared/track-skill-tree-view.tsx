@@ -5,16 +5,13 @@ import { getSkillTree } from "@/lib/api";
 import { fetchProgressServerSide } from "@/lib/server-progress";
 
 /** The per-track skill-tree page body - identical shell across tracks
- * (Postgres, SQL Databases, and future paradigms per Module 20), only
- * the backend route prefix, title, and description differ. Extracted
- * once a second track needed the exact same page, per this project's
- * own "promote to shared once a second consumer needs it" convention.
+ * (Postgres, SQL Databases, and every other paradigm), only the backend
+ * route prefix, title, and description differ.
  *
- * Module 24: a track's own `paradigm` field (not every one of them is a
- * literal PHASE_THEME key - the fundamentals tracks use their own slugs
- * like "sql-databases") maps to the phase color closest to what it's
- * actually teaching, so all 8 skill-tree pages get a paradigm-colored
- * PageHero from this one edit. */
+ * A track's own `paradigm` field isn't always a literal PHASE_THEME key -
+ * the fundamentals tracks use their own slugs like "sql-databases" - so
+ * this maps each one to the phase color closest to what it's actually
+ * teaching, giving every skill-tree page a paradigm-colored PageHero. */
 const PARADIGM_ACCENT: Record<string, string> = {
   postgres: "--phase-postgres",
   "sql-databases": "--phase-postgres",

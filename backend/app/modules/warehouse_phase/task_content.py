@@ -1,10 +1,8 @@
-"""Module 19 rewrite of Module 8's exercise description for PySpark/Spark
-SQL instead of DuckDB (ARCHITECTURE_DECISIONS.md §3.1). Real content
-changes, not just a find-replace - every one found by actually running
-the SQL against a real Spark session first, not assumed to port
-unchanged (see MODULE_19_PLAN.md):
-- No more `pg.`-qualified source tables - Spark temp views are always
-  single-part names, so users/accounts/transactions/etc. are now plain
+"""The warehouse-phase exercise description, for PySpark/Spark SQL. A few
+Spark-specific quirks worth knowing when writing or grading this
+exercise's SQL:
+- Spark temp views are always single-part names (no `pg.`-style
+  qualification), so users/accounts/transactions/etc. are plain
   unqualified names.
 - Every CREATE TABLE needs an explicit `USING DELTA` - a bare CTAS tries
   Hive's SerDe path and fails outright without Hive support configured,
@@ -137,9 +135,9 @@ WAREHOUSE_PHASE_TASK = {
             "MERGE INTO, not UPDATE, closes out exactly the rows whose tracked attributes changed since "
             "the last load - unchanged accounts never get touched, so re-running this twice in a row "
             "inserts nothing further. This has to be MERGE, not a plain UPDATE with a join/subquery in its "
-            "condition - Delta's UPDATE doesn't support subqueries in the WHERE clause at all (confirmed "
-            "by actually running it); MERGE INTO is Delta's real mechanism for 'update rows based on "
-            "matching another table', the same technique real Databricks SCD2 pipelines use. dim_accounts "
+            "condition - Delta's UPDATE doesn't support subqueries in the WHERE clause at all; MERGE INTO "
+            "is Delta's real mechanism for 'update rows based on matching another table', the same "
+            "technique real Databricks SCD2 pipelines use. dim_accounts "
             "must be USING DELTA for MERGE/UPDATE to work at all - Spark SQL's plain managed tables don't "
             "support them, only Delta (and a few other formats) do. dim_users stays SCD Type 1 on purpose "
             "(deliberate contrast): it's always overwritten wholesale, no history kept, no "
@@ -195,9 +193,9 @@ WAREHOUSE_PHASE_TASK = {
                     "attributes against the source is what tells changed accounts apart from unchanged "
                     "ones - only the changed rows get closed out, so running this against an untouched "
                     "day-1 snapshot updates nothing. Written as MERGE INTO, not a plain UPDATE - Delta's "
-                    "UPDATE doesn't support a subquery/join in its condition at all (confirmed by actually "
-                    "running it), so 'update rows based on matching another table' always goes through "
-                    "MERGE on this engine, not Postgres's UPDATE ... FROM syntax."
+                    "UPDATE doesn't support a subquery/join in its condition at all, so 'update rows based "
+                    "on matching another table' always goes through MERGE on this engine, not Postgres's "
+                    "UPDATE ... FROM syntax."
                 ),
             },
             {

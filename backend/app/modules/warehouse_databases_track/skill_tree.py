@@ -1,17 +1,16 @@
-"""Module 20 Part 2: the new "Warehouse Databases" track - generic
-dimensional-modeling fundamentals (declaring the grain, star-schema JOINs,
-querying a historized SCD2 dimension, fact aggregation), grounded in the
-Kimball method's own four-step design process per CURRICULUM_STRUCTURE.md.
-Same division of labor as sql_databases_track vs. postgres_phase, and
-mongo_databases_track vs. nosql_phase: these are small, hand-sized teaching
-tables run through node_practice.py's plain-Postgres engine, not the real
-warehouse_phase capstone's Spark/Delta star schema at real scale - that
-distinction is deliberate (see node_practice.py's own docstring: the
-fundamentals-track engine was never tied to whatever the real capstone
-happens to run on). Every example row and expected output below was
-captured by actually creating these exact tables and running these exact
-queries against real Postgres, then copying the real result - not
-hand-typed (same verify-by-running standard as every prior track)."""
+"""The "Warehouse Databases" track - generic dimensional-modeling
+fundamentals (declaring the grain, star-schema JOINs, querying a
+historized SCD2 dimension, fact aggregation), grounded in the Kimball
+method's four-step design process. Same division of labor as
+sql_databases_track vs. postgres_phase, and mongo_databases_track vs.
+nosql_phase: these are small, hand-sized teaching tables run through
+node_practice.py's plain-Postgres engine, not the real warehouse_phase
+capstone's Spark/Delta star schema at real scale (see node_practice.py's
+own docstring - the fundamentals-track engine isn't tied to whatever the
+real capstone happens to run on). Every example row and expected output
+below was captured by creating these exact tables and running these
+exact queries against real Postgres, then copying the real result
+rather than hand-typing it."""
 
 WAREHOUSE_DATABASES_SKILL_TREE = {
     "paradigm": "warehouse-databases",

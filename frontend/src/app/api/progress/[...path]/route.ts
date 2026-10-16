@@ -1,6 +1,6 @@
-// Module 17: a thin server-side proxy for the backend's /progress/* API.
-// Auth.js's database-session cookie is httpOnly by design (Module 15) -
-// client components can't read it via document.cookie, so a client-side
+// A thin server-side proxy for the backend's /progress/* API. Auth.js's
+// database-session cookie is httpOnly by design - client components
+// can't read it via document.cookie, so a client-side
 // fetch straight to the FastAPI backend has no way to prove who's signed
 // in. This route runs server-side (where `cookies()` can read it),
 // forwards it to the backend as the X-Session-Token header the backend

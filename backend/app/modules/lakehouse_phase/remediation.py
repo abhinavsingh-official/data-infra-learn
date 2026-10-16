@@ -1,9 +1,9 @@
-"""Module 10.4: remediation for the three lakehouse-specific structural
-checks. Everything fault-type-specific (nulls, duplicates, late arrival,
-schema drift, malformed IDs/dates) reuses grading.remediation directly
-via grading.report.grade_clean_transactions - the required output
-contract and ground truth are identical to the relational phase's, so
-that text is identical too, not re-authored here."""
+"""Remediation for the three lakehouse-specific structural checks.
+Everything fault-type-specific (nulls, duplicates, late arrival, schema
+drift, malformed IDs/dates) reuses grading.remediation directly via
+grading.report.grade_clean_transactions - the required output contract
+and ground truth are identical to the relational phase's, so that text
+is identical too, not re-authored here."""
 
 REMEDIATION = {
     "ERR_LAKEHOUSE_NOT_DELTA": {

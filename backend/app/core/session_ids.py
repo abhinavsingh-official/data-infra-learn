@@ -1,23 +1,19 @@
-"""Session-id validation, shared across every storage-phase module (first
-extracted from postgres_phase for Module 7's nosql_phase). This is a
-security invariant, not phase-specific business logic - duplicating it
-per module would risk the two copies drifting (e.g. one module's regex
-loosening without the other's), so it lives here once instead of
-following CODE_STANDARDS.md's usual "duplication is fine for now"
-guidance for phase modules."""
+"""Session-id validation, shared across every storage-phase module. This
+is a security invariant, not phase-specific business logic -
+duplicating it per module would risk the copies drifting (e.g. one
+module's regex loosening without the others'), so it lives here once."""
 
 import re
 
-# Deliberately short of 64: identifier-truncation collision found in
-# Module 4 (Postgres silently truncates identifiers past 63 bytes) means
-# any prefixed name (role_name, db_name, etc.) derived from a session_id
-# must leave headroom for its own prefix. The longest prefix in use as of
-# Module 10 is "lakehouse_session_" (19 chars) - 40 hex chars + that
-# still stays under the 63-byte limit with 4 bytes to spare, but actual
-# usage only ever needs 32 (secrets.token_hex(16)), which leaves a
-# comfortable 12 bytes of real headroom against today's longest prefix.
-# Re-check this margin before adding a phase whose prefix is longer than
-# "lakehouse_session_".
+# Deliberately short of 64: Postgres silently truncates identifiers past
+# 63 bytes, so any prefixed name (role_name, db_name, etc.) derived from
+# a session_id must leave headroom for its own prefix. The longest
+# prefix in use is "lakehouse_session_" (19 chars) - 40 hex chars plus
+# that still stays under the 63-byte limit with 4 bytes to spare, but
+# actual usage only ever needs 32 (secrets.token_hex(16)), which leaves
+# a comfortable 12 bytes of real headroom against today's longest
+# prefix. Re-check this margin before adding a phase whose prefix is
+# longer than "lakehouse_session_".
 SAFE_SESSION_ID = re.compile(r"^[a-f0-9]{16,40}$")
 
 

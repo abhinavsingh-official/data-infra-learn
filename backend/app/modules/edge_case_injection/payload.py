@@ -1,4 +1,4 @@
-"""Renders a clean transaction (from Module 2's `transactions` table) into
+"""Renders a clean transaction (from the `transactions` table) into
 the baseline raw webhook-style payload shape - before any fault is
 injected. Amounts are represented as decimal strings at baseline
 (a common simpler webhook convention); the schema-drift type-change
@@ -26,6 +26,6 @@ def to_baseline_payload(txn: dict[str, Any]) -> dict[str, Any]:
 
 def baseline_received_at(txn: dict[str, Any]) -> datetime:
     """Normal (non-late) arrival: shortly after the event, matching
-    Module 2's existing settlement-lag pattern (0-48h)."""
+    the existing settlement-lag pattern (0-48h)."""
     posted = txn["posted_timestamp"]
     return posted if isinstance(posted, datetime) else datetime.fromisoformat(posted)

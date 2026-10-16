@@ -1,11 +1,10 @@
-"""Module 14: the Postgres-phase skill tree - content and data model only,
-no grading/UI yet (see MODULE_13_PLAN.md / MODULE_14_PLAN.md). Each skill
-node's `teach` block reuses the already-verified `reference_solution.steps`
-from `task_content.py` (not duplicated logic, same source of truth); each
-node's `practice`/`combine` example rows are real rows pulled directly from
-this project's own seeded database and hand-verified by actually running
-the relevant query against them - not invented. The capstone node
-references POSTGRES_PHASE_TASK itself rather than repeating it."""
+"""Postgres-phase skill tree - content and data model only, no
+grading/UI yet. Each skill node's `teach` block reuses
+`reference_solution.steps` from `task_content.py` (not duplicated
+logic, same source of truth); each node's `practice`/`combine` example
+rows are real rows pulled directly from this project's own seeded
+database, not invented. The capstone node references
+POSTGRES_PHASE_TASK itself rather than repeating it."""
 
 from app.modules.postgres_phase.task_content import POSTGRES_PHASE_TASK
 
@@ -232,8 +231,7 @@ POSTGRES_SKILL_TREE = {
             "title": "Review: all five edge cases, mixed",
             "prompt": (
                 "Spaced-repetition checkpoint - same seven example rows as node 5's combine drill, "
-                "unlocked once, then re-surfaced later per a simple schedule once real progress "
-                "tracking exists (Module 16)."
+                "unlocked once, then re-surfaced later on a simple schedule."
             ),
         },
         {

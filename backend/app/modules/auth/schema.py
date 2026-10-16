@@ -1,11 +1,12 @@
-"""Module 15: DDL for Auth.js's Postgres adapter tables (@auth/pg-adapter's
-own documented schema - https://authjs.dev/getting-started/adapters/pg),
-schema-qualified into `auth` rather than the adapter's default unqualified
-names. Unqualified `accounts`/`sessions`/`users` would collide directly
-with this project's own public.accounts/public.users tables, which mean
-something completely different (fintech data, not login sessions) - see
-docker/init/02_auth_role.sh for the role whose search_path keeps the
-Next.js side's own unqualified queries resolving into this schema."""
+"""DDL for Auth.js's Postgres adapter tables (@auth/pg-adapter's own
+documented schema - https://authjs.dev/getting-started/adapters/pg),
+schema-qualified into `auth` rather than the adapter's default
+unqualified names. Unqualified `accounts`/`sessions`/`users` would
+collide directly with this project's own public.accounts/public.users
+tables, which mean something completely different (fintech data, not
+login sessions) - see docker/init/02_auth_role.sh for the role whose
+search_path keeps the Next.js side's own unqualified queries resolving
+into this schema."""
 
 from psycopg import Connection
 
@@ -58,9 +59,8 @@ def create_schema(conn: Connection) -> None:
 
 
 if __name__ == "__main__":
-    # One-time setup, same invocation pattern as data_generation's schema -
-    # `python -m app.modules.auth.schema` - run once per environment, not
-    # part of regular app startup.
+    # One-time setup - `python -m app.modules.auth.schema` - run once per
+    # environment, not part of regular app startup.
     from app.core.db import get_admin_connection
 
     with get_admin_connection() as conn:

@@ -1,21 +1,19 @@
-"""Module 16/18: node-scoped grading - runs a learner's single SQL
-statement against a private, per-check copy of just that node's own
-example rows (not a real shared dataset), then diffs the result against
-the node's recorded expected_output_rows. Reuses postgres_phase's own
-role-isolation mechanics (session_provisioning's pattern) and
-execute_submission directly rather than reinventing them - the only real
-difference is this role's own tables are small private copies it owns,
-loaded with just this node's example rows, instead of a GRANT onto a
-real shared table.
+"""Node-scoped grading - runs a learner's single SQL statement against a
+private, per-check copy of just that node's own example rows (not a real
+shared dataset), then diffs the result against the node's recorded
+expected_output_rows. Reuses postgres_phase's own role-isolation
+mechanics (session_provisioning's pattern) and execute_submission
+directly rather than reinventing them - the only real difference is this
+role's own tables are small private copies it owns, loaded with just
+this node's example rows, instead of a GRANT onto a real shared table.
 
-Module 18 generalized this from a single hardcoded raw_transaction_events
-table (Module 16's original Postgres-only shape) to an arbitrary list of
-tables, each driven entirely by its own `schema` list (column name + SQL
-type) - needed for the new SQL Databases track's JOIN node, which needs
-two small tables, not one. The schema list was already authored for
-every node (originally just for UI display) and happens to describe
-exactly the DDL needed, so this reuses it as the single source of truth
-instead of maintaining a second, parallel column list."""
+Practice blocks can declare an arbitrary list of tables, each driven
+entirely by its own `schema` list (column name + SQL type) - needed for
+the SQL Databases track's JOIN node, which needs two small tables, not
+one. The schema list is already authored for every node (originally just
+for UI display) and happens to describe exactly the DDL needed, so this
+reuses it as the single source of truth instead of maintaining a second,
+parallel column list."""
 
 import json
 import math
@@ -39,16 +37,15 @@ from app.modules.pipeline_architecture_track.skill_tree import PIPELINE_ARCHITEC
 from app.modules.sql_databases_track.skill_tree import SQL_DATABASES_SKILL_TREE
 from app.modules.warehouse_databases_track.skill_tree import WAREHOUSE_DATABASES_SKILL_TREE
 
-# Postgres (Module 14), SQL Databases (Module 18), MongoDB Databases, and
-# Warehouse Databases (Module 20) have skill trees so far - the remaining
-# paradigms join this registry as their own trees get built. Keyed by
-# track slug, not literally "paradigm" anymore since Module 18 split SQL
-# into two tracks under one umbrella - kept the param name for
-# API-contract stability (POST /progress/nodes/{paradigm}/{node_id}/check),
-# but it really means "track slug" today. Warehouse Databases runs through
-# this same plain-Postgres engine despite the real warehouse_phase capstone
-# running on Spark/Delta - the engine was never tied to the capstone's own
-# engine (see sql_databases_track's own precedent against postgres_phase).
+# Registry of paradigms/tracks that have a skill tree with gradable
+# nodes; other paradigms join as their own trees get built. Keyed by
+# track slug, not literally "paradigm" - SQL is split into two tracks
+# under one umbrella, so the param name is kept for API-contract
+# stability (POST /progress/nodes/{paradigm}/{node_id}/check), but it
+# really means "track slug" today. Warehouse Databases runs through this
+# same plain-Postgres engine despite the real warehouse_phase capstone
+# running on Spark/Delta - this engine was never tied to the capstone's
+# own engine.
 _SKILL_TREES: dict[str, dict] = {
     "postgres": POSTGRES_SKILL_TREE,
     "sql-databases": SQL_DATABASES_SKILL_TREE,
@@ -89,11 +86,11 @@ def _dsn(role: str, password: str) -> str:
 
 
 def _practice_tables(practice: dict) -> list[dict]:
-    """A practice block declares one or more tables. Module 16's original
-    content only ever had one (always named raw_transaction_events) and
-    never said so explicitly - `tables` lets new content (Module 18) name
-    its own table(s) and have more than one, while this single-table
-    fallback keeps every existing node working unchanged."""
+    """A practice block declares one or more tables. Older content only
+    ever had one (always named raw_transaction_events) and never said so
+    explicitly - `tables` lets newer content name its own table(s) and
+    have more than one, while this single-table fallback keeps every
+    existing node working unchanged."""
     if "tables" in practice:
         return practice["tables"]
     table_name = practice.get("table_name", "raw_transaction_events")
@@ -158,10 +155,9 @@ def _deprovision_practice_role(conn: Connection, check_id: str) -> None:
 
 # Postgres renders a UTC (or any zero-minute) offset in its default text
 # output as a short "+00" / "-05", not the full "+00:00" / "-05:00" ISO
-# form - that's exactly the format the skill-tree content's
-# expected_output_rows were captured in (by actually running the query,
-# per this project's own verify-by-running standard). Python's
-# datetime.fromisoformat needs the full form, so pad it before parsing.
+# form - that's the format the skill-tree content's expected_output_rows
+# were captured in. Python's datetime.fromisoformat needs the full form,
+# so pad it before parsing.
 _SHORT_OFFSET = re.compile(r"([+-]\d{2})$")
 
 
@@ -217,8 +213,8 @@ def check_practice_submission(practice: dict, sql_text: str) -> dict:
     """The actual provision -> run -> diff -> teardown grading logic,
     factored out of check_node_submission so a caller with a practice
     block that isn't a static skill-tree node lookup (the Daily
-    Challenge's date-rotated problems, Module 21) can reuse it directly
-    without inventing a parallel grading path."""
+    Challenge's date-rotated problems) can reuse it directly without
+    inventing a parallel grading path."""
     check_id = secrets.token_hex(16)
 
     with get_admin_connection() as conn:

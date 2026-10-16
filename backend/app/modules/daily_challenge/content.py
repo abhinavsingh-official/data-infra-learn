@@ -1,10 +1,6 @@
-"""Module 21: the Daily Challenge's content pool - small, hand-sized
-problems tagged by difficulty tier (1-3), one fresh SQL problem and one
-fresh Python problem picked per day (see selection.py). Every SQL query
-and every Python reference solution below was verified by actually
-running it (against real Postgres for the SQL pool, directly for the
-Python pool) before being written down here - same discipline as every
-other content module in this project.
+"""The Daily Challenge's content pool - small, hand-sized problems tagged
+by difficulty tier (1-3), one fresh SQL problem and one fresh Python
+problem picked per day (see selection.py).
 
 Practice blocks reuse the exact same dict keys as sql_databases_track's
 content (table_name/schema/example_rows/tables/expected_output_rows) so

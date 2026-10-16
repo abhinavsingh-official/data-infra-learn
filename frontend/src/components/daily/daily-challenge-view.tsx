@@ -5,7 +5,7 @@ import { CheckCircle2, Flame, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { RowTable } from "@/components/shared/lesson-node-modal";
 import { ApiError, checkDailyPython, checkDailySql } from "@/lib/api";

@@ -1,6 +1,5 @@
-"""Module 5.1: the structural contract for clean_transactions - see
-task_content.py's required_output. Uses pandera's polars backend, not
-pandas (pandas wasn't even installed - see MODULE_5_PLAN.md)."""
+"""The structural contract for clean_transactions - see task_content.py's
+required_output. Uses pandera's polars backend, not pandas."""
 
 import pandera.polars as pa
 

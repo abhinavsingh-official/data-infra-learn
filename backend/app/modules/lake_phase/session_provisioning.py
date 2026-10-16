@@ -1,10 +1,9 @@
-"""Module 19 rewrite of Module 9.2's provisioning, now on PySpark instead
-of DuckDB (see app.core.spark_sessions for the shared engine layer this
-builds on). Still a read-only Postgres role plus a real local output
+"""Session provisioning for the lake phase, built on PySpark (see
+app.core.spark_sessions for the shared engine layer this builds on). Each
+session gets a read-only Postgres role plus a real local output
 directory - the directory stays a genuine filesystem path (not just a
 Spark-catalog concept), since the whole point of this phase is writing
-and reading real Parquet files, same reasoning as MODULE_9_PLAN.md's
-original decision."""
+and reading real Parquet files."""
 
 import shutil
 
@@ -37,9 +36,9 @@ def output_dir(session_id: str):
 
 
 def provision_session(pg_conn: Connection, session_id: str):
-    """Returns (spark_session, pg_password) - same shape as warehouse_
-    phase's provisioning, for the same reason (session_registry.py keeps
-    the actual SparkSession object alive across requests)."""
+    """Returns (spark_session, pg_password) - same shape as the warehouse
+    phase's provisioning, since session_registry.py keeps the actual
+    SparkSession object alive across requests."""
     session_spark, password = provision_phase_session(pg_conn, PHASE_PREFIX, session_id)
     output_dir(session_id).mkdir(parents=True, exist_ok=True)
     return session_spark, password

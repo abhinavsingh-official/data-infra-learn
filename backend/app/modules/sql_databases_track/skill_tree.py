@@ -1,15 +1,13 @@
-"""Module 18: the new "SQL Databases" track - generic, DB-agnostic SQL
-fundamentals (WHERE, JOIN, GROUP BY/ORDER BY, NULL handling), per
-CURRICULUM_STRUCTURE.md's SQL-umbrella split. Deliberately NOT the real
+"""The "SQL Databases" track - generic, DB-agnostic SQL fundamentals
+(WHERE, JOIN, GROUP BY/ORDER BY, NULL handling). Not the real
 51,495-row fintech feed or the real `public.transactions`/`public.accounts`
 tables - those are Postgres-track/capstone-scale content. These are
-small, hand-sized teaching copies of the same fintech domain (consistent
-with the project's one-company throughline) with only the few columns
-each lesson actually needs, not the real ~20-column ISO-8583-inspired
-schema from data_generation/schema.py. Every example row and expected
-output below was captured by actually creating these exact tables and
-running these exact queries against real Postgres, then copying the real
-result - not hand-typed (same verify-by-running standard as Module 14)."""
+small, hand-sized teaching copies of the same fintech domain, with only
+the few columns each lesson actually needs, not the real ~20-column
+ISO-8583-inspired schema from data_generation/schema.py. Every example
+row and expected output below was captured by creating these exact
+tables and running these exact queries against real Postgres, then
+copying the real result rather than hand-typing it."""
 
 SQL_DATABASES_SKILL_TREE = {
     "paradigm": "sql-databases",

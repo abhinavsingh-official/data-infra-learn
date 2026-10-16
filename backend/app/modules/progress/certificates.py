@@ -1,11 +1,11 @@
-"""Module 22: certificates, per MODULE_13_PLAN.md's own decision -
-"purely vanity, format doesn't matter," unlocked after finishing EVERY
-node in a paradigm's tree, not just its capstone. Module 18/20's SQL and
-NoSQL splits mean "a paradigm" today is really a small group of tracks
-(SQL Databases + Postgres; MongoDB Databases + NoSQL; Warehouse Databases
-+ Warehouse) - a certificate covers the whole group, matching how `/sql`,
-`/nosql`, and `/warehouse` already present themselves as one umbrella to
-the learner, not two separate things to finish."""
+"""Certificates - purely a vanity reward, unlocked after finishing EVERY
+node in a paradigm's tree, not just its capstone. The SQL and NoSQL
+umbrellas each span two tracks (SQL Databases + Postgres; MongoDB
+Databases + NoSQL; Warehouse Databases + Warehouse), so "a paradigm"
+here is really a small group of tracks - a certificate covers the whole
+group, matching how `/sql`, `/nosql`, and `/warehouse` already present
+themselves as one umbrella to the learner, not two separate things to
+finish."""
 
 from app.modules.mongo_databases_track.skill_tree import MONGO_DATABASES_SKILL_TREE
 from app.modules.lake_phase.skill_tree import LAKE_SKILL_TREE

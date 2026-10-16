@@ -1,12 +1,9 @@
-"""Module 19 rewrite of Module 10.2's provisioning, now on PySpark/Delta
-instead of DuckDB + the `deltalake` Python library (see app.core.
-spark_sessions for the shared engine layer this builds on). Still splits
-the raw feed into two batches revealed progressively (`batch_1_events`
-immediately, `batch_2_events` only on request) - same "day 1 / day 2"
-mechanism as the warehouse phase's SCD2 mutation, applied here to
-simulate incremental batch arrival - and both are real Delta tables now
-(USING DELTA, same reason every managed table in this project needs it:
-see spark_sessions.py's module docstring)."""
+"""Lakehouse-phase session provisioning on PySpark/Delta (see
+app.core.spark_sessions for the shared engine layer this builds on).
+Splits the raw feed into two batches revealed progressively
+(`batch_1_events` immediately, `batch_2_events` only on request) to
+simulate incremental batch arrival - both are real Delta tables
+(USING DELTA; see spark_sessions.py for why managed tables need that)."""
 
 from psycopg import Connection
 
@@ -30,8 +27,8 @@ def session_lock(session_id: str):
 
 
 def provision_session(pg_conn: Connection, session_id: str):
-    """Returns (spark_session, pg_password) - same shape as every other
-    migrated phase's provisioning."""
+    """Returns (spark_session, pg_password) - same shape as the other
+    phases' provisioning."""
     session_spark, password = provision_phase_session(pg_conn, PHASE_PREFIX, session_id)
     session_spark.sql(
         "CREATE TABLE batch_1_events USING DELTA AS "

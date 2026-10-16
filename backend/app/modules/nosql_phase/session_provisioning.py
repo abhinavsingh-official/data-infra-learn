@@ -1,15 +1,15 @@
-"""Module 7.2: per-session provisioning across TWO databases at once -
-a Mongo user scoped to readWrite on its own database (where the user
-builds account_profiles), and a Postgres role scoped to read-only access
-on the same five source tables from the relational phase (where the
+"""Per-session provisioning across TWO databases at once - a Mongo user
+scoped to readWrite on its own database (where the user builds
+account_profiles), and a Postgres role scoped to read-only access on
+the same five source tables from the relational phase (where the
 source data actually lives - there's no reason to duplicate it into
-Mongo just so this phase has "its own" copy). Mirrors Module 4's
-role/schema isolation, but the isolation mechanism on the Mongo side is
-its own native per-database authentication - see MODULE_7_PLAN.md.
+Mongo just so this phase has "its own" copy). Mirrors the Postgres
+phase's role/schema isolation, but the isolation mechanism on the Mongo
+side is its own native per-database authentication.
 
 The Postgres read-only side is a thin, name-stable wrapper around
-app.core.pg_readonly_sessions - shared with warehouse_phase (Module 8),
-the second real caller that needed the identical shape."""
+app.core.pg_readonly_sessions, shared with warehouse_phase, which needs
+the identical shape."""
 
 import secrets
 import string
@@ -33,8 +33,8 @@ from app.core.session_ids import validate_session_id
 # distinct prefix keeps that impossible rather than merely unlikely.
 PG_ROLE_PREFIX = "nosql_session_"
 
-# Confirmed by calling dropUser against a nonexistent user directly
-# (see MODULE_7_PLAN.md) - Mongo's real error code for "no such user".
+# Mongo's error code for "no such user" (from dropUser against a
+# nonexistent user).
 _USER_NOT_FOUND = 11
 
 

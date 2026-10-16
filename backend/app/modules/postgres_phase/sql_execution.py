@@ -1,7 +1,7 @@
-"""Module 4.3: executes user-submitted SQL as the session's restricted
-role. Resilient by design, mirroring the health-check fix from Module 1 -
-a bad submission (syntax error, timeout, permission violation) must come
-back as a structured result, not an unhandled 500."""
+"""Executes user-submitted SQL as the session's restricted role. A bad
+submission (syntax error, timeout, permission violation) comes back as
+a structured result, not an unhandled 500 - same approach as the
+health-check endpoint's own error handling."""
 
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -32,25 +32,23 @@ def _session_dsn(role: str, password: str) -> str:
 def _jsonable_row(row: tuple[Any, ...]) -> tuple[Any, ...]:
     """FastAPI's response serialization for a bare `-> dict` return
     annotation (no Pydantic response_model) renders a raw Decimal as a
-    quoted JSON string, not a number - confirmed directly, and different
-    from calling jsonable_encoder by hand, which does convert it to a
-    float. Every NUMERIC column a user's SELECT returns (amount, balance,
-    etc.) would otherwise come back type-wrong over the API - a real bug
-    hiding in both this endpoint and nosql_phase's query-source, which
-    reuses this function directly."""
+    quoted JSON string, not a number - unlike calling jsonable_encoder by
+    hand, which does convert it to a float. Every NUMERIC column a user's
+    SELECT returns (amount, balance, etc.) would otherwise come back
+    type-wrong over the API, which also affects nosql_phase's
+    query-source, since it reuses this function directly."""
     return tuple(float(value) if isinstance(value, Decimal) else value for value in row)
 
 
 def _contains_multiple_statements(sql_text: str) -> bool:
-    """Heuristic, not a real SQL parser (documented limitation - could
-    false-positive on a single statement whose only string literal
-    contains a semicolon). Exists because of a real bug found by testing:
+    """Heuristic, not a real SQL parser - could false-positive on a
+    single statement whose only string literal contains a semicolon.
     psycopg3's simple-query-protocol multi-statement execution leaves
-    cur.description as None even when the last statement was a SELECT -
-    a multi-statement submission silently returned "success" with empty
-    results, discarding real output rather than erroring. Rejecting
-    multi-statement submissions with a clear message is safer than
-    silently losing a result set the caller thinks it received."""
+    cur.description as None even when the last statement was a SELECT,
+    so a multi-statement submission would silently return "success" with
+    empty results instead of erroring. Rejecting multi-statement
+    submissions with a clear message is safer than silently losing a
+    result set the caller thinks it received."""
     return ";" in sql_text.strip().rstrip(";")
 
 
@@ -59,10 +57,9 @@ def execute_submission(role: str, password: str, sql_text: str) -> ExecutionResu
     role - never the admin connection. Any failure (syntax, timeout,
     permission, multi-statement rejection) comes back as a structured
     ExecutionResult, not a raised exception. Row-returning results are
-    capped at MAX_RETURNED_ROWS - found by testing that an unbounded
-    SELECT against the raw feed produced a 12MB response in under a
-    second, a real resource-exhaustion risk on the stated low-spec-host
-    requirement, not a hypothetical one."""
+    capped at MAX_RETURNED_ROWS - an unbounded SELECT against the raw
+    feed can produce a multi-megabyte response in under a second, a real
+    resource-exhaustion risk on a low-spec host."""
     if _contains_multiple_statements(sql_text):
         return ExecutionResult(
             success=False,

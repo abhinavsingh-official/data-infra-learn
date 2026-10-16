@@ -1,10 +1,9 @@
-"""Module 7.4: the NoSQL-phase grading report generator. Fetches the
-user's account_profiles documents (as the session's own scoped user -
-not the admin client, so grading never silently benefits from an access
-level the user themselves wouldn't have) and compares them against the
-real ground truth computed directly from the relational source tables.
-Same remediation-first contract as grading.report: every failure gets a
-why/fix/tradeoffs writeup, never just pass/fail."""
+"""NoSQL-phase grading report generator. Fetches the user's
+account_profiles documents (as the session's own scoped user - not the
+admin client, so grading never silently benefits from an access level
+the user themselves wouldn't have) and compares them against the real
+ground truth computed directly from the relational source tables. Every
+failure gets a why/fix/tradeoffs writeup, never just pass/fail."""
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -54,10 +53,9 @@ def _normalize_date(value: Any) -> str | None:
     reasonably store next_due_date as an ISO string OR a BSON datetime
     (which pymongo returns as a Python datetime, not a date). Ground
     truth from Postgres comes back as a real `date` object. Comparing
-    those directly (found by running a real, otherwise-correct
-    submission through grading) fails every time on a type mismatch, not
-    an actual data error - normalize all three shapes to an ISO date
-    string before comparing."""
+    those directly fails on a type mismatch even when the data itself is
+    correct, so normalize all three shapes to an ISO date string before
+    comparing."""
     if value is None:
         return None
     if hasattr(value, "date") and callable(value.date):
@@ -69,8 +67,8 @@ def _normalize_date(value: Any) -> str | None:
 
 def _fetch_ground_truth(pg_conn: Connection) -> dict[str, dict[str, Any]]:
     """One pass over the real relational source, computed directly - not
-    a copy of what the user is expected to produce. Ground truth is keyed
-    by account_id (as a string, matching the document contract's _id)."""
+    a copy of what the user is expected to produce. Keyed by account_id
+    (as a string, matching the document contract's _id)."""
     ground_truth: dict[str, dict[str, Any]] = {}
 
     with pg_conn.cursor(row_factory=dict_row) as cur:

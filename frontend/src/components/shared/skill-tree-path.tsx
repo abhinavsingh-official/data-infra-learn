@@ -9,7 +9,7 @@ import type { ProgressDto, SkillNodeDto, SkillTreeDto } from "@/lib/types";
 /** A node that isn't individually gradable (intro/review/capstone) is
  * treated as an automatic pass-through for unlock purposes - only
  * "skill" nodes actually gate progression, since those are the only
- * ones Module 16's backend can grade today. */
+ * ones the backend can grade. */
 function isDone(node: SkillNodeDto, completedIds: Set<string>): boolean {
   if (node.type !== "skill") return true;
   return completedIds.has(node.id);

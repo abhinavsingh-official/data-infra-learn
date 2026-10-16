@@ -1,26 +1,21 @@
-"""Module 23: the new "Pipeline Architecture" track - a 6th, cross-cutting
-track per CURRICULUM_STRUCTURE.md's own flagged structural finding: real
-data-engineering curricula (DataDriven.io's own five categories) split on
-a different axis than this project's five storage paradigms - theirs
-includes a "Pipeline Architecture" category (scheduling, data quality,
-schema evolution, batch vs. streaming, idempotent pipelines, monitoring)
-that doesn't map to any single paradigm here. Its actual subtopics are
-exactly the edge-case categories this project already teaches, just
-scattered across all five phases' individual fault types (schema drift =
-"schema evolution"; redelivery dedup = "idempotent pipelines"; the
-watermark check = "batch vs. streaming") instead of presented as their
-own named discipline.
+"""The "Pipeline Architecture" track - a cross-cutting track covering
+scheduling, data quality, schema evolution, batch vs. streaming,
+idempotent pipelines, and monitoring. These topics don't map to any
+single storage paradigm; they show up as edge-case fault types scattered
+across the other phases (schema drift, redelivery dedup, watermark
+checks) rather than being presented as their own discipline, so this
+track pulls them together explicitly.
 
-Unlike every other fundamentals track, this one has no sibling "phase"
+Unlike the other fundamentals tracks, this one has no sibling "phase"
 with a real capstone dataset - it's cross-cutting by design, so there's
 no capstone node here, same as sql_databases_track has none (its capstone
 lives in the sibling postgres_phase tree instead). This track's "capstone"
-is conceptual: the review node explicitly points back at where each
-concept already shows up for real, across the five existing capstones.
+is conceptual: the review node points back at where each concept already
+shows up for real, across the five existing capstones.
 
-Every example row and expected output below was captured by actually
-creating these exact tables and running these exact queries against real
-Postgres, same verify-by-running standard as every other content module."""
+Every example row and expected output below was captured by creating
+these exact tables and running these exact queries against real
+Postgres."""
 
 PIPELINE_ARCHITECTURE_SKILL_TREE = {
     "paradigm": "pipeline-architecture",

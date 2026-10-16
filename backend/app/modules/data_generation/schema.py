@@ -1,5 +1,4 @@
-"""DDL for the fintech schema (Module 2). See MODULE_2_PLAN.md for the
-research/reasoning behind each table and data type choice."""
+"""DDL for the fintech schema."""
 
 from psycopg import Connection
 

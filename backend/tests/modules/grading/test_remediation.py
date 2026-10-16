@@ -6,14 +6,14 @@ from app.modules.grading.remediation import REMEDIATION
 _INJECTORS_PATH = Path(__file__).resolve().parents[3] / "app" / "modules" / "edge_case_injection" / "injectors.py"
 
 
-def test_every_error_code_module_3_actually_produces_has_remediation():
+def test_every_error_code_the_injectors_produce_has_remediation():
     """Cross-checks against the real injectors.py rather than a hardcoded
-    duplicate list, so this can't silently drift out of sync with Module 3."""
+    duplicate list, so this can't silently drift out of sync."""
     injectors_source = _INJECTORS_PATH.read_text()
     error_codes_in_use = set(re.findall(r'"(ERR_[A-Z_]+)"', injectors_source))
     assert error_codes_in_use, "regex found nothing - check injectors.py still matches this pattern"
     for code in error_codes_in_use:
-        assert code in REMEDIATION, f"{code} is injected by Module 3 but has no remediation entry"
+        assert code in REMEDIATION, f"{code} is injected by the edge-case injectors but has no remediation entry"
 
 
 def test_every_remediation_entry_has_why_fix_and_tradeoffs():

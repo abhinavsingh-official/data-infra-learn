@@ -15,8 +15,7 @@ def get_connection() -> Iterator[Connection]:
     Deliberate choice: this platform's core operation is executing and
     inspecting arbitrary SQL (data generation, grading, user submissions),
     not typical ORM-style CRUD - an ORM would add a layer to explain away
-    rather than one that helps. See CODE_STANDARDS.md on avoiding
-    premature abstraction.
+    rather than one that helps.
     """
     settings = get_settings()
     conn = psycopg.connect(settings.postgres_dsn)
@@ -30,11 +29,10 @@ def get_connection() -> Iterator[Connection]:
 def get_admin_connection() -> Iterator[Connection]:
     """Superuser connection - ONLY for session provisioning (creating/
     dropping per-session roles and schemas), never for regular request
-    handling. See MODULE_4_PLAN.md's two-connection-tier decision: the
-    data-plane connection above stays maximally restricted, and this
-    narrowly-used control-plane connection is what's allowed to do things
-    app_role deliberately cannot (CREATE ROLE, CREATE SCHEMA for another
-    role's ownership)."""
+    handling. The data-plane connection above stays maximally restricted,
+    and this narrowly-used control-plane connection is what's allowed to
+    do things app_role deliberately cannot (CREATE ROLE, CREATE SCHEMA for
+    another role's ownership)."""
     settings = get_settings()
     conn = psycopg.connect(settings.postgres_admin_dsn)
     try:

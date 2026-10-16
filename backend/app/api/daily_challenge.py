@@ -1,8 +1,8 @@
-"""Module 21: Daily Challenge - one SQL problem + one Python problem
-picked fresh per day. Mounted at /progress/daily so the frontend's
-existing generic /api/progress/* proxy route (Module 17, forwards the
-Auth.js session-token cookie as the X-Session-Token header) already
-covers it with zero new frontend plumbing."""
+"""Daily Challenge - one SQL problem + one Python problem picked fresh
+per day. Mounted at /progress/daily so the frontend's existing generic
+/api/progress/* proxy route (which forwards the Auth.js session-token
+cookie as the X-Session-Token header) already covers it with zero new
+frontend plumbing."""
 
 from datetime import datetime, timezone
 

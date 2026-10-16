@@ -44,7 +44,7 @@ const PARADIGMS: StorageParadigm[] = [
     name: "Data Lake",
     tagline: "Partitioned Parquet, schema-on-read",
     description:
-      "The same data as partitioned Parquet files queried with DuckDB - schema-on-read tradeoffs instead of schema-on-write.",
+      "The same data as partitioned Parquet files queried with Spark SQL - schema-on-read tradeoffs instead of schema-on-write.",
     available: true,
   },
   {
@@ -52,7 +52,7 @@ const PARADIGMS: StorageParadigm[] = [
     name: "Lakehouse",
     tagline: "ACID table semantics on object storage",
     description:
-      "Delta/Iceberg-style table semantics on top of the lake layer - batch and incremental append unified under one table format.",
+      "Real Delta Lake table semantics on top of the lake layer - batch and incremental append unified under one table format, with real time travel.",
     available: true,
   },
   {

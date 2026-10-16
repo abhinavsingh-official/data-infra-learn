@@ -3,13 +3,12 @@ warehouse phase - same single-process, TTL-based design as the other two
 phases' registries (see postgres_phase.session_registry's docstring for
 the documented distributed-store limitation, which applies here too).
 
-Module 19 addition: also holds the session's own `SparkSession` object
-(from `global_spark.newSession()`) - unlike DuckDB, where a session's
-state lived entirely in its file and got reopened fresh every call,
-Spark's per-session temp views and current-database setting live in that
-Python object itself, in-process. It has to be the *same* object reused
-across every request for this session, not a fresh `newSession()` each
-time - a fresh one would have none of the source temp views registered."""
+Also holds the session's own `SparkSession` object (from
+`global_spark.newSession()`): Spark's per-session temp views and
+current-database setting live in that Python object itself, in-process,
+so it has to be the *same* object reused across every request for this
+session, not a fresh `newSession()` each time - a fresh one would have
+none of the source temp views registered."""
 
 import time
 from dataclasses import dataclass

@@ -1,7 +1,6 @@
-"""Module 4.2: per-session provisioning - a restricted role + an owned
-schema, isolated from every other session. See MODULE_4_PLAN.md for the
-two-connection-tier decision (this uses the admin connection, never the
-regular app_role one) and the research behind the design."""
+"""Per-session provisioning - a restricted role + an owned schema,
+isolated from every other session. Uses the admin connection, never the
+regular app_role one."""
 
 import secrets
 import string
@@ -32,16 +31,16 @@ def _generate_password() -> str:
 
 def provision_session(conn: Connection, session_id: str) -> str:
     """Creates role+schema `session_<id>`, scopes its search_path to just
-    that schema, and applies the statement_timeout from ARCHITECTURE_
-    DECISIONS.md §7. Returns the generated password (the caller is
-    responsible for handing it to whatever connects as this role)."""
+    that schema, and applies a statement_timeout. Returns the generated
+    password (the caller is responsible for handing it to whatever
+    connects as this role)."""
     validate_session_id(session_id)
     role = role_name(session_id)
     password = _generate_password()
 
-    # Postgres doesn't accept a bind parameter in this DDL position (found
-    # by running it, not assumed) - sql.Literal is the correct mechanism
-    # for safely embedding a literal value here, not %s binding.
+    # Postgres doesn't accept a bind parameter in this DDL position -
+    # sql.Literal is the correct mechanism for safely embedding a literal
+    # value here, not %s binding.
     conn.execute(
         sql.SQL("CREATE ROLE {role} WITH LOGIN PASSWORD {password} NOSUPERUSER NOCREATEDB NOCREATEROLE").format(
             role=sql.Identifier(role), password=sql.Literal(password)
@@ -73,16 +72,15 @@ def provision_session(conn: Connection, session_id: str) -> str:
 
 def deprovision_session(conn: Connection, session_id: str) -> None:
     """DROP ROLE fails if the role still holds privileges granted on
-    shared objects (public.raw_transaction_events, public schema usage) -
-    found by running this against a session that had actually used its
-    read grants. DROP OWNED BY handles both the role's own schema AND any
-    privileges granted to it on other objects in one step; DROP SCHEMA
-    alone only ever covered the former."""
+    shared objects (public.raw_transaction_events, public schema usage).
+    DROP OWNED BY handles both the role's own schema AND any privileges
+    granted to it on other objects in one step; DROP SCHEMA alone only
+    covers the former."""
     validate_session_id(session_id)
     role = role_name(session_id)
     # DROP OWNED BY errors if the role doesn't exist (unlike DROP ROLE IF
-    # EXISTS) - guard so a double-deprovision or a partially-failed
-    # provision doesn't crash this.
+    # EXISTS), so guard against that: a double-deprovision or a
+    # partially-failed provision shouldn't crash this.
     with conn.cursor() as cur:
         cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (role,))
         role_exists = cur.fetchone() is not None

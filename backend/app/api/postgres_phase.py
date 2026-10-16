@@ -79,11 +79,11 @@ def grade(session_id: str, x_session_token: str | None = Header(default=None)) -
         "fault_findings": [vars(f) for f in report.fault_findings],
         "fault_type_summary": report.fault_type_summary,
     }
-    # Module 22: the capstone node has no "practice" block of its own (it
-    # links out to this real session/grading flow instead), so this is
-    # the one place a capstone's completion can be recorded - signed-out
-    # grading still works exactly as before, it just doesn't earn XP/a
-    # badge, matching every other progress-tracking path in this project.
+    # The capstone node has no "practice" block of its own (it links out
+    # to this real session/grading flow instead), so this is the one
+    # place a capstone's completion can be recorded - signed-out grading
+    # still works exactly as before, it just doesn't earn XP/a badge,
+    # matching every other progress-tracking path in this project.
     if report.passed:
         user = resolve_user(x_session_token)
         if user is not None:

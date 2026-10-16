@@ -1,9 +1,9 @@
-"""Module 12: aggregates existing remediation content from every phase
-(each `REMEDIATION` dict was hand-authored, with why/fix/tradeoffs, at
-the time that phase was built) plus Module 11's comparison content, into
-one explainer page. Nothing here is new content - it imports and
-displays what already exists, so the only new risk is wiring the wrong
-dict to the wrong phase label, not re-derived correctness."""
+"""Aggregates existing remediation content from every phase (each
+`REMEDIATION` dict carries its own why/fix/tradeoffs) plus the
+cross-platform comparison content, into one explainer page. Nothing here
+is new content - it imports and displays what already exists, so the
+only real risk is wiring the wrong dict to the wrong phase label, not
+re-derived correctness."""
 
 from app.modules.comparison_view.content import COMPARISON
 from app.modules.grading.remediation import REMEDIATION as POSTGRES_REMEDIATION

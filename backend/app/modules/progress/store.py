@@ -1,16 +1,15 @@
-"""Module 16: persistence for per-user progress - node completions, XP
-total, streak, badges. All writes go through record_node_completion,
-the one place XP/streak/badge logic actually runs; reads are a thin
-SELECT. Idempotent by design - completing an already-completed node
-again is a no-op (returns current state, no double XP/streak credit),
-since the node-check endpoint has no other way to know a submission is a
-repeat attempt rather than the first pass.
+"""Persistence for per-user progress - node completions, XP total,
+streak, badges. All writes go through record_node_completion, the one
+place XP/streak/badge logic runs; reads are a thin SELECT. Idempotent by
+design - completing an already-completed node again is a no-op (returns
+current state, no double XP/streak credit), since the node-check
+endpoint has no other way to know a submission is a repeat attempt
+rather than the first pass.
 
 Concurrency note: the read-then-write of progress.user_stats isn't
 wrapped in row-level locking beyond a plain UPDATE/INSERT - acceptable
-here for the same reason PySpark's single-session design was (see
-ARCHITECTURE_DECISIONS.md §3.2): primary usage is the user alone, not
-concurrent multi-user traffic."""
+since primary usage is a single user at a time, not concurrent
+multi-user traffic."""
 
 from datetime import datetime, timezone
 

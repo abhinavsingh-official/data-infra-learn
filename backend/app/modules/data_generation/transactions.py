@@ -1,5 +1,5 @@
-"""Module 2.2: transaction generator, modeled on real ISO 8583 data
-elements (see MODULE_2_PLAN.md) - not an invented schema."""
+"""Transaction generator, modeled on real ISO 8583 data elements - not an
+invented schema."""
 
 import itertools
 import json
@@ -56,9 +56,8 @@ def generate_transaction_batches(
         for _ in range(this_batch):
             # transaction_type and channel are correlated, not independent -
             # a "recurring" type IS a "recurring" channel, and vice versa.
-            # Sampling them separately produced nonsense like a recurring
-            # payment on a POS channel; caught by inspecting real output,
-            # not assumed correct just because it ran without error.
+            # Sampling them separately produces nonsense like a recurring
+            # payment on a POS channel.
             if random.random() < 0.10:
                 txn_type = "recurring"
                 channel = "recurring"
@@ -67,8 +66,8 @@ def generate_transaction_batches(
                 channel = random.choices(["POS", "online", "ATM"], weights=[45, 35, 10])[0]
             is_international = random.random() < 0.08
             txn_time = _fake.date_time_between(start_date="-2y", end_date="now", tzinfo=timezone.utc)
-            # Settlement lag - real, and reused conceptually by Module 3's
-            # late-arriving-record edge case later.
+            # Settlement lag - a real-world gap between when a transaction
+            # happens and when it posts.
             posted_time = txn_time + timedelta(hours=random.randint(0, 48))
 
             device_fp = None

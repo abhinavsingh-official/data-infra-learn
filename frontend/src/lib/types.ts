@@ -33,10 +33,10 @@ export interface SkillNodePracticeTableDto {
 
 export interface SkillNodePracticeDto {
   prompt: string;
-  /** Single-table nodes (every Postgres-track node, Module 14/16) use
-   * schema/example_rows directly. Multi-table nodes (the SQL Databases
-   * track's JOIN node, Module 18) use `tables` instead - present either
-   * schema/example_rows or tables, never assume both are set. */
+  /** Single-table nodes (every Postgres-track node) use schema/example_rows
+   * directly. Multi-table nodes (the SQL Databases track's JOIN node) use
+   * `tables` instead - present either schema/example_rows or tables,
+   * never assume both are set. */
   schema?: SkillNodeSchemaColumnDto[];
   example_rows?: Record<string, unknown>[];
   tables?: SkillNodePracticeTableDto[];

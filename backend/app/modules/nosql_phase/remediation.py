@@ -1,7 +1,6 @@
-"""Module 7.4: hand-authored remediation writeups, one per grading check
-in report.py. Same remediation-first requirement as
-grading.remediation - why it broke, a concrete fix, and the tradeoffs
-between valid approaches, never just detection."""
+"""Hand-authored remediation writeups, one per grading check in
+report.py - why it broke, a concrete fix, and the tradeoffs between
+valid approaches, never just detection."""
 
 REMEDIATION = {
     "ERR_MISSING_ACCOUNT_PROFILE": {

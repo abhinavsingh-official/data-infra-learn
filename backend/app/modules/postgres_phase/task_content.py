@@ -1,8 +1,7 @@
-"""Module 4.4: the Postgres-phase exercise description. Content, not
-logic - kept as a plain dict rather than a class hierarchy per
-CODE_STANDARDS.md's "no premature abstraction"; Module 5's grader is
-what actually checks the submission against the edge cases described
-here, not this module."""
+"""Postgres-phase exercise description. Content, not logic - kept as a
+plain dict rather than a class hierarchy; the grader module is what
+actually checks the submission against the edge cases described here,
+not this module."""
 
 POSTGRES_PHASE_TASK = {
     "title": "Load the raw transaction feed into a clean schema",

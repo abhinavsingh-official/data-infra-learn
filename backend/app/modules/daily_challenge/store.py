@@ -1,10 +1,10 @@
-"""Module 21: Daily Challenge persistence - deliberately zero new tables.
-Each track (SQL, Python) is recorded as a normal progress.node_completions
-row under its own paradigm ("daily-sql" / "daily-python") with a
-date-namespaced node_id (selection.daily_node_id) - this reuses
-store.record_node_completion exactly as-is, which means XP, the shared
-streak, and the existing node-count/streak/XP badge thresholds all already
-work for the Daily Challenge with no schema change and no new logic."""
+"""Daily Challenge persistence - no new tables. Each track (SQL, Python)
+is recorded as a normal progress.node_completions row under its own
+paradigm ("daily-sql" / "daily-python") with a date-namespaced node_id
+(selection.daily_node_id) - this reuses store.record_node_completion
+exactly as-is, so XP, the shared streak, and the existing
+node-count/streak/XP badge thresholds all work for the Daily Challenge
+with no schema change and no new logic."""
 
 from datetime import date
 

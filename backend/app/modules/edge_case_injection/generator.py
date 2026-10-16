@@ -1,6 +1,5 @@
-"""Module 3 orchestrator: samples clean transactions from Module 2, renders
-them as raw webhook-style payloads, and applies each of the 5 injectors
-independently at a configurable rate. See MODULE_3_PLAN.md."""
+"""Samples clean transactions, renders them as raw webhook-style payloads,
+and applies each of the 5 injectors independently at a configurable rate."""
 
 import json
 import time
@@ -36,7 +35,7 @@ def _fetch_sample_transactions(conn: Connection, sample_size: int) -> list[dict[
 def _write_events(conn: Connection, rows: list[tuple[Any, Any, Any]]) -> list[int]:
     """rows: list of (received_at, source_delivery_id, payload_dict). Uses a
     batched INSERT (not COPY) because we need the generated IDs back for
-    the fault log - same reasoning as Module 2's users/accounts tables."""
+    the fault log."""
     ids = []
     with conn.cursor() as cur:
         for received_at, delivery_id, payload in rows:
@@ -103,9 +102,9 @@ def run(sample_size: int = 50_000, rate: float = DEFAULT_RATE) -> dict[str, Any]
                 pending_rows.append((dup_received_at, dup_delivery_id, payload))
                 # The duplicate is a literal copy of `payload`, so it carries
                 # whatever other faults the original row already has, not
-                # just the duplicate_delivery fault itself - found on review:
-                # a grader checking "does this row have every fault it
-                # should" would otherwise find the duplicate incomplete.
+                # just the duplicate_delivery fault itself - a grader checking
+                # "does this row have every fault it should" would otherwise
+                # find the duplicate incomplete.
                 pending_faults_by_index.append(row_faults + [dup_fault])
 
         event_ids = _write_events(conn, pending_rows)

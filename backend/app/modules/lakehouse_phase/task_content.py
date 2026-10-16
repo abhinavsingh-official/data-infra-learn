@@ -1,29 +1,21 @@
-"""Module 19 rewrite of Module 10's exercise description for PySpark/
-Delta instead of DuckDB + the `deltalake` Python library
-(ARCHITECTURE_DECISIONS.md §3.1). Real content changes, verified by
-actually running every statement against a real session first (see
-MODULE_19_PLAN.md):
-- No more `pg.`-qualified source tables - plain unqualified
-  raw_transaction_events, same reasoning as the warehouse/lake phases.
+"""Lakehouse-phase exercise description, targeting PySpark/Delta instead
+of DuckDB:
+- No `pg.`-qualified source tables - plain unqualified
+  raw_transaction_events, same as the warehouse/lake phases.
 - DuckDB's `payload::JSON->>'field'` becomes Spark SQL's
   `get_json_object(payload, '$.field')`.
-- `TRY_CAST(... AS TIMESTAMPTZ)` alone cannot recover the
-  malformed_ambiguous_date fault's real DD/MM/YYYY-only string on this
-  engine - needs an explicit fallback format, same fix as the lake phase:
+- `TRY_CAST(... AS TIMESTAMPTZ)` alone can't recover the
+  malformed_ambiguous_date fault's DD/MM/YYYY-only string on this
+  engine - needs an explicit fallback format:
   `COALESCE(TRY_CAST(ts AS TIMESTAMP), try_to_timestamp(ts, 'dd/MM/yyyy'))`.
-- No more `delta_scan('<path>')` - clean_transactions is now a real
-  Spark-catalog table (committed via `saveAsTable`, not a bare path), so
-  it's just referenced directly by name, including for time travel
+- No `delta_scan('<path>')` - clean_transactions is a real Spark-catalog
+  table (committed via `saveAsTable`, not a bare path), so it's
+  referenced directly by name, including for time travel
   (`clean_transactions VERSION AS OF 0`) and history
-  (`DESCRIBE HISTORY clean_transactions`) - both confirmed working
-  directly on a catalog (not just path-based) Delta table.
-- Late arrivals are kept, not dropped past the 48-hour watermark - same
-  platform-wide fix applied to the Postgres and Lake phases, for the
-  same reason (see MODULE_19_PLAN.md: the curriculum and the shared
-  grader disagreed about this; confirmed with the user which was
-  intended). Rows missing currency or timestamp entirely are still
-  explicitly rejected, the same reject-and-log policy as every other
-  required field."""
+  (`DESCRIBE HISTORY clean_transactions`).
+- Late arrivals are kept, not dropped past the 48-hour watermark. Rows
+  missing currency or timestamp entirely are still explicitly rejected,
+  the same reject-and-log policy as every other required field."""
 
 LAKEHOUSE_PHASE_TASK = {
     "title": "Commit two real incremental batches to a Delta table",

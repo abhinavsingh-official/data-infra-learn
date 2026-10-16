@@ -1,11 +1,9 @@
 import { auth, signIn, signOut } from "@/auth";
 import { Button } from "@/components/ui/button";
 
-/** Module 15. Sign-in is additive, not a gate - per the still-open question
- * in MODULE_13_PLAN.md ("does sign-in gate the whole platform, or only
- * progress-tracking"), the default here is the more welcoming option:
- * every page stays usable signed-out, sign-in just has nothing to attach
- * progress to yet (that's Module 16). */
+/** Sign-in is additive, not a gate - every page stays usable signed-out;
+ * signing in just lets progress/XP attach to a real account instead of
+ * nothing. */
 export async function UserMenu() {
   const session = await auth();
 

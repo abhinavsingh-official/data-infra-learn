@@ -1,10 +1,9 @@
-"""Module 19 rewrite of Module 8.2's provisioning, now on PySpark instead
-of DuckDB (see app.core.spark_sessions for the shared engine layer this
-builds on). Still a read-only Postgres role plus a bronze-layer snapshot
-of `accounts` the session owns - same reasoning as before (MODULE_8_
-PLAN.md): `accounts` is the SCD2 exercise's mutation target, so it needs
-a real local copy; users/transactions/etc. don't, since they're never
-mutated and can stay live JDBC-backed temp views."""
+"""Provisions a warehouse-phase session on PySpark (see
+app.core.spark_sessions for the shared engine layer this builds on): a
+read-only Postgres role plus a bronze-layer snapshot of `accounts` that
+the session owns. `accounts` is the SCD2 exercise's mutation target, so
+it needs a real local copy; users/transactions/etc. don't, since they're
+never mutated and can stay live JDBC-backed temp views."""
 
 from psycopg import Connection
 
@@ -34,10 +33,9 @@ def provision_session(pg_conn: Connection, session_id: str):
     session_spark, password = provision_phase_session(pg_conn, PHASE_PREFIX, session_id)
     # USING DELTA, not a bare CTAS - see spark_sessions.py's module
     # docstring on why every managed table here needs this explicit.
-    # Deliberately not just "SELECT * FROM accounts" copied verbatim -
-    # grading (report.py) and the exercise's own required_output key this
-    # table by `id`, which the real schema also calls `id` already, so no
-    # rename is needed here, just the engine/format choice.
+    # No column rename needed here since the real schema already calls
+    # the primary key `id`, matching what grading (report.py) and the
+    # exercise's required_output expect.
     session_spark.sql("CREATE TABLE source_accounts_snapshot USING DELTA AS SELECT * FROM accounts")
     return session_spark, password
 

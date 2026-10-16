@@ -1,10 +1,9 @@
-"""Module 16: resolves an Auth.js database-session token to the real
-user behind it. Auth.js's database strategy (Module 15's deliberate
-choice over JWT) stores the session token in Postgres unencrypted - the
-cookie's raw value *is* auth.sessions."sessionToken", so this is a plain
-lookup, no JWE decryption needed. The frontend is responsible for
-forwarding its own session-token cookie value to the backend (Module 17+
-wiring); this module only does the lookup once it receives it."""
+"""Resolves an Auth.js database-session token to the real user behind
+it. Auth.js's database strategy stores the session token in Postgres
+unencrypted - the cookie's raw value *is* auth.sessions."sessionToken",
+so this is a plain lookup, no JWE decryption needed. The frontend is
+responsible for forwarding its own session-token cookie value to the
+backend; this module only does the lookup once it receives it."""
 
 from dataclasses import dataclass
 

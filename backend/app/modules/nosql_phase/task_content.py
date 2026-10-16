@@ -1,6 +1,6 @@
-"""Module 7's exercise description. Content, not logic - same pattern as
-postgres_phase.task_content: a plain dict, checked by nosql_phase.report,
-not by this module itself."""
+"""NoSQL-phase exercise description. Content, not logic - same pattern
+as postgres_phase.task_content: a plain dict, checked by
+nosql_phase.report, not by this module itself."""
 
 NOSQL_PHASE_TASK = {
     "title": "Remodel account data as a denormalized document",

@@ -20,45 +20,44 @@ class Settings(BaseSettings):
     postgres_app_password: str = "app_role_dev_password"
 
     # Control-plane only (session provisioning) - never used for regular
-    # request handling. See MODULE_4_PLAN.md's two-connection-tier decision.
+    # request handling.
     postgres_superuser: str = "postgres"
     postgres_superuser_password: str = "postgres"
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
-    # Local frontend dev server origin - Module 6. Kept as a single
-    # configurable value (not "allow all") so the CORS surface stays
-    # deliberate even though this never runs multi-tenant in local dev.
+    # Local frontend dev server origin. Kept as a single configurable
+    # value (not "allow all") so the CORS surface stays deliberate even
+    # though this never runs multi-tenant in local dev.
     frontend_origin: str = "http://localhost:3000"
 
-    # Module 7 - MongoDB. Root user is provisioning-only (creates/drops
-    # per-session scoped users), mirroring the Postgres superuser/app_role
-    # split - never used for regular request handling.
+    # MongoDB root user is provisioning-only (creates/drops per-session
+    # scoped users), mirroring the Postgres superuser/app_role split -
+    # never used for regular request handling.
     mongo_host: str = "localhost"
     mongo_port: int = 27017
     mongo_superuser: str = "mongo_admin"
     mongo_superuser_password: str = "mongo_admin_dev_password"
 
-    # Module 8 - one DuckDB file per warehouse-phase session, not a
-    # network service, so there's no admin/app split here the way Postgres
-    # and Mongo have - the backend process already has full filesystem
-    # access to any file it created.
+    # One DuckDB file per warehouse-phase session, not a network service,
+    # so there's no admin/app split here the way Postgres and Mongo have -
+    # the backend process already has full filesystem access to any file
+    # it created.
     warehouse_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "warehouse_sessions"
 
-    # Module 9 - one DuckDB file plus a real local directory of Parquet
-    # output per lake-phase session.
+    # One DuckDB file plus a real local directory of Parquet output per
+    # lake-phase session.
     lake_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "lake_sessions"
 
-    # Module 10 - one DuckDB file plus a real local Delta table directory
-    # per lakehouse-phase session.
+    # One DuckDB file plus a real local Delta table directory per
+    # lakehouse-phase session.
     lakehouse_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "lakehouse_sessions"
 
-    # Module 19 - PySpark replaces DuckDB for Warehouse/Lake/Lakehouse
-    # (ARCHITECTURE_DECISIONS.md §3.1). PySpark needs a JVM; this machine's
-    # system Python has none installed system-wide, so this points at the
-    # Homebrew-installed JDK directly rather than relying on a symlinked
-    # /Library/Java install (never set up - see MODULE_19_PLAN.md).
+    # PySpark backs the Warehouse/Lake/Lakehouse phases. PySpark needs a
+    # JVM; this machine's system Python has none installed system-wide, so
+    # this points at the Homebrew-installed JDK directly rather than
+    # relying on a symlinked /Library/Java install.
     spark_java_home: str = "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
     # One shared on-disk location for every session's managed Delta
     # tables, namespaced by per-session database name underneath it - not

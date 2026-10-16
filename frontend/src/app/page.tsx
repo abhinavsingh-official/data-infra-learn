@@ -33,7 +33,6 @@ const TECH_LOGOS = [
   { name: "PostgreSQL", src: "/images/logos/postgresql.svg" },
   { name: "MongoDB", src: "/images/logos/mongodb.svg" },
   { name: "Python", src: "/images/logos/python.svg" },
-  { name: "DuckDB", src: "/images/logos/duckdb.svg" },
   { name: "Apache Spark", src: "/images/logos/apachespark.svg" },
 ];
 
