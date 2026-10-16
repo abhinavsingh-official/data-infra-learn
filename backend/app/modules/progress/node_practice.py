@@ -36,18 +36,23 @@ from app.modules.postgres_phase.session_provisioning import STATEMENT_TIMEOUT
 from app.modules.postgres_phase.skill_tree import POSTGRES_SKILL_TREE
 from app.modules.postgres_phase.sql_execution import execute_submission
 from app.modules.sql_databases_track.skill_tree import SQL_DATABASES_SKILL_TREE
+from app.modules.warehouse_databases_track.skill_tree import WAREHOUSE_DATABASES_SKILL_TREE
 
-# Postgres (Module 14), SQL Databases (Module 18), and MongoDB Databases
-# (Module 20) have skill trees so far - the remaining paradigms join this
-# registry as their own trees get built. Keyed by track slug, not
-# literally "paradigm" anymore since Module 18 split SQL into two tracks
-# under one umbrella - kept the param name for API-contract stability
-# (POST /progress/nodes/{paradigm}/{node_id}/check), but it really means
-# "track slug" today.
+# Postgres (Module 14), SQL Databases (Module 18), MongoDB Databases, and
+# Warehouse Databases (Module 20) have skill trees so far - the remaining
+# paradigms join this registry as their own trees get built. Keyed by
+# track slug, not literally "paradigm" anymore since Module 18 split SQL
+# into two tracks under one umbrella - kept the param name for
+# API-contract stability (POST /progress/nodes/{paradigm}/{node_id}/check),
+# but it really means "track slug" today. Warehouse Databases runs through
+# this same plain-Postgres engine despite the real warehouse_phase capstone
+# running on Spark/Delta - the engine was never tied to the capstone's own
+# engine (see sql_databases_track's own precedent against postgres_phase).
 _SKILL_TREES: dict[str, dict] = {
     "postgres": POSTGRES_SKILL_TREE,
     "sql-databases": SQL_DATABASES_SKILL_TREE,
     "mongo-databases": MONGO_DATABASES_SKILL_TREE,
+    "warehouse-databases": WAREHOUSE_DATABASES_SKILL_TREE,
 }
 
 # A submitted "sql" string means a raw JSON Mongo command document, not

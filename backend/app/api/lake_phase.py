@@ -12,9 +12,15 @@ from app.modules.lake_phase.session_provisioning import (
     output_dir,
     provision_session,
 )
+from app.modules.lake_phase.skill_tree import LAKE_SKILL_TREE
 from app.modules.lake_phase.task_content import LAKE_PHASE_TASK
 
 router = APIRouter(prefix="/lake-phase", tags=["lake-phase"])
+
+
+@router.get("/skill-tree")
+def get_skill_tree() -> dict:
+    return LAKE_SKILL_TREE
 
 
 class ExecuteRequest(BaseModel):
