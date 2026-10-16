@@ -18,18 +18,19 @@ missed, and why, is a different kind of learning.
 
 ![Homepage](docs/screenshots/homepage.png)
 
+A short animated walkthrough of how the skill tree works before you pick a paradigm:
+
+![How it works](docs/screenshots/start.png)
+
 A guided path through each paradigm - small fundamentals exercises first, then the real capstone
 on the full dataset:
 
 ![Skill tree](docs/screenshots/skill-tree.png)
 
-Every paradigm walks through the same dataset, so you can compare approaches directly:
+Every paradigm walks the same dataset, so Learn doubles as a cross-paradigm comparison - a real
+graph, plus the same operation solved six different ways:
 
-![Cross-paradigm comparison](docs/screenshots/compare.png)
-
-Six lenses on one dataset, picked from a single starting page:
-
-![Pick a paradigm](docs/screenshots/start.png)
+![Learn and compare](docs/screenshots/learn.png)
 
 ## What's actually running under the hood
 
@@ -38,8 +39,8 @@ Six lenses on one dataset, picked from a single starting page:
 - A rule-based grading engine with a real remediation catalog - every injected fault has a documented
   root cause, fix, and the tradeoffs between valid fixes.
 - Per-user progress, XP, streaks, badges, and a daily SQL + Python challenge, behind Google sign-in.
-- A cross-paradigm comparison graph (`@xyflow/react`) showing the same operation solved five
-  different ways.
+- A cross-paradigm comparison graph (`@xyflow/react`) on the Learn page, showing the same
+  operation solved six different ways.
 
 **Stack:** FastAPI + Postgres + MongoDB + PySpark/Delta on the backend; Next.js 16, React 19, and
 Tailwind on the frontend; Auth.js for sign-in.
