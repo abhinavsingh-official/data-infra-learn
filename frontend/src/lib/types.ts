@@ -87,6 +87,40 @@ export interface ProgressDto {
   new_badges?: string[];
 }
 
+export interface DailySqlChallengeDto {
+  id: string;
+  difficulty: number;
+  prompt: string;
+  table_name?: string;
+  tables?: SkillNodePracticeTableDto[];
+  example_rows?: Record<string, unknown>[];
+  starter_sql?: string;
+  completed_today: boolean;
+}
+
+export interface DailyPythonChallengeDto {
+  id: string;
+  difficulty: number;
+  prompt: string;
+  function_name: string;
+  starter_code: string;
+  completed_today: boolean;
+}
+
+export interface DailyChallengeDto {
+  date: string;
+  sql: DailySqlChallengeDto;
+  python: DailyPythonChallengeDto;
+}
+
+export interface PythonCheckResult {
+  passed: boolean;
+  error_code: string | null;
+  error_message: string | null;
+  results: { passed: boolean; actual?: unknown; error?: string }[];
+  progress?: ProgressDto;
+}
+
 export interface PostgresTask {
   title: string;
   summary: string;

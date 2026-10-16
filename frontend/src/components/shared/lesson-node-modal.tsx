@@ -38,7 +38,7 @@ function cellText(value: unknown): string {
   return String(value);
 }
 
-function RowTable({ rows }: { rows: Record<string, unknown>[] }) {
+export function RowTable({ rows }: { rows: Record<string, unknown>[] }) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">(no rows)</p>;
   }

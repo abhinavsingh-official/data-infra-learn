@@ -48,6 +48,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 <Link href="/learn" className="text-muted-foreground hover:text-foreground">
                   Learn
                 </Link>
+                <Link href="/daily" className="text-muted-foreground hover:text-foreground">
+                  Daily
+                </Link>
                 <XpBadge />
                 <ThemeToggle />
                 <UserMenu />
