@@ -12,7 +12,7 @@ const HOW_IT_WORKS = [
   },
   {
     icon: Database,
-    title: "You pick the paradigm",
+    title: "You pick the approach",
     body: "Postgres, MongoDB, a Spark warehouse, a data lake, a lakehouse, or the cross-cutting pipeline discipline - six different lenses on the exact same dataset.",
   },
   {
@@ -32,7 +32,7 @@ export default function StartPage() {
     <div className="space-y-14">
       <PageHero
         title="Here's how it actually works"
-        description="No quizzes, no videos to sit through - a short guided path per paradigm, each one ending in a real exercise against real data."
+        description="No quizzes, no videos to sit through - a short guided path per approach, each one ending in a real exercise against real data."
         aside={<SkillTreePreview />}
       />
 
@@ -49,7 +49,7 @@ export default function StartPage() {
       </section>
 
       <section className="flex flex-col items-center gap-4 rounded-2xl border bg-card py-12 text-center">
-        <p className="text-xl font-medium">Ready to pick a paradigm?</p>
+        <p className="text-xl font-medium">Ready to pick an approach?</p>
         <p className="max-w-md text-sm text-muted-foreground">
           All six tracks, what each one teaches, and how they compare - one page.
         </p>

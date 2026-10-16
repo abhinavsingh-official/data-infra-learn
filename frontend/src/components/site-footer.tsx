@@ -8,7 +8,7 @@ export function SiteFooter() {
           <div className="space-y-2">
             <p className="font-semibold tracking-tight">Learndata</p>
             <p className="text-sm text-muted-foreground">
-              One real fintech dataset, five storage paradigms, real ETL edge cases - learn
+              One real fintech dataset, six storage approaches, real ETL edge cases - learn
               by fixing what actually breaks.
             </p>
           </div>
@@ -28,12 +28,7 @@ export function SiteFooter() {
           </div>
         </div>
         <p className="mt-8 border-t pt-6 text-xs text-muted-foreground">
-          Synthetic data only - no real transactions, users, or companies. Homepage photos by
-          Emile Perron and Luke Chesser via{" "}
-          <a href="https://unsplash.com" className="underline hover:text-foreground">
-            Unsplash
-          </a>
-          , used under the Unsplash License.
+          Synthetic data only - no real transactions, users, or companies.
         </p>
       </div>
     </footer>

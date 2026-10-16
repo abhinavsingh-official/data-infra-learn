@@ -23,11 +23,11 @@ PIPELINE_ARCHITECTURE_SKILL_TREE = {
         {
             "id": "intro",
             "type": "intro",
-            "title": "Pipeline Architecture: the discipline underneath every paradigm",
+            "title": "Pipeline Architecture: the discipline underneath every approach",
             "body": (
                 "Schema drift, retried deliveries, late-arriving data, and the need to actually "
                 "notice when a pipeline is failing - these aren't Postgres problems or Mongo "
-                "problems, they're pipeline-engineering problems that show up in every paradigm "
+                "problems, they're pipeline-engineering problems that show up in every approach "
                 "this platform teaches. This track names them explicitly and practices each one "
                 "once, on its own, before you've seen them (and will keep seeing them) baked into "
                 "every real capstone."

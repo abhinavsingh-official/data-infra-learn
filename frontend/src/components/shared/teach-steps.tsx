@@ -29,10 +29,10 @@ export function TeachSteps({ steps }: { steps: TeachStepDto[] }) {
         ))}
       </div>
 
-      <div className="min-h-40 space-y-4 rounded-xl border bg-card p-5">
-        <p className="text-base leading-relaxed text-balance">{step.body}</p>
+      <div className="flex min-h-80 flex-col justify-center space-y-6 rounded-xl border bg-card p-8">
+        <p className="text-lg leading-relaxed text-balance">{step.body}</p>
         {step.sql && (
-          <pre className="overflow-x-auto rounded-md border bg-muted/40 p-3 font-mono text-xs">{step.sql}</pre>
+          <pre className="overflow-x-auto rounded-md border bg-muted/40 p-4 font-mono text-sm">{step.sql}</pre>
         )}
       </div>
 

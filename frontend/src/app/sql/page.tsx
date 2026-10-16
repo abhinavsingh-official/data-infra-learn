@@ -27,7 +27,7 @@ export default function SqlUmbrellaPage() {
     <div className="space-y-8">
       <PageHero
         title="SQL"
-        description="SQL isn't one flat paradigm here - it's an umbrella over two tracks: the generic fundamentals every relational database shares, and the Postgres-specific depth beyond them."
+        description="SQL isn't one flat approach here - it's an umbrella over two tracks: the generic fundamentals every relational database shares, and the Postgres-specific depth beyond them."
         accentVar="--phase-postgres"
       />
 

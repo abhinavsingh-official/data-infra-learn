@@ -113,7 +113,7 @@ COMPARISON = {
                 "project's own seeded data). The fix is an anti-join against the real Delta table's "
                 "own current committed state (clean_transactions, queried by name) - deduplicating "
                 "against history, not just within the new batch. This is the actual lesson "
-                "incremental/streaming ingestion adds on top of every other paradigm's single-shot "
+                "incremental/streaming ingestion adds on top of every other approach's single-shot "
                 "version of the same problem."
             ),
         },

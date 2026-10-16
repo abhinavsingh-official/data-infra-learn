@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Learndata",
-  description: "Learn how ETL actually breaks, one storage paradigm at a time.",
+  description: "Learn how ETL actually breaks, one storage approach at a time.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

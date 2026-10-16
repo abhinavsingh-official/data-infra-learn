@@ -18,7 +18,7 @@ LAKE_SKILL_TREE = {
             "type": "intro",
             "title": "Schema-on-read: the file is the table",
             "body": (
-                "Every paradigm so far enforced a schema the moment data was written. A lake "
+                "Every approach so far enforced a schema the moment data was written. A lake "
                 "flips that: raw files (here, partitioned Parquet) are written once, and whatever "
                 "reads them decides the schema at read time - cheaper writes, but no guarantee "
                 "every file agrees on what its own columns mean. Partitioning by date/key (not "

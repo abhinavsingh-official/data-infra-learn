@@ -1,20 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowRight,
-  Check,
-  Database,
-  FlaskConical,
-  ClipboardCheck,
-  Layers,
-  GitBranch,
-  BarChart3,
-  Boxes,
-  Workflow,
-} from "lucide-react";
+import { ArrowRight, Check, GitBranch, Warehouse, Waves, Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { QueryDemo } from "@/components/query-demo";
+import { ComparisonSection } from "@/components/home/comparison-section";
 import { PHASE_THEME, type PhaseSlug } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
 
@@ -31,26 +21,26 @@ const STAT_COLORS = ["text-phase-postgres", "text-phase-nosql", "text-phase-ware
 const STEP_COLORS = ["bg-phase-postgres", "bg-phase-nosql", "bg-phase-warehouse", "bg-phase-lakehouse"];
 
 const STATS = [
-  { value: "5", label: "Storage paradigms", hint: "One shared fintech dataset, five different models - see how differently each one represents the same data." },
+  { value: "5", label: "Storage approaches", hint: "One shared fintech dataset, five different models - see how differently each one represents the same data." },
   { value: "1,000,000", label: "Simulated transactions", hint: "Not a toy sample - a real production-scale feed with the volume problems that only show up at scale." },
   { value: "51,495", label: "Raw feed events", hint: "With roughly 7,753 deliberately injected faults - nulls, duplicates, drift, late arrivals." },
   { value: "29", label: "Remediation writeups", hint: "Every failure comes with a root cause, a fix, and the tradeoffs between valid fixes - not a bare score." },
 ];
 
 const HOW_IT_WORKS = [
-  { icon: Layers, title: "Fundamentals first", body: "Joins, WHERE, GROUP BY, ORDER BY - small, hand-sized exercises before the real dataset shows up." },
-  { icon: Database, title: "Then the real dataset", body: "The same million-row feed every exercise has been building toward, with the edge cases that actually show up in production." },
-  { icon: FlaskConical, title: "Write, run, fix", body: "A starter query gets you moving. A hidden reference solution is there if you get stuck - not before." },
-  { icon: ClipboardCheck, title: "A real grading report", body: "Per-edge-case findings with the actual root cause and fix, so you learn why it broke, not just that it did." },
+  { title: "Fundamentals first", body: "Joins, WHERE, GROUP BY, ORDER BY - small, hand-sized exercises before the real dataset shows up." },
+  { title: "Then the real dataset", body: "The same million-row feed every exercise has been building toward, with the edge cases that actually show up in production." },
+  { title: "Write, run, fix", body: "A starter query gets you moving. A hidden reference solution is there if you get stuck - not before." },
+  { title: "A real grading report", body: "Per-edge-case findings with the actual root cause and fix, so you learn why it broke, not just that it did." },
 ];
 
 const PARADIGM_PREVIEW: { slug: PhaseSlug; name: string; tagline: string; detail: string; logo?: string; icon?: typeof GitBranch }[] = [
   { slug: "postgres", name: "SQL / Postgres", tagline: "Schemas, joins, constraints", detail: "Fundamentals, then deep internals", logo: "/images/logos/postgresql.svg" },
   { slug: "nosql", name: "NoSQL", tagline: "The same data, remodeled", detail: "Embedding vs. referencing, for real", logo: "/images/logos/mongodb.svg" },
-  { slug: "warehouse", name: "Warehouse", tagline: "Star schemas, SCD", detail: "Kimball's own design process", icon: BarChart3 },
-  { slug: "lake", name: "Lake", tagline: "Partitioned, schema-on-read", detail: "Parquet internals, partition pruning", icon: Boxes },
+  { slug: "warehouse", name: "Warehouse", tagline: "Star schemas, SCD", detail: "Kimball's own design process", icon: Warehouse },
+  { slug: "lake", name: "Lake", tagline: "Partitioned, schema-on-read", detail: "Parquet internals, partition pruning", icon: Waves },
   { slug: "lakehouse", name: "Lakehouse", tagline: "ACID on object storage", detail: "Delta commits and time travel", icon: GitBranch },
-  { slug: "pipeline-architecture", name: "Pipeline Architecture", tagline: "The discipline underneath it all", detail: "Idempotency, schema drift, monitoring", icon: Workflow },
+  { slug: "pipeline-architecture", name: "Pipeline Architecture", tagline: "The discipline underneath it all", detail: "Idempotency, schema drift, monitoring", icon: Network },
 ];
 
 const TECH_LOGOS = [
@@ -86,8 +76,8 @@ export default function HomePage() {
                 Start learning
                 <ArrowRight className="size-4" />
               </Button>
-              <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/learn" />}>
-                Compare paradigms
+              <Button size="lg" variant="outline" nativeButton={false} render={<Link href="#compare" />}>
+                See how they compare
               </Button>
             </div>
           </div>
@@ -140,17 +130,14 @@ export default function HomePage() {
           {HOW_IT_WORKS.map((step, index) => (
             <Card key={step.title} className="shadow-sm">
               <CardContent className="space-y-2 pt-6">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "flex size-7 items-center justify-center rounded-full text-xs font-medium text-primary-foreground",
-                      STEP_COLORS[index % STEP_COLORS.length],
-                    )}
-                  >
-                    {index + 1}
-                  </span>
-                  <step.icon className="size-4 text-muted-foreground" />
-                </div>
+                <span
+                  className={cn(
+                    "flex size-7 items-center justify-center rounded-full text-xs font-medium text-primary-foreground",
+                    STEP_COLORS[index % STEP_COLORS.length],
+                  )}
+                >
+                  {index + 1}
+                </span>
                 <p className="font-medium">{step.title}</p>
                 <p className="text-sm text-muted-foreground">{step.body}</p>
               </CardContent>
@@ -158,6 +145,8 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      <ComparisonSection />
 
       <section className="space-y-6">
         <div className="space-y-2 text-center">

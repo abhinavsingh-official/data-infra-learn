@@ -13,9 +13,9 @@ from app.modules.nosql_phase.remediation import REMEDIATION as NOSQL_REMEDIATION
 from app.modules.warehouse_phase.remediation import REMEDIATION as WAREHOUSE_REMEDIATION
 
 OVERVIEW = (
-    "One fintech company's data, five storage paradigms. Each phase asks you to handle the "
+    "One fintech company's data, five storage approaches. Each phase asks you to handle the "
     "same underlying ETL edge cases - nulls, duplicate deliveries, late arrivals, schema drift, "
-    "malformed IDs/dates - through that paradigm's own real mechanics, and grades your submission "
+    "malformed IDs/dates - through that approach's own real mechanics, and grades your submission "
     "with a remediation-first report: why it broke, how to fix it, and the tradeoffs where more "
     "than one valid approach exists. This page collects every one of those remediation writeups "
     "in one place, plus the cross-platform comparison from the same underlying operation."
