@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHero } from "@/components/shared/page-hero";
 import { PHASE_THEME } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
 
@@ -27,13 +28,11 @@ export default function WarehouseUmbrellaPage() {
   const theme = PHASE_THEME.warehouse;
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Data Warehouse</h1>
-        <p className="text-muted-foreground">
-          Same split as SQL and NoSQL: generic dimensional-modeling fundamentals on small data
-          first, then the real capstone - a star schema against the real feed - right after.
-        </p>
-      </div>
+      <PageHero
+        title="Data Warehouse"
+        description="Same split as SQL and NoSQL: generic dimensional-modeling fundamentals on small data first, then the real capstone - a star schema against the real feed - right after."
+        accentVar="--phase-warehouse"
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {TRACKS.map((track) => (

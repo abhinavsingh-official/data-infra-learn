@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getComparisonView } from "@/lib/api";
 import type { ComparisonView } from "@/lib/types";
 import { ParadigmMapGraph } from "@/components/compare/paradigm-map-graph";
+import { TypingCode } from "@/components/shared/typing-code";
 
 export default function ComparePage() {
   const [data, setData] = useState<ComparisonView | null>(null);
@@ -61,9 +62,7 @@ export default function ComparePage() {
               <CardDescription className="text-xs italic">{entry.source}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <pre className="overflow-x-auto rounded-md border bg-muted/30 p-3 text-xs">
-                <code>{entry.code}</code>
-              </pre>
+              <TypingCode code={entry.code} />
               <p className="text-sm text-muted-foreground">{entry.explanation}</p>
             </CardContent>
           </Card>

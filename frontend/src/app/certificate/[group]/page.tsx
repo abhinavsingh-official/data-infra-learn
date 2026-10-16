@@ -51,7 +51,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ gr
         <PrintButton />
       </div>
 
-      <div className="mx-auto max-w-3xl rounded-lg border-4 border-double border-primary/60 bg-card p-16 text-center shadow-sm">
+      <div className="mx-auto max-w-3xl animate-in zoom-in-95 fade-in rounded-lg border-4 border-double border-primary/60 bg-card p-16 text-center shadow-sm duration-700 print:animate-none">
         <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Certificate of Completion</p>
         <h1 className="mt-6 text-4xl font-semibold tracking-tight">{cert.label}</h1>
         <p className="mt-8 text-lg text-muted-foreground">This certifies that</p>
