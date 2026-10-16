@@ -83,3 +83,46 @@ def test_sql_databases_nulls_node_passes():
     )
     result = check_node_submission("sql-databases", "node_4_nulls", sql)
     assert result["passed"] is True
+
+
+def test_warehouse_databases_grain_node_passes():
+    sql = "SELECT account_id, card_network FROM raw_account_events GROUP BY account_id, card_network"
+    result = check_node_submission("warehouse-databases", "node_1_grain", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_warehouse_databases_star_join_node_uses_three_private_tables():
+    sql = (
+        "SELECT f.id AS transaction_id, a.card_network, m.merchant_name, f.transaction_amount "
+        "FROM fact_transactions f "
+        "JOIN dim_accounts a ON a.id = f.account_id "
+        "JOIN dim_merchants m ON m.id = f.merchant_id"
+    )
+    result = check_node_submission("warehouse-databases", "node_2_star_join", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 3
+
+
+def test_warehouse_databases_scd2_node_filters_to_current_only():
+    sql = "SELECT account_id, card_network FROM dim_accounts_scd2 WHERE is_current = true"
+    result = check_node_submission("warehouse-databases", "node_3_scd2_current", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_warehouse_databases_scd2_node_fails_without_current_filter():
+    sql = "SELECT account_id, card_network FROM dim_accounts_scd2"
+    result = check_node_submission("warehouse-databases", "node_3_scd2_current", sql)
+    assert result["passed"] is False
+
+
+def test_warehouse_databases_fact_aggregate_node_passes():
+    sql = (
+        "SELECT a.card_network, SUM(f.transaction_amount) AS total_spent "
+        "FROM fact_transactions f JOIN dim_accounts a ON a.id = f.account_id "
+        "GROUP BY a.card_network ORDER BY total_spent DESC"
+    )
+    result = check_node_submission("warehouse-databases", "node_4_fact_aggregate", sql)
+    assert result["passed"] is True
+    assert result["actual_rows"][0]["card_network"] == "Mastercard"

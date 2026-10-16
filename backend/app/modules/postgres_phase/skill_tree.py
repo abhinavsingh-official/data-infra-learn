@@ -240,7 +240,7 @@ POSTGRES_SKILL_TREE = {
             "id": "capstone",
             "type": "capstone",
             "title": POSTGRES_PHASE_TASK["title"],
-            "task_ref": "POSTGRES_PHASE_TASK",
+            "task_ref": "postgres",
             "note": (
                 "The real task, at real scale (51,495 rows) - everything the five skill nodes above "
                 "taught in isolation, now combined against the actual feed. Same grading engine, "

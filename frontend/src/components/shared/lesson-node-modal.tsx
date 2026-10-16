@@ -27,6 +27,9 @@ import type { NodeCheckResult, SkillNodeDto } from "@/lib/types";
 const CAPSTONE_HREF: Record<string, string> = {
   postgres: "/postgres",
   nosql: "/nosql/capstone",
+  warehouse: "/warehouse/capstone",
+  lake: "/lake/capstone",
+  lakehouse: "/lakehouse/capstone",
 };
 
 function cellText(value: unknown): string {

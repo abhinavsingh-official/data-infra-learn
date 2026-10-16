@@ -13,9 +13,15 @@ from app.modules.lakehouse_phase.session_provisioning import (
     provision_session,
     release_batch_two,
 )
+from app.modules.lakehouse_phase.skill_tree import LAKEHOUSE_SKILL_TREE
 from app.modules.lakehouse_phase.task_content import LAKEHOUSE_PHASE_TASK
 
 router = APIRouter(prefix="/lakehouse-phase", tags=["lakehouse-phase"])
+
+
+@router.get("/skill-tree")
+def get_skill_tree() -> dict:
+    return LAKEHOUSE_SKILL_TREE
 
 
 class ExecuteRequest(BaseModel):
