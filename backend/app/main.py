@@ -9,6 +9,7 @@ from app.api.lakehouse_phase import router as lakehouse_phase_router
 from app.api.learn_page import router as learn_page_router
 from app.api.mongo_databases_track import router as mongo_databases_track_router
 from app.api.nosql_phase import router as nosql_phase_router
+from app.api.pipeline_architecture_track import router as pipeline_architecture_track_router
 from app.api.postgres_phase import router as postgres_phase_router
 from app.api.progress import router as progress_router
 from app.api.sql_databases_track import router as sql_databases_track_router
@@ -39,6 +40,7 @@ app.include_router(daily_challenge_router)
 app.include_router(sql_databases_track_router)
 app.include_router(mongo_databases_track_router)
 app.include_router(warehouse_databases_track_router)
+app.include_router(pipeline_architecture_track_router)
 
 
 if __name__ == "__main__":

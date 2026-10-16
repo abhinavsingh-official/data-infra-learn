@@ -11,6 +11,7 @@ from app.modules.mongo_databases_track.skill_tree import MONGO_DATABASES_SKILL_T
 from app.modules.lake_phase.skill_tree import LAKE_SKILL_TREE
 from app.modules.lakehouse_phase.skill_tree import LAKEHOUSE_SKILL_TREE
 from app.modules.nosql_phase.skill_tree import NOSQL_SKILL_TREE
+from app.modules.pipeline_architecture_track.skill_tree import PIPELINE_ARCHITECTURE_SKILL_TREE
 from app.modules.postgres_phase.skill_tree import POSTGRES_SKILL_TREE
 from app.modules.sql_databases_track.skill_tree import SQL_DATABASES_SKILL_TREE
 from app.modules.warehouse_databases_track.skill_tree import WAREHOUSE_DATABASES_SKILL_TREE
@@ -30,6 +31,7 @@ _ALL_TREES: dict[str, dict] = {
     "warehouse": WAREHOUSE_SKILL_TREE,
     "lake": LAKE_SKILL_TREE,
     "lakehouse": LAKEHOUSE_SKILL_TREE,
+    "pipeline-architecture": PIPELINE_ARCHITECTURE_SKILL_TREE,
 }
 
 CERTIFICATE_GROUPS: dict[str, dict] = {
@@ -38,6 +40,7 @@ CERTIFICATE_GROUPS: dict[str, dict] = {
     "warehouse": {"label": "Data Warehouse", "paradigms": ["warehouse-databases", "warehouse"]},
     "lake": {"label": "Data Lake", "paradigms": ["lake"]},
     "lakehouse": {"label": "Lakehouse", "paradigms": ["lakehouse"]},
+    "pipeline-architecture": {"label": "Pipeline Architecture", "paradigms": ["pipeline-architecture"]},
 }
 
 

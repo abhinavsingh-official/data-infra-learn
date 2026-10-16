@@ -3,7 +3,7 @@
  * place instead of scattered class-name literals through every phase's
  * components. Postgres/Mongo's real brand colors informed the first two. */
 
-export type PhaseSlug = "postgres" | "nosql" | "warehouse" | "lake" | "lakehouse";
+export type PhaseSlug = "postgres" | "nosql" | "warehouse" | "lake" | "lakehouse" | "pipeline-architecture";
 
 interface PhaseTheme {
   label: string;
@@ -48,5 +48,12 @@ export const PHASE_THEME: Record<PhaseSlug, PhaseTheme> = {
     bg: "bg-phase-lakehouse/10",
     border: "border-phase-lakehouse/30",
     bgSolid: "bg-phase-lakehouse",
+  },
+  "pipeline-architecture": {
+    label: "Cross-cutting",
+    text: "text-phase-pipeline-architecture",
+    bg: "bg-phase-pipeline-architecture/10",
+    border: "border-phase-pipeline-architecture/30",
+    bgSolid: "bg-phase-pipeline-architecture",
   },
 };

@@ -35,6 +35,7 @@ from app.modules.mongo_databases_track.skill_tree import MONGO_DATABASES_SKILL_T
 from app.modules.postgres_phase.session_provisioning import STATEMENT_TIMEOUT
 from app.modules.postgres_phase.skill_tree import POSTGRES_SKILL_TREE
 from app.modules.postgres_phase.sql_execution import execute_submission
+from app.modules.pipeline_architecture_track.skill_tree import PIPELINE_ARCHITECTURE_SKILL_TREE
 from app.modules.sql_databases_track.skill_tree import SQL_DATABASES_SKILL_TREE
 from app.modules.warehouse_databases_track.skill_tree import WAREHOUSE_DATABASES_SKILL_TREE
 
@@ -53,6 +54,7 @@ _SKILL_TREES: dict[str, dict] = {
     "sql-databases": SQL_DATABASES_SKILL_TREE,
     "mongo-databases": MONGO_DATABASES_SKILL_TREE,
     "warehouse-databases": WAREHOUSE_DATABASES_SKILL_TREE,
+    "pipeline-architecture": PIPELINE_ARCHITECTURE_SKILL_TREE,
 }
 
 # A submitted "sql" string means a raw JSON Mongo command document, not

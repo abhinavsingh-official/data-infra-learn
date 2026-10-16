@@ -48,6 +48,7 @@
   --color-phase-warehouse: var(--phase-warehouse);
   --color-phase-lake: var(--phase-lake);
   --color-phase-lakehouse: var(--phase-lakehouse);
+  --color-phase-pipeline-architecture: var(--phase-pipeline-architecture);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -98,6 +99,11 @@
   --phase-warehouse: oklch(0.72 0.15 70);
   --phase-lake: oklch(0.62 0.11 220);
   --phase-lakehouse: oklch(0.53 0.18 300);
+  /* Deliberately a subdued graphite, not another saturated hue - this
+     track is the cross-cutting discipline underneath the other five
+     paradigms, not a sixth storage system competing for the same visual
+     "pick one" language. */
+  --phase-pipeline-architecture: oklch(0.5 0.03 240);
   --chart-1: var(--phase-postgres);
   --chart-2: var(--phase-nosql);
   --chart-3: var(--phase-warehouse);
@@ -147,6 +153,7 @@
   --phase-warehouse: oklch(0.78 0.14 70);
   --phase-lake: oklch(0.74 0.1 220);
   --phase-lakehouse: oklch(0.68 0.16 300);
+  --phase-pipeline-architecture: oklch(0.7 0.02 240);
   --chart-1: var(--phase-postgres);
   --chart-2: var(--phase-nosql);
   --chart-3: var(--phase-warehouse);
