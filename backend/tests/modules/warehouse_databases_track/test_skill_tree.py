@@ -9,6 +9,12 @@ def test_tree_has_expected_node_ids_in_order():
         "node_2_star_join",
         "node_3_scd2_current",
         "node_4_fact_aggregate",
+        "node_5_degenerate_dimension",
+        "node_6_role_playing_dimension",
+        "node_7_unknown_member",
+        "node_8_conformed_dimension",
+        "node_9_grain_violation",
+        "node_10_junk_dimension",
         "review",
     ]
 

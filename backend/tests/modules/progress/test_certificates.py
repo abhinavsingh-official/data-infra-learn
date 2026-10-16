@@ -18,7 +18,18 @@ def test_lake_unlocks_once_its_only_node_is_done():
 
 
 def test_sql_requires_both_sql_databases_and_postgres_tracks():
-    sql_databases_nodes = ["node_1_where", "node_2_join", "node_3_group_order", "node_4_nulls"]
+    sql_databases_nodes = [
+        "node_1_where",
+        "node_2_join",
+        "node_3_group_order",
+        "node_4_nulls",
+        "node_5_distinct",
+        "node_6_having",
+        "node_7_subquery",
+        "node_8_case",
+        "node_9_string_functions",
+        "node_10_date_functions",
+    ]
     partial = certificate_status({"sql-databases": sql_databases_nodes})
     assert partial["sql"]["unlocked"] is False
     assert partial["sql"]["completed"] == len(sql_databases_nodes)

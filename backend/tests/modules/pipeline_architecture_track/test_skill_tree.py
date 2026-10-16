@@ -9,6 +9,12 @@ def test_tree_has_expected_node_ids_in_order():
         "node_2_schema_evolution",
         "node_3_batch_vs_streaming",
         "node_4_monitoring_alerting",
+        "node_5_data_quality_gates",
+        "node_6_incremental_watermark",
+        "node_7_change_data_capture",
+        "node_8_dead_letter_queue",
+        "node_9_backfill_reprocessing",
+        "node_10_data_lineage",
         "review",
     ]
 

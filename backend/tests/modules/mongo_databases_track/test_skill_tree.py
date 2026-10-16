@@ -9,6 +9,12 @@ def test_tree_has_expected_node_ids_in_order():
         "node_2_lookup",
         "node_3_group",
         "node_4_missing_fields",
+        "node_5_match_logic",
+        "node_6_project_concat",
+        "node_7_sort_limit",
+        "node_8_count",
+        "node_9_cond",
+        "node_10_unwind_array",
         "review",
     ]
 

@@ -86,6 +86,118 @@ def test_missing_fields_node_passes():
     assert result["passed"] is True
 
 
+def test_match_logic_node_passes():
+    command = json.dumps(
+        {
+            "aggregate": "transactions",
+            "pipeline": [
+                {
+                    "$match": {
+                        "$or": [
+                            {"channel": "online"},
+                            {"$and": [{"channel": "pos"}, {"amount_cents": {"$gt": 1000}}]},
+                        ]
+                    }
+                },
+                {"$project": {"_id": 1, "amount_cents": 1}},
+            ],
+            "cursor": {},
+        }
+    )
+    result = check_mongo_node_submission("mongo-databases", "node_5_match_logic", command)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 3
+
+
+def test_project_concat_node_passes():
+    command = json.dumps(
+        {
+            "aggregate": "accounts",
+            "pipeline": [
+                {"$project": {"_id": 1, "display": {"$concat": ["$owner_name", " - ", "$card_network"]}}}
+            ],
+            "cursor": {},
+        }
+    )
+    result = check_mongo_node_submission("mongo-databases", "node_6_project_concat", command)
+    assert result["passed"] is True
+
+
+def test_sort_limit_node_passes():
+    command = json.dumps(
+        {
+            "aggregate": "transactions",
+            "pipeline": [
+                {"$sort": {"amount_cents": -1}},
+                {"$limit": 2},
+                {"$project": {"_id": 1, "amount_cents": 1}},
+            ],
+            "cursor": {},
+        }
+    )
+    result = check_mongo_node_submission("mongo-databases", "node_7_sort_limit", command)
+    assert result["passed"] is True
+    assert result["actual_rows"][0]["_id"] == "t3"
+
+
+def test_count_node_passes():
+    command = json.dumps(
+        {
+            "aggregate": "transactions",
+            "pipeline": [
+                {"$group": {"_id": None, "transaction_count": {"$sum": 1}}},
+                {"$project": {"_id": 0, "transaction_count": 1}},
+            ],
+            "cursor": {},
+        }
+    )
+    result = check_mongo_node_submission("mongo-databases", "node_8_count", command)
+    assert result["passed"] is True
+    assert result["actual_rows"] == [{"transaction_count": 3}]
+
+
+def test_cond_node_passes():
+    command = json.dumps(
+        {
+            "aggregate": "transactions",
+            "pipeline": [
+                {
+                    "$project": {
+                        "_id": 1,
+                        "amount_cents": 1,
+                        "tier": {
+                            "$cond": {
+                                "if": {"$gt": ["$amount_cents", 100000]},
+                                "then": "large",
+                                "else": "small",
+                            }
+                        },
+                    }
+                }
+            ],
+            "cursor": {},
+        }
+    )
+    result = check_mongo_node_submission("mongo-databases", "node_9_cond", command)
+    assert result["passed"] is True
+
+
+def test_unwind_array_node_passes():
+    command = json.dumps(
+        {
+            "aggregate": "accounts",
+            "pipeline": [
+                {"$unwind": "$tags"},
+                {"$project": {"_id": 1, "tag": "$tags"}},
+            ],
+            "cursor": {},
+        }
+    )
+    result = check_mongo_node_submission("mongo-databases", "node_10_unwind_array", command)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 3
+
+
 def test_invalid_json_returns_structured_error_not_a_crash():
     result = check_mongo_node_submission("mongo-databases", "node_1_find", "not json")
     assert result["passed"] is False
