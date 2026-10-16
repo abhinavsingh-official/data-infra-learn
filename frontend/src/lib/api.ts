@@ -1,6 +1,7 @@
 import type {
   CommitBatchResult,
   ComparisonView,
+  DailyChallengeDto,
   ExecuteResult,
   GradingReport,
   LakeTask,
@@ -12,6 +13,7 @@ import type {
   NosqlTask,
   PostgresTask,
   ProgressDto,
+  PythonCheckResult,
   QuerySourceResult,
   SkillTreeDto,
   WarehouseExecuteResult,
@@ -90,6 +92,27 @@ export function checkNode(paradigm: string, nodeId: string, sql: string) {
   return requestLocal<NodeCheckResult>(`/api/progress/nodes/${paradigm}/${nodeId}/check`, {
     method: "POST",
     body: JSON.stringify({ sql }),
+  });
+}
+
+// Module 21 - mounted on the backend at /progress/daily, so the existing
+// generic /api/progress/* proxy (Module 17) already covers these with no
+// new proxy route needed.
+export function getDailyChallenge() {
+  return requestLocal<DailyChallengeDto>("/api/progress/daily/today");
+}
+
+export function checkDailySql(sql: string) {
+  return requestLocal<NodeCheckResult>("/api/progress/daily/sql/check", {
+    method: "POST",
+    body: JSON.stringify({ sql }),
+  });
+}
+
+export function checkDailyPython(code: string) {
+  return requestLocal<PythonCheckResult>("/api/progress/daily/python/check", {
+    method: "POST",
+    body: JSON.stringify({ code }),
   });
 }
 

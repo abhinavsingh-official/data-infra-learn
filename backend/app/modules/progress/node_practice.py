@@ -208,8 +208,15 @@ def check_node_submission(paradigm: str, node_id: str, sql_text: str) -> dict:
     node = find_skill_node(paradigm, node_id)
     if node is None or node.get("type") != "skill" or "practice" not in node:
         raise ValueError(f"No gradable practice node '{node_id}' for paradigm '{paradigm}'")
+    return check_practice_submission(node["practice"], sql_text)
 
-    practice = node["practice"]
+
+def check_practice_submission(practice: dict, sql_text: str) -> dict:
+    """The actual provision -> run -> diff -> teardown grading logic,
+    factored out of check_node_submission so a caller with a practice
+    block that isn't a static skill-tree node lookup (the Daily
+    Challenge's date-rotated problems, Module 21) can reuse it directly
+    without inventing a parallel grading path."""
     check_id = secrets.token_hex(16)
 
     with get_admin_connection() as conn:
