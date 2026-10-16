@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TeachSteps } from "@/components/shared/teach-steps";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError, checkNode } from "@/lib/api";
 import type { NodeCheckResult, SkillNodeDto } from "@/lib/types";
@@ -150,10 +151,16 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
             </TabsList>
 
             <TabsContent value="teach" className="space-y-3">
-              <p className="text-sm text-muted-foreground">{node.teach.note}</p>
-              <pre className="overflow-x-auto rounded-md border bg-muted/40 p-3 font-mono text-xs">
-                {node.teach.sql}
-              </pre>
+              {node.teach.steps && node.teach.steps.length > 0 ? (
+                <TeachSteps key={node.id} steps={node.teach.steps} />
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">{node.teach.note}</p>
+                  <pre className="overflow-x-auto rounded-md border bg-muted/40 p-3 font-mono text-xs">
+                    {node.teach.sql}
+                  </pre>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="practice" className="space-y-4">

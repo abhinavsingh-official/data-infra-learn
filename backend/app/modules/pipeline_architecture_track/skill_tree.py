@@ -52,6 +52,38 @@ PIPELINE_ARCHITECTURE_SKILL_TREE = {
                     "exact attempt' regardless of how many times it arrives. A pipeline is "
                     "idempotent when re-running it produces the same result, not an extra copy."
                 ),
+                "steps": [
+                    {
+                        "body": "A real webhook sender retries a delivery it isn't sure "
+                        "succeeded - so how does the receiver avoid processing the same payment "
+                        "twice?"
+                    },
+                    {
+                        "body": "Keep only the first attempt per idempotency key:",
+                        "sql": "SELECT *, ROW_NUMBER() OVER (PARTITION BY idempotency_key ORDER BY attempt) AS rn\nFROM deliveries;",
+                    },
+                    {
+                        "body": "Keep only the first attempt of each idempotency_key:",
+                        "sql": (
+                            "SELECT idempotency_key, amount\n"
+                            "FROM (\n"
+                            "  SELECT *, ROW_NUMBER() OVER (PARTITION BY idempotency_key ORDER BY attempt) AS rn\n"
+                            "  FROM webhook_deliveries\n"
+                            ") t\n"
+                            "WHERE rn = 1;"
+                        ),
+                    },
+                    {
+                        "body": "An idempotency key is how the receiver recognizes 'I've "
+                        "already seen this exact attempt' regardless of how many times it "
+                        "arrives - re-running an idempotent pipeline produces the same result, "
+                        "not an extra copy."
+                    },
+                    {
+                        "body": "Idempotent means safe to retry, by construction. Try it "
+                        "yourself in the Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": "Keep only the first attempt of each idempotency_key.",
@@ -88,6 +120,30 @@ PIPELINE_ARCHITECTURE_SKILL_TREE = {
                     "A production-grade pipeline reads across both historical shapes at once, "
                     "rather than breaking the moment the old field disappears."
                 ),
+                "steps": [
+                    {
+                        "body": "A pipeline that's been running for months has survived at "
+                        "least one schema change upstream - a field gets renamed, and old rows "
+                        "never get backfilled."
+                    },
+                    {
+                        "body": "Read across both historical shapes at once:",
+                        "sql": "SELECT COALESCE(new_field, old_field) AS field\nFROM events;",
+                    },
+                    {
+                        "body": "Unify customer_name_v1 (the old field name) and full_name_v2 (the new one):",
+                        "sql": "SELECT id, COALESCE(full_name_v2, customer_name_v1) AS customer_name\nFROM customer_events;",
+                    },
+                    {
+                        "body": "A production-grade pipeline reads across both historical "
+                        "shapes at once, rather than breaking the moment the old field "
+                        "disappears."
+                    },
+                    {
+                        "body": "Schema evolution means yesterday's field isn't today's field - "
+                        "and your pipeline has to read both. Try it yourself in the Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": "Unify customer_name_v1 (the old field name) and full_name_v2 (the new one) into one customer_name.",
@@ -120,6 +176,31 @@ PIPELINE_ARCHITECTURE_SKILL_TREE = {
                     "a stricter cutoff, it's accepting that a watermark is a tradeoff, not a hard "
                     "guarantee, and designing the pipeline to still include it."
                 ),
+                "steps": [
+                    {
+                        "body": "'Arrive' and 'happen' are different timestamps - an event can "
+                        "be real and correct while showing up well after the window meant to "
+                        "cover it."
+                    },
+                    {
+                        "body": "A late arrival still belongs in the output:",
+                        "sql": "SELECT * FROM events;  -- no cutoff on processed_at",
+                    },
+                    {
+                        "body": "Event 2 happened on time but wasn't processed until 4 days "
+                        "later - include it anyway:",
+                        "sql": "SELECT id, amount FROM stream_events;",
+                    },
+                    {
+                        "body": "The fix isn't a stricter cutoff - it's accepting that a "
+                        "watermark is a tradeoff, not a hard guarantee, and designing the "
+                        "pipeline to still include a late arrival once it does show up."
+                    },
+                    {
+                        "body": "A late event is late, not invalid. Try it yourself in the "
+                        "Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": (
@@ -166,6 +247,34 @@ PIPELINE_ARCHITECTURE_SKILL_TREE = {
                     "something actually counts and surfaces those rejections - this is the exact "
                     "query shape behind a real pipeline dashboard or alert."
                 ),
+                "steps": [
+                    {
+                        "body": "Every reject-and-log decision a pipeline makes only pays off if "
+                        "something actually counts and surfaces those rejections."
+                    },
+                    {
+                        "body": "Count errors, worst offender first:",
+                        "sql": "SELECT error_code, COUNT(*) AS n\nFROM errors\nGROUP BY error_code\nORDER BY n DESC;",
+                    },
+                    {
+                        "body": "Count errors by error_code, worst offender first:",
+                        "sql": (
+                            "SELECT error_code, COUNT(*) AS error_count\n"
+                            "FROM pipeline_errors\n"
+                            "GROUP BY error_code\n"
+                            "ORDER BY error_count DESC;"
+                        ),
+                    },
+                    {
+                        "body": "This is the exact query shape behind a real pipeline "
+                        "dashboard or alert - a null required field, a duplicate delivery, a "
+                        "malformed date all show up the same way here."
+                    },
+                    {
+                        "body": "You can't fix what you can't see. Try it yourself in the "
+                        "Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": "Count errors by error_code, worst offender first - the query behind a real ops dashboard.",

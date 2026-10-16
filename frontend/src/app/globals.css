@@ -183,3 +183,13 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  /* A light retro/2D-game touch for primary CTAs and a few key cards - a
+     chunky 2px border plus a hard (non-blurred) offset shadow instead of
+     a soft drop shadow, with a "pressed button" effect on click. Used
+     selectively, not sitewide, per the "light touches only" direction. */
+  .retro-box {
+    @apply border-2 border-foreground/80 shadow-[4px_4px_0_0_var(--foreground)] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_var(--foreground)];
+  }
+}

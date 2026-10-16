@@ -24,6 +24,12 @@ const WHAT_THIS_IS = [
   "Grading like a real code review - what broke, why, and exactly how to fix it, not just a score",
 ];
 
+// A real multi-color rotation (reusing the already-chosen phase accent
+// colors, not inventing new ones) instead of one flat brand color on
+// every stat/step - a single-hue homepage reads flatter than it needs to.
+const STAT_COLORS = ["text-phase-postgres", "text-phase-nosql", "text-phase-warehouse", "text-phase-lakehouse"];
+const STEP_COLORS = ["bg-phase-postgres", "bg-phase-nosql", "bg-phase-warehouse", "bg-phase-lakehouse"];
+
 const STATS = [
   { value: "5", label: "Storage paradigms", hint: "One shared fintech dataset, five different models - see how differently each one represents the same data." },
   { value: "1,000,000", label: "Simulated transactions", hint: "Not a toy sample - a real production-scale feed with the volume problems that only show up at scale." },
@@ -76,7 +82,7 @@ export default function HomePage() {
               actually breaks - with a clear explanation every time, not just a score.
             </p>
             <div className="flex gap-3 pt-2">
-              <Button size="lg" nativeButton={false} render={<Link href="/start" />}>
+              <Button size="lg" className="retro-box" nativeButton={false} render={<Link href="/start" />}>
                 Start learning
                 <ArrowRight className="size-4" />
               </Button>
@@ -114,10 +120,12 @@ export default function HomePage() {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          {STATS.map((stat) => (
+          {STATS.map((stat, index) => (
             <Card key={stat.label} className="shadow-sm">
               <CardContent className="space-y-1.5 pt-6">
-                <p className="text-3xl font-semibold tabular-nums text-primary">{stat.value}</p>
+                <p className={cn("text-3xl font-semibold tabular-nums", STAT_COLORS[index % STAT_COLORS.length])}>
+                  {stat.value}
+                </p>
                 <p className="text-sm font-medium">{stat.label}</p>
                 <p className="text-xs text-muted-foreground">{stat.hint}</p>
               </CardContent>
@@ -133,7 +141,12 @@ export default function HomePage() {
             <Card key={step.title} className="shadow-sm">
               <CardContent className="space-y-2 pt-6">
                 <div className="flex items-center gap-2">
-                  <span className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                  <span
+                    className={cn(
+                      "flex size-7 items-center justify-center rounded-full text-xs font-medium text-primary-foreground",
+                      STEP_COLORS[index % STEP_COLORS.length],
+                    )}
+                  >
                     {index + 1}
                   </span>
                   <step.icon className="size-4 text-muted-foreground" />

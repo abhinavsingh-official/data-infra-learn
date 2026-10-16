@@ -45,6 +45,29 @@ WAREHOUSE_DATABASES_SKILL_TREE = {
                     "repeated events down to that grain - the first real decision in Kimball's "
                     "four-step process, before a single fact table exists."
                 ),
+                "steps": [
+                    {
+                        "body": "Before you build anything, Kimball's process asks one question "
+                        "first: what does one row in your output actually represent?"
+                    },
+                    {
+                        "body": "GROUP BY on the key you want collapses repeats down to it:",
+                        "sql": "SELECT key_column\nFROM raw_events\nGROUP BY key_column;",
+                    },
+                    {
+                        "body": "Collapse this raw event feed into one row per account:",
+                        "sql": "SELECT account_id, card_network\nFROM raw_account_events\nGROUP BY account_id, card_network;",
+                    },
+                    {
+                        "body": "The raw feed has one row per *event* (opened, reissued); "
+                        "a dim_accounts table needs one row per *account* - that's the grain "
+                        "decision, made before a single fact table exists."
+                    },
+                    {
+                        "body": "Declaring the grain means deciding up front what one output row "
+                        "represents. Try it yourself in the Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": "Collapse this raw event feed into one row per account, with its card_network.",
@@ -83,6 +106,35 @@ WAREHOUSE_DATABASES_SKILL_TREE = {
                     "the shape - fact_transactions never repeats 'Visa' or 'Corner Cafe' on every "
                     "row, it just points at the one dimension row that says so."
                 ),
+                "steps": [
+                    {
+                        "body": "A star schema puts one fact table at the center, with "
+                        "descriptive dimension tables radiating out - a shape, not just a name."
+                    },
+                    {
+                        "body": "The fact table holds keys and numbers; dimensions hold the rest:",
+                        "sql": "SELECT f.id, d1.name, d2.name, f.amount\nFROM fact f\nJOIN dim_a d1 ON d1.id = f.a_id\nJOIN dim_b d2 ON d2.id = f.b_id;",
+                    },
+                    {
+                        "body": "Join the fact table to both dimension tables:",
+                        "sql": (
+                            "SELECT f.id AS transaction_id, a.card_network, m.merchant_name, f.transaction_amount\n"
+                            "FROM fact_transactions f\n"
+                            "JOIN dim_accounts a ON a.id = f.account_id\n"
+                            "JOIN dim_merchants m ON m.id = f.merchant_id;"
+                        ),
+                    },
+                    {
+                        "body": "fact_transactions never repeats 'Visa' or 'Corner Cafe' on "
+                        "every row - it just points at the one dimension row that says so. This "
+                        "is the whole point of the shape."
+                    },
+                    {
+                        "body": "A fact table holds foreign keys and numbers; dimensions hold "
+                        "every descriptive attribute, one JOIN away. Try it yourself in the "
+                        "Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": (
@@ -151,6 +203,29 @@ WAREHOUSE_DATABASES_SKILL_TREE = {
                     "account that's changed: here, account 101 has two rows (old network, new "
                     "network), and only one of them is current."
                 ),
+                "steps": [
+                    {
+                        "body": "When a customer's own attributes change, do you overwrite the "
+                        "old value and lose history, or keep both versions? SCD Type 2 keeps both."
+                    },
+                    {
+                        "body": "Every version gets a flag - filter to the current one:",
+                        "sql": "SELECT key, value\nFROM dim_table\nWHERE is_current = true;",
+                    },
+                    {
+                        "body": "Return each account's current card_network only:",
+                        "sql": "SELECT account_id, card_network\nFROM dim_accounts_scd2\nWHERE is_current = true;",
+                    },
+                    {
+                        "body": "A query that forgets the is_current filter double-counts an "
+                        "account that's changed - here, account 101 has two rows (old network, "
+                        "new network), and only one of them is current."
+                    },
+                    {
+                        "body": "SCD Type 2 keeps every historical version of a row instead of "
+                        "overwriting it. Try it yourself in the Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": "Return each account's current card_network only - not its historical versions.",
@@ -192,6 +267,35 @@ WAREHOUSE_DATABASES_SKILL_TREE = {
                     "accounts, cards, and transactions across several more joins. This is the "
                     "payoff for the grain decision back in node 1."
                 ),
+                "steps": [
+                    {
+                        "body": "This is the actual payoff for everything so far: a star schema "
+                        "turns a real business question into one JOIN and one GROUP BY."
+                    },
+                    {
+                        "body": "Join to a dimension, then aggregate by its attribute:",
+                        "sql": "SELECT d.attribute, SUM(f.amount)\nFROM fact f\nJOIN dim d ON d.id = f.dim_id\nGROUP BY d.attribute;",
+                    },
+                    {
+                        "body": "Total transaction amount by card_network, highest spender first:",
+                        "sql": (
+                            "SELECT a.card_network, SUM(f.transaction_amount) AS total_spent\n"
+                            "FROM fact_transactions f\n"
+                            "JOIN dim_accounts a ON a.id = f.account_id\n"
+                            "GROUP BY a.card_network\n"
+                            "ORDER BY total_spent DESC;"
+                        ),
+                    },
+                    {
+                        "body": "The same question against raw OLTP tables would need to "
+                        "untangle accounts, cards, and transactions across several more joins - "
+                        "this is the payoff for the grain decision back in node 1."
+                    },
+                    {
+                        "body": "Analytics-shaped questions are one JOIN and one GROUP BY away "
+                        "on a star schema. Try it yourself in the Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": "Total transaction amount by card_network, highest spender first.",

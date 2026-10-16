@@ -10,6 +10,38 @@ from app.modules.postgres_phase.task_content import POSTGRES_PHASE_TASK
 
 _STEPS = POSTGRES_PHASE_TASK["reference_solution"]["steps"]
 
+# A short hook + recap per step, wrapping each step's own real sql/note
+# (never retyped - pulled directly from _STEPS below) into the stepped
+# Teach format. Lighter than the fundamentals tracks' 5-step breakdown
+# since these are genuinely bigger chunks of real SQL with substantial
+# explanatory notes already - this is the deep-internals track, not a
+# bite-sized one, so the steps stay honest about that instead of forcing
+# artificial granularity onto content that doesn't split that way.
+_HOOKS = [
+    "What if the feed really were clean? Try the obvious query first and see how it actually breaks.",
+    "Two small fixes handle both a renamed field and a row that's missing one entirely.",
+    "The payload hides the real event id - that's the key a dedupe has to partition on, not the delivery id.",
+    "This step changes nothing in the query itself - the lesson is entirely about what NOT to add.",
+    "One last real-world wrinkle: some amounts arrive as integers, in cents, not as a decimal string.",
+]
+_RECAPS = [
+    "Run the naive version for real before trusting it - this is why every step after exists.",
+    "COALESCE and a WHERE clause absorb a rename and skip an unrecoverable row, without a branch.",
+    "row_number() partitioned by the real event id, ordered by received_at DESC, keeps the latest copy.",
+    "Scanning the raw table by its own id, not a rolling time window, is what keeps a late arrival from being lost.",
+    "A length/flag heuristic catches integer-cents amounts before they're miscounted as whole dollars.",
+]
+
+
+def _teach_steps(index: int) -> list[dict]:
+    step = _STEPS[index]
+    return [
+        {"body": _HOOKS[index]},
+        {"body": "The real query for this step:", "sql": step["sql"]},
+        {"body": step["note"]},
+        {"body": f"{_RECAPS[index]} Try it yourself in the Practice tab."},
+    ]
+
 _SCHEMA = [
     {"column": "id", "type": "bigint", "note": "the raw event's own id"},
     {"column": "received_at", "type": "timestamptz", "note": "when this event arrived"},
@@ -35,7 +67,7 @@ POSTGRES_SKILL_TREE = {
             "id": "node_1_base_load",
             "type": "skill",
             "title": _STEPS[0]["title"],
-            "teach": {"sql": _STEPS[0]["sql"], "note": _STEPS[0]["note"]},
+            "teach": {"sql": _STEPS[0]["sql"], "note": _STEPS[0]["note"], "steps": _teach_steps(0)},
             "practice": {
                 "prompt": "Load this one clean event into clean_transactions.",
                 "schema": _SCHEMA,
@@ -64,7 +96,7 @@ POSTGRES_SKILL_TREE = {
             "id": "node_2_renamed_missing",
             "type": "skill",
             "title": _STEPS[1]["title"],
-            "teach": {"sql": _STEPS[1]["sql"], "note": _STEPS[1]["note"]},
+            "teach": {"sql": _STEPS[1]["sql"], "note": _STEPS[1]["note"], "steps": _teach_steps(1)},
             "practice": {
                 "prompt": (
                     "One of these two payloads uses 'merchant_name' instead of 'merchant'; the other "
@@ -110,7 +142,7 @@ POSTGRES_SKILL_TREE = {
             "id": "node_3_dedupe",
             "type": "skill",
             "title": _STEPS[2]["title"],
-            "teach": {"sql": _STEPS[2]["sql"], "note": _STEPS[2]["note"]},
+            "teach": {"sql": _STEPS[2]["sql"], "note": _STEPS[2]["note"], "steps": _teach_steps(2)},
             "practice": {
                 "prompt": (
                     "These two rows are the same business event, redelivered - same event_id inside "
@@ -155,7 +187,7 @@ POSTGRES_SKILL_TREE = {
             "id": "node_4_watermark",
             "type": "skill",
             "title": _STEPS[3]["title"],
-            "teach": {"sql": _STEPS[3]["sql"], "note": _STEPS[3]["note"]},
+            "teach": {"sql": _STEPS[3]["sql"], "note": _STEPS[3]["note"], "steps": _teach_steps(3)},
             "practice": {
                 "prompt": (
                     "This event's own timestamp is 2026-07-27T04:59:08+00, but it wasn't received "
@@ -191,7 +223,7 @@ POSTGRES_SKILL_TREE = {
             "id": "node_5_minor_unit",
             "type": "skill",
             "title": _STEPS[4]["title"],
-            "teach": {"sql": _STEPS[4]["sql"], "note": _STEPS[4]["note"]},
+            "teach": {"sql": _STEPS[4]["sql"], "note": _STEPS[4]["note"], "steps": _teach_steps(4)},
             "practice": {
                 "prompt": (
                     "This payload's 'amount' is 360961 - an integer, in cents, not a decimal string. "

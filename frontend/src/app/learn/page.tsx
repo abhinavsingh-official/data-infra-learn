@@ -2,16 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { ArrowRight, Lightbulb, Scale, Wrench } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHero } from "@/components/shared/page-hero";
 import { TypingCode } from "@/components/shared/typing-code";
 import { ParadigmMapGraph } from "@/components/learn/paradigm-map-graph";
@@ -39,10 +35,43 @@ const REFERENCE_TRACKS: { routePrefix: string; label: string; slug: PhaseSlug }[
   { routePrefix: "pipeline-architecture-track", label: "Pipeline Architecture", slug: "pipeline-architecture" },
 ];
 
+function PillSelector<T extends { label: string; slug: PhaseSlug }>({
+  items,
+  active,
+  onSelect,
+}: {
+  items: T[];
+  active: number;
+  onSelect: (i: number) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item, i) => {
+        const theme = PHASE_THEME[item.slug];
+        const isActive = i === active;
+        return (
+          <Button
+            key={item.label}
+            size="sm"
+            variant={isActive ? "default" : "outline"}
+            onClick={() => onSelect(i)}
+            className={cn(!isActive && theme.text, isActive && "retro-box")}
+          >
+            <span className={cn("mr-1.5 size-2 rounded-full", theme.bgSolid)} />
+            {item.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function LearnPagePage() {
   const [data, setData] = useState<LearnPage | null>(null);
   const [referenceTrees, setReferenceTrees] = useState<SkillTreeDto[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [referenceIndex, setReferenceIndex] = useState(0);
+  const [edgeCaseIndex, setEdgeCaseIndex] = useState(0);
 
   useEffect(() => {
     getLearnPage()
@@ -69,8 +98,18 @@ export default function LearnPagePage() {
     return <p className="text-sm text-muted-foreground">Loading...</p>;
   }
 
+  const edgeCasePhases = data.phases.map((phase) => {
+    const path = PATHS.find((p) => phase.phase.startsWith(p.match));
+    return { phase, slug: path?.slug ?? ("postgres" as PhaseSlug), href: path?.href };
+  });
+  const activeEdgeCasePhase = edgeCasePhases[edgeCaseIndex];
+
+  const activeReferenceTrack = REFERENCE_TRACKS[referenceIndex];
+  const activeReferenceTree = referenceTrees?.[referenceIndex];
+  const activeTeachNodes = activeReferenceTree?.nodes.filter((n) => n.type === "skill" && n.teach) ?? [];
+
   return (
-    <div className="space-y-14">
+    <div className="space-y-10">
       <PageHero title="Learn" description={data.overview} showBack backHref="/start" />
 
       <section className="space-y-4">
@@ -115,122 +154,108 @@ export default function LearnPagePage() {
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Same dataset, six lenses</h2>
+      <Tabs defaultValue="compare" className="w-full">
+        <TabsList>
+          <TabsTrigger value="compare">Compare</TabsTrigger>
+          <TabsTrigger value="reference">Reference</TabsTrigger>
+          <TabsTrigger value="edge-cases">Edge Cases</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="compare" className="space-y-4 pt-2">
           <p className="text-sm text-muted-foreground">Click a node to jump straight into that paradigm.</p>
-        </div>
-        <ParadigmMapGraph />
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{data.comparison.operation}</CardTitle>
-            <CardDescription>{data.comparison.why_this_operation}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            {data.comparison.entries.map((entry) => (
-              <div key={entry.paradigm} className="space-y-2 rounded-md border p-3">
-                <p className="text-sm font-medium">{entry.paradigm}</p>
-                <TypingCode code={entry.code} />
-                <p className="text-sm text-muted-foreground">{entry.explanation}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
+          <ParadigmMapGraph />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{data.comparison.operation}</CardTitle>
+              <CardDescription>{data.comparison.why_this_operation}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              {data.comparison.entries.map((entry) => (
+                <div key={entry.paradigm} className="space-y-2 rounded-md border p-3">
+                  <p className="text-sm font-medium">{entry.paradigm}</p>
+                  <TypingCode code={entry.code} />
+                  <p className="text-sm text-muted-foreground">{entry.explanation}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {referenceTrees && referenceTrees.length > 0 && (
-        <section className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">Quick reference</h2>
-            <p className="text-sm text-muted-foreground">
-              Every worked example from the fundamentals tracks, in one skimmable place - no need
-              to start an exercise just to see the syntax again.
-            </p>
+        <TabsContent value="reference" className="space-y-4 pt-2">
+          <p className="text-sm text-muted-foreground">
+            Pick a track to see its worked examples - no need to start an exercise just to see
+            the syntax again.
+          </p>
+          <PillSelector items={REFERENCE_TRACKS} active={referenceIndex} onSelect={setReferenceIndex} />
+          {!referenceTrees ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {activeTeachNodes.map((node) => (
+                <Card
+                  key={node.id}
+                  className={cn("border-l-4", PHASE_THEME[activeReferenceTrack.slug].border)}
+                >
+                  <CardHeader>
+                    <CardTitle className="text-sm">{node.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <pre className="overflow-x-auto rounded-md border bg-muted/30 p-3 text-xs">
+                      <code>{node.teach!.sql}</code>
+                    </pre>
+                    <p className="text-sm text-muted-foreground">{node.teach!.note}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="edge-cases" className="space-y-4 pt-2">
+          <p className="text-sm text-muted-foreground">
+            Every real fault this platform injects, and how to actually fix it - pick a paradigm.
+          </p>
+          <PillSelector
+            items={edgeCasePhases.map((p) => ({ label: p.phase.phase, slug: p.slug }))}
+            active={edgeCaseIndex}
+            onSelect={setEdgeCaseIndex}
+          />
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">{activeEdgeCasePhase.phase.one_liner}</p>
+            {activeEdgeCasePhase.href && (
+              <Link
+                href={activeEdgeCasePhase.href}
+                className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Open track <ArrowRight className="size-3" />
+              </Link>
+            )}
           </div>
-          {REFERENCE_TRACKS.map((track, i) => {
-            const tree = referenceTrees[i];
-            const theme = PHASE_THEME[track.slug];
-            const teachNodes = tree?.nodes.filter((n) => n.type === "skill" && n.teach) ?? [];
-            if (teachNodes.length === 0) return null;
-            return (
-              <div key={track.routePrefix} className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className={cn("size-2.5 rounded-full", theme.bgSolid)} />
-                  <h3 className="font-medium">{track.label}</h3>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {teachNodes.map((node) => (
-                    <Card key={node.id} className={cn("border-l-4", theme.border)}>
-                      <CardHeader>
-                        <CardTitle className="text-sm">{node.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <pre className="overflow-x-auto rounded-md border bg-muted/30 p-3 text-xs">
-                          <code>{node.teach!.sql}</code>
-                        </pre>
-                        <p className="text-sm text-muted-foreground">{node.teach!.note}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </section>
-      )}
-
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold tracking-tight">Every edge case, explained</h2>
-        <div className="space-y-4">
-          {data.phases.map((phase) => {
-            const path = PATHS.find((p) => phase.phase.startsWith(p.match));
-            const theme = path ? PHASE_THEME[path.slug] : undefined;
-            return (
-              <Card key={phase.phase} className={cn("border-l-4", theme?.border)}>
+          <div className="grid gap-3 md:grid-cols-2">
+            {activeEdgeCasePhase.phase.entries.map((entry) => (
+              <Card key={entry.error_code} className={cn("border-l-4", PHASE_THEME[activeEdgeCasePhase.slug].border)}>
                 <CardHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="text-base">{phase.phase}</CardTitle>
-                    {path && (
-                      <Link
-                        href={path.href}
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        Open track <ArrowRight className="size-3" />
-                      </Link>
-                    )}
-                  </div>
-                  <CardDescription>{phase.one_liner}</CardDescription>
+                  <Badge variant="destructive">{entry.error_code}</Badge>
                 </CardHeader>
-                <CardContent>
-                  <Accordion className="w-full">
-                    {phase.entries.map((entry) => (
-                      <AccordionItem key={entry.error_code} value={entry.error_code}>
-                        <AccordionTrigger>
-                          <Badge variant="destructive">{entry.error_code}</Badge>
-                        </AccordionTrigger>
-                        <AccordionContent className="space-y-3">
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium">Why it breaks</p>
-                            <p className="text-sm text-muted-foreground">{entry.why}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium">How to fix it</p>
-                            <p className="text-sm text-muted-foreground">{entry.fix}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium">Tradeoffs</p>
-                            <p className="text-sm text-muted-foreground">{entry.tradeoffs}</p>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
+                <CardContent className="space-y-2.5">
+                  <div className="flex gap-2">
+                    <Lightbulb className="mt-0.5 size-4 shrink-0 text-warning" />
+                    <p className="text-sm text-muted-foreground">{entry.why}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Wrench className="mt-0.5 size-4 shrink-0 text-success" />
+                    <p className="text-sm text-muted-foreground">{entry.fix}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Scale className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <p className="text-sm text-muted-foreground">{entry.tradeoffs}</p>
+                  </div>
                 </CardContent>
               </Card>
-            );
-          })}
-        </div>
-      </section>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

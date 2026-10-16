@@ -51,6 +51,31 @@ MONGO_DATABASES_SKILL_TREE = {
                     "SQL would write `amount_cents > 100000`. Every matching document comes back "
                     "whole unless you also pass a projection to pick specific fields."
                 ),
+                "steps": [
+                    {
+                        "body": "A relational table forces every row into the same fixed "
+                        "columns. A Mongo collection just holds documents - and you can query "
+                        "them without a JOIN or a fixed schema."
+                    },
+                    {
+                        "body": "A find command's filter is itself a document:",
+                        "sql": '{ "find": "collection", "filter": { "field": { "$gt": value } } }',
+                    },
+                    {
+                        "body": "Find every transaction over $1000 (amount_cents > 100000):",
+                        "sql": '{ "find": "transactions", "filter": { "amount_cents": { "$gt": 100000 } } }',
+                    },
+                    {
+                        "body": "Comparisons use operators like $gt/$lt/$eq as keys inside the "
+                        "filter, where SQL would write a bare `amount_cents > 100000` - and every "
+                        "matching document comes back whole unless you also pass a projection to "
+                        "pick specific fields."
+                    },
+                    {
+                        "body": "find() matches documents against a filter document, the same "
+                        "job WHERE does in SQL. Try it yourself in the Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": (
@@ -93,6 +118,42 @@ MONGO_DATABASES_SKILL_TREE = {
                     "produces into a plain embedded object, which makes projecting its fields "
                     "afterward straightforward."
                 ),
+                "steps": [
+                    {
+                        "body": "card_network lives on the accounts collection, not on "
+                        "transactions - so how do you combine two independently-growing "
+                        "collections at query time?"
+                    },
+                    {
+                        "body": "The pattern joins two collections, then flattens the result:",
+                        "sql": (
+                            '{ "aggregate": "collection", "pipeline": [\n'
+                            '  { "$lookup": { "from": "other", "localField": "key", '
+                            '"foreignField": "_id", "as": "joined" } },\n'
+                            '  { "$unwind": "$joined" }\n'
+                            '], "cursor": {} }'
+                        ),
+                    },
+                    {
+                        "body": "Join accounts onto transactions by account_id:",
+                        "sql": (
+                            '{ "aggregate": "transactions", "pipeline": [\n'
+                            '  { "$lookup": { "from": "accounts", "localField": "account_id", '
+                            '"foreignField": "_id", "as": "account" } },\n'
+                            '  { "$unwind": "$account" }\n'
+                            '], "cursor": {} }'
+                        ),
+                    },
+                    {
+                        "body": "$lookup always produces a single-element array even for a 1:1 "
+                        "match - $unwind flattens that array into a plain embedded object, which "
+                        "is what makes projecting its fields afterward straightforward."
+                    },
+                    {
+                        "body": "$lookup is Mongo's aggregation-pipeline equivalent of a SQL "
+                        "JOIN. Try it yourself in the Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": (
@@ -148,6 +209,43 @@ MONGO_DATABASES_SKILL_TREE = {
                     "shape of MongoDB's Computed Pattern: store the aggregate instead of re-summing "
                     "the raw collection on every read."
                 ),
+                "steps": [
+                    {
+                        "body": "What's the total spend per account? One document per "
+                        "transaction won't answer that - you need to collapse documents "
+                        "together first."
+                    },
+                    {
+                        "body": "$group collapses, then $sort orders the groups:",
+                        "sql": (
+                            '{ "aggregate": "collection", "pipeline": [\n'
+                            '  { "$group": { "_id": "$key", "total": { "$sum": "$amount" } } },\n'
+                            '  { "$sort": { "total": -1 } }\n'
+                            '], "cursor": {} }'
+                        ),
+                    },
+                    {
+                        "body": "Total spend per account, highest spender first:",
+                        "sql": (
+                            '{ "aggregate": "transactions", "pipeline": [\n'
+                            '  { "$group": { "_id": "$account_id", "total_spent_cents": '
+                            '{ "$sum": "$amount_cents" } } },\n'
+                            '  { "$sort": { "total_spent_cents": -1 } }\n'
+                            '], "cursor": {} }'
+                        ),
+                    },
+                    {
+                        "body": "A later $sort stage orders the *grouped* documents, not the "
+                        "original ones - this is also the shape of MongoDB's own Computed "
+                        "Pattern: store the aggregate instead of re-summing the raw collection "
+                        "on every read."
+                    },
+                    {
+                        "body": "$group collapses documents sharing the same _id expression "
+                        "into one per group, the same role GROUP BY plays in SQL. Try it "
+                        "yourself in the Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": "Total spend per account, highest spender first.",
@@ -184,6 +282,34 @@ MONGO_DATABASES_SKILL_TREE = {
                     "$ifNull substitutes a fallback whenever a field is missing OR explicitly "
                     "null, the same role COALESCE plays for a relational NULL."
                 ),
+                "steps": [
+                    {
+                        "body": "Mongo's document model has no fixed schema, so a field doesn't "
+                        "have to be NULL to be missing - it can simply not exist on that "
+                        "document at all."
+                    },
+                    {
+                        "body": "The pattern substitutes a fallback for a missing or null field:",
+                        "sql": '{ "$ifNull": ["$field", "fallback"] }',
+                    },
+                    {
+                        "body": "Substitute a readable default wherever nickname is missing:",
+                        "sql": (
+                            '{ "aggregate": "accounts", "pipeline": [\n'
+                            '  { "$project": { "_id": 1, "nickname": '
+                            '{ "$ifNull": ["$nickname", "Unnamed account"] } } }\n'
+                            '], "cursor": {} }'
+                        ),
+                    },
+                    {
+                        "body": "$ifNull substitutes its fallback whenever a field is missing "
+                        "OR explicitly null - the same role COALESCE plays for a relational NULL."
+                    },
+                    {
+                        "body": "$ifNull fills in a default for a field that's absent or null. "
+                        "Try it yourself in the Practice tab."
+                    },
+                ],
             },
             "practice": {
                 "prompt": (

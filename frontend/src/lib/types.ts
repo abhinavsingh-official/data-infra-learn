@@ -49,12 +49,23 @@ export interface SkillNodeCombineDto {
   note: string;
 }
 
+export interface TeachStepDto {
+  body: string;
+  sql?: string;
+}
+
 export interface SkillNodeDto {
   id: string;
   type: "intro" | "skill" | "review" | "capstone";
   title: string;
   body?: string;
-  teach?: { sql: string; note: string };
+  /** `sql`/`note` is the single-block original shape, kept so any node
+   * not yet rewritten into the stepped format still renders. `steps`,
+   * when present, is a short bite-sized sequence (hook, syntax pattern,
+   * example, gotcha, recap) shown one at a time with a Next button -
+   * same optional-staged-breakdown-with-a-flat-fallback shape as
+   * ReferenceSolutionDto's own `steps` field. */
+  teach?: { sql: string; note: string; steps?: TeachStepDto[] };
   practice?: SkillNodePracticeDto;
   combine?: SkillNodeCombineDto;
   prompt?: string;
