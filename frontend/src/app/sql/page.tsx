@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHero } from "@/components/shared/page-hero";
 import { PHASE_THEME } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
 
@@ -24,14 +25,11 @@ export default function SqlUmbrellaPage() {
   const theme = PHASE_THEME.postgres;
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">SQL</h1>
-        <p className="text-muted-foreground">
-          SQL isn&apos;t one flat paradigm here - it&apos;s an umbrella over two tracks: the
-          generic fundamentals every relational database shares, and the Postgres-specific depth
-          beyond them.
-        </p>
-      </div>
+      <PageHero
+        title="SQL"
+        description="SQL isn't one flat paradigm here - it's an umbrella over two tracks: the generic fundamentals every relational database shares, and the Postgres-specific depth beyond them."
+        accentVar="--phase-postgres"
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {TRACKS.map((track) => (

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHero } from "@/components/shared/page-hero";
 import { PHASE_THEME } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
 
@@ -26,13 +27,11 @@ export default function NosqlUmbrellaPage() {
   const theme = PHASE_THEME.nosql;
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">NoSQL</h1>
-        <p className="text-muted-foreground">
-          Same split as SQL: generic MongoDB fundamentals on small data first, then the real
-          capstone - remodeling the whole fintech dataset as documents - right after.
-        </p>
-      </div>
+      <PageHero
+        title="NoSQL"
+        description="Same split as SQL: generic MongoDB fundamentals on small data first, then the real capstone - remodeling the whole fintech dataset as documents - right after."
+        accentVar="--phase-nosql"
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {TRACKS.map((track) => (

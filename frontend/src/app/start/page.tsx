@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHero } from "@/components/shared/page-hero";
 import type { PhaseSlug } from "@/lib/phase-theme";
 import { PHASE_THEME } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
@@ -69,15 +70,10 @@ const PARADIGMS: StorageParadigm[] = [
 export default function StartPage() {
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Pick a storage paradigm</h1>
-        <p className="text-muted-foreground">
-          Same underlying fintech data, five different storage systems. Each one asks you to
-          handle the ETL edge cases that actually show up in that paradigm, then grades your
-          submission with a real explanation - why it broke, how to fix it, what the tradeoffs
-          are.
-        </p>
-      </div>
+      <PageHero
+        title="Pick a storage paradigm"
+        description="Same underlying fintech data, six lenses. Each one asks you to handle the ETL edge cases that actually show up in that paradigm, then grades your submission with a real explanation - why it broke, how to fix it, what the tradeoffs are."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {PARADIGMS.map((paradigm) => {
