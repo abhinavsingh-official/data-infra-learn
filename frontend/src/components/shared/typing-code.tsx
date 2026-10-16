@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 /** The homepage's `QueryDemo` types code out character-by-character in a
  * loop; this is the same typing mechanic as a standalone, one-shot (not
  * looping) piece, so a page with its own static code snippets (like
- * /compare) can get the same motion without cloning QueryDemo's
- * hero-specific before/after state machine. */
+ * /learn's cross-paradigm comparison) can get the same motion without
+ * cloning QueryDemo's hero-specific before/after state machine. */
 const MS_PER_CHAR = 10;
 
 export function TypingCode({ code }: { code: string }) {

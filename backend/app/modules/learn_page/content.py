@@ -33,17 +33,17 @@ PHASES = [
         "remediation": NOSQL_REMEDIATION,
     },
     {
-        "phase": "Data Warehouse (DuckDB, SCD Type 2)",
+        "phase": "Data Warehouse (PySpark, SCD Type 2)",
         "one_liner": "A real Kimball star schema, proven against an actual dimension change.",
         "remediation": WAREHOUSE_REMEDIATION,
     },
     {
-        "phase": "Data Lake (DuckDB, partitioned Parquet)",
+        "phase": "Data Lake (PySpark, partitioned Parquet)",
         "one_liner": "Genuine schema-on-read - the raw payload is interpreted only at query time.",
         "remediation": LAKE_REMEDIATION,
     },
     {
-        "phase": "Lakehouse (DuckDB, real Delta table)",
+        "phase": "Lakehouse (PySpark, real Delta table)",
         "one_liner": "Real ACID: schema enforcement, atomic commits, and time travel - not just files.",
         "remediation": LAKEHOUSE_REMEDIATION,
     },

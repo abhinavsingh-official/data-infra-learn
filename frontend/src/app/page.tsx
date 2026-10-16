@@ -1,11 +1,28 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Database, FlaskConical, ClipboardCheck, Layers, GitBranch, BarChart3, Boxes } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Database,
+  FlaskConical,
+  ClipboardCheck,
+  Layers,
+  GitBranch,
+  BarChart3,
+  Boxes,
+  Workflow,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { QueryDemo } from "@/components/query-demo";
 import { PHASE_THEME, type PhaseSlug } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
+
+const WHAT_THIS_IS = [
+  "One dataset that feels like a real company's data - generated at scale, with real problems baked in on purpose",
+  "The basics of each storage system first, so nothing feels like it's thrown at you cold",
+  "Grading like a real code review - what broke, why, and exactly how to fix it, not just a score",
+];
 
 const STATS = [
   { value: "5", label: "Storage paradigms", hint: "One shared fintech dataset, five different models - see how differently each one represents the same data." },
@@ -27,6 +44,7 @@ const PARADIGM_PREVIEW: { slug: PhaseSlug; name: string; tagline: string; detail
   { slug: "warehouse", name: "Warehouse", tagline: "Star schemas, SCD", detail: "Kimball's own design process", icon: BarChart3 },
   { slug: "lake", name: "Lake", tagline: "Partitioned, schema-on-read", detail: "Parquet internals, partition pruning", icon: Boxes },
   { slug: "lakehouse", name: "Lakehouse", tagline: "ACID on object storage", detail: "Delta commits and time travel", icon: GitBranch },
+  { slug: "pipeline-architecture", name: "Pipeline Architecture", tagline: "The discipline underneath it all", detail: "Idempotency, schema drift, monitoring", icon: Workflow },
 ];
 
 const TECH_LOGOS = [
@@ -42,7 +60,11 @@ export default function HomePage() {
       <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-background py-20">
         <div
           aria-hidden
-          className="absolute left-[15%] bottom-[-12rem] size-[32rem] rounded-full bg-primary opacity-20 blur-[140px]"
+          className="absolute left-[10%] bottom-[-14rem] size-[34rem] rounded-full bg-primary opacity-25 blur-[150px]"
+        />
+        <div
+          aria-hidden
+          className="absolute right-[8%] top-[-10rem] size-[26rem] rounded-full bg-accent-warm opacity-[0.14] blur-[130px]"
         />
         <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-6 lg:grid-cols-2">
           <div className="space-y-5">
@@ -50,15 +72,15 @@ export default function HomePage() {
               Learn data engineering by fixing what actually breaks
             </h1>
             <p className="max-w-md text-lg text-balance text-muted-foreground">
-              Fundamentals first, then one real million-row dataset across five storage
-              paradigms - graded with a real fix, not just a score.
+              No experience needed. Start with the basics, then practice on real data that
+              actually breaks - with a clear explanation every time, not just a score.
             </p>
             <div className="flex gap-3 pt-2">
               <Button size="lg" nativeButton={false} render={<Link href="/start" />}>
                 Start learning
                 <ArrowRight className="size-4" />
               </Button>
-              <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/compare" />}>
+              <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/learn" />}>
                 Compare paradigms
               </Button>
             </div>
@@ -73,18 +95,18 @@ export default function HomePage() {
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold tracking-tight">What this actually is</h2>
           <p className="text-muted-foreground">
-            Most SQL courses teach you to query data that's already clean. Real data
-            engineering work is mostly the opposite: a feed arrives with missing fields,
-            duplicate deliveries, and records that showed up three days late, and it's your
-            job to figure out why and fix it correctly.
+            Most SQL courses teach you to query data that's already clean. Real work is
+            mostly the opposite - a feed arrives with missing fields, duplicate deliveries,
+            and records that showed up three days late, and it's your job to figure out why.
           </p>
-          <p className="text-muted-foreground">
-            This platform simulates that - one real fintech company's data, generated at
-            real scale, with real faults injected on purpose. You learn the fundamentals of
-            each storage paradigm first, then take on the same dataset's actual mess, and get
-            graded the way a real code review would: here's what broke, here's why, here's
-            how to fix it.
-          </p>
+          <ul className="space-y-2.5">
+            {WHAT_THIS_IS.map((item) => (
+              <li key={item} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
             {TECH_LOGOS.map((logo) => (
               <Image key={logo.name} src={logo.src} alt={logo.name} width={28} height={28} className="h-7 w-auto opacity-70" />
@@ -126,13 +148,13 @@ export default function HomePage() {
 
       <section className="space-y-6">
         <div className="space-y-2 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">One dataset, five paradigms</h2>
+          <h2 className="text-xl font-semibold tracking-tight">One dataset, six lenses</h2>
           <p className="mx-auto max-w-lg text-sm text-balance text-muted-foreground">
-            The same fintech data, reshaped five different ways - see how differently each
-            paradigm actually models and visualizes it.
+            The same fintech data, reshaped six different ways - see how differently each one
+            actually models and visualizes it.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {PARADIGM_PREVIEW.map((paradigm) => {
             const theme = PHASE_THEME[paradigm.slug];
             return (
@@ -155,7 +177,7 @@ export default function HomePage() {
         </div>
         <div className="text-center">
           <Button nativeButton={false} render={<Link href="/start" />}>
-            Explore all five
+            Explore all six
             <ArrowRight className="size-4" />
           </Button>
         </div>

@@ -1,115 +1,63 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, Check, Database, FlaskConical, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/shared/page-hero";
-import type { PhaseSlug } from "@/lib/phase-theme";
-import { PHASE_THEME } from "@/lib/phase-theme";
-import { cn } from "@/lib/utils";
+import { SkillTreePreview } from "@/components/start/skill-tree-preview";
 
-interface StorageParadigm {
-  slug: PhaseSlug;
-  name: string;
-  tagline: string;
-  description: string;
-  available: boolean;
-}
-
-const PARADIGMS: StorageParadigm[] = [
+const HOW_IT_WORKS = [
   {
-    slug: "postgres",
-    name: "SQL (Fundamentals + Postgres)",
-    tagline: "Generic SQL, then Postgres-specific depth",
-    description:
-      "Not one flat paradigm - an umbrella over two tracks: database-agnostic fundamentals (WHERE, JOINs, GROUP BY), then Postgres's own deep internals on a real million-row dirty webhook feed.",
-    available: true,
+    icon: Check,
+    title: "Nodes unlock one at a time",
+    body: "Finish one small exercise, the next one unlocks - just like the preview on the right. Nothing is thrown at you before you're ready for it.",
   },
   {
-    slug: "nosql",
-    name: "NoSQL (MongoDB)",
-    tagline: "Document modeling, denormalization",
-    description:
-      "Remodel the same fintech data as documents instead of rows - what changes, what you trade away, what eventual consistency actually costs you.",
-    available: true,
+    icon: Database,
+    title: "You pick the paradigm",
+    body: "Postgres, MongoDB, a Spark warehouse, a data lake, a lakehouse, or the cross-cutting pipeline discipline - six different lenses on the exact same dataset.",
   },
   {
-    slug: "warehouse",
-    name: "Data Warehouse",
-    tagline: "Star schema, slowly changing dimensions",
-    description:
-      "Dimensional modeling on top of the same source data - fact/dimension tables, SCD Type 2, analytics-shaped queries.",
-    available: true,
+    icon: FlaskConical,
+    title: "You write real code, not multiple choice",
+    body: "Every exercise is a real SQL or Python submission against real (small, safe) data - checked instantly, with a starter query if you want a nudge.",
   },
   {
-    slug: "lake",
-    name: "Data Lake",
-    tagline: "Partitioned Parquet, schema-on-read",
-    description:
-      "The same data as partitioned Parquet files queried with Spark SQL - schema-on-read tradeoffs instead of schema-on-write.",
-    available: true,
-  },
-  {
-    slug: "lakehouse",
-    name: "Lakehouse",
-    tagline: "ACID table semantics on object storage",
-    description:
-      "Real Delta Lake table semantics on top of the lake layer - batch and incremental append unified under one table format, with real time travel.",
-    available: true,
-  },
-  {
-    slug: "pipeline-architecture",
-    name: "Pipeline Architecture",
-    tagline: "The cross-cutting discipline, named explicitly",
-    description:
-      "Idempotent pipelines, schema evolution, batch vs. streaming, and monitoring - the same " +
-      "edge cases every paradigm above already teaches, pulled together as their own discipline " +
-      "instead of staying scattered across five phases' fault types.",
-    available: true,
+    icon: Trophy,
+    title: "The last node is always the real thing",
+    body: "Each tree ends in a capstone against the full-scale dataset, graded like a real code review - what broke, why, and how to fix it.",
   },
 ];
 
 export default function StartPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-14">
       <PageHero
-        title="Pick a storage paradigm"
-        description="Same underlying fintech data, six lenses. Each one asks you to handle the ETL edge cases that actually show up in that paradigm, then grades your submission with a real explanation - why it broke, how to fix it, what the tradeoffs are."
+        title="Here's how it actually works"
+        description="No quizzes, no videos to sit through - a short guided path per paradigm, each one ending in a real exercise against real data."
+        aside={<SkillTreePreview />}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {PARADIGMS.map((paradigm) => {
-          const theme = PHASE_THEME[paradigm.slug];
-          const href = paradigm.slug === "postgres" ? "/sql" : `/${paradigm.slug}`;
-          return (
-            <Link key={paradigm.slug} href={href} className="block">
-              <Card className={cn("h-full border-l-4 transition-colors hover:border-foreground/30", theme.border)}>
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("size-2.5 rounded-full", theme.bgSolid)} />
-                      <CardTitle>{paradigm.name}</CardTitle>
-                    </div>
-                    {!paradigm.available && <Badge variant="secondary">Coming soon</Badge>}
-                  </div>
-                  <CardDescription className={cn("font-medium", theme.text)}>{paradigm.tagline}</CardDescription>
-                </CardHeader>
-                <p className="px-6 pb-6 text-sm text-muted-foreground">{paradigm.description}</p>
-              </Card>
-            </Link>
-          );
-        })}
-      </div>
+      <section className="grid gap-5 sm:grid-cols-2">
+        {HOW_IT_WORKS.map((item) => (
+          <div key={item.title} className="flex gap-3 rounded-xl border bg-card p-5">
+            <item.icon className="size-5 shrink-0 text-primary" />
+            <div className="space-y-1">
+              <p className="font-medium">{item.title}</p>
+              <p className="text-sm text-muted-foreground">{item.body}</p>
+            </div>
+          </div>
+        ))}
+      </section>
 
-      <Link href="/compare" className="block">
-        <Card className="transition-colors hover:border-foreground/30">
-          <CardHeader>
-            <CardTitle>See how these compare</CardTitle>
-            <CardDescription>
-              The same real operation - deduplicating a retried event - expressed across all five
-              paradigms side by side, with the real reference query from each one.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </Link>
+      <section className="flex flex-col items-center gap-4 rounded-2xl border bg-card py-12 text-center">
+        <p className="text-xl font-medium">Ready to pick a paradigm?</p>
+        <p className="max-w-md text-sm text-muted-foreground">
+          All six tracks, what each one teaches, and how they compare - one page.
+        </p>
+        <Button size="lg" nativeButton={false} render={<Link href="/learn" />}>
+          Go to Learn
+          <ArrowRight className="size-4" />
+        </Button>
+      </section>
     </div>
   );
 }

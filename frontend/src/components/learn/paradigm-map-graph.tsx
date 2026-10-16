@@ -47,6 +47,8 @@ export function ParadigmMapGraph() {
         ),
       },
       style: {
+        background: "var(--card)",
+        color: "var(--card-foreground)",
         borderColor: `var(--phase-${slug})`,
         borderWidth: 2,
         borderRadius: 12,

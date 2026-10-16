@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SkillTreePath } from "@/components/shared/skill-tree-path";
 import { PageHero } from "@/components/shared/page-hero";
+import { SignInPrompt } from "@/components/shared/sign-in-prompt";
 import { getSkillTree } from "@/lib/api";
 import { fetchProgressServerSide } from "@/lib/server-progress";
 
@@ -53,13 +54,8 @@ export async function TrackSkillTreeView({
 
   return (
     <div className="space-y-6">
-      <PageHero title={title} description={description} accentVar={accentVar} />
-      {!progress && (
-        <p className="text-sm text-muted-foreground">
-          Sign in (top right) to save progress and earn XP as you go - the tree itself works
-          either way.
-        </p>
-      )}
+      <PageHero title={title} description={description} accentVar={accentVar} showBack backHref="/start" />
+      {!progress && <SignInPrompt />}
       <SkillTreePath tree={tree} progress={progress} />
     </div>
   );

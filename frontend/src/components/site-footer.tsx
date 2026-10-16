@@ -16,8 +16,7 @@ export function SiteFooter() {
             <p className="font-medium">Platform</p>
             <nav className="flex flex-col gap-1.5 text-muted-foreground">
               <Link href="/start" className="hover:text-foreground">Start learning</Link>
-              <Link href="/compare" className="hover:text-foreground">Compare paradigms</Link>
-              <Link href="/learn" className="hover:text-foreground">Remediation catalog</Link>
+              <Link href="/learn" className="hover:text-foreground">Learn &amp; compare</Link>
             </nav>
           </div>
           <div className="space-y-2 text-sm">

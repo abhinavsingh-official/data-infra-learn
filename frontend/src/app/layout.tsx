@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteNav } from "@/components/site-nav";
 import { UserMenu } from "@/components/user-menu";
 import { XpBadge } from "@/components/progress/xp-badge";
 
@@ -38,26 +39,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/" className="font-semibold tracking-tight">
                 Learndata
               </Link>
-              <nav className="flex items-center gap-4 text-sm">
-                <Link href="/start" className="text-muted-foreground hover:text-foreground">
-                  Start
-                </Link>
-                <Link href="/compare" className="text-muted-foreground hover:text-foreground">
-                  Compare
-                </Link>
-                <Link href="/learn" className="text-muted-foreground hover:text-foreground">
-                  Learn
-                </Link>
-                <Link href="/daily" className="text-muted-foreground hover:text-foreground">
-                  Daily
-                </Link>
-                <Link href="/profile" className="text-muted-foreground hover:text-foreground">
-                  Profile
-                </Link>
+              <div className="flex items-center gap-4">
+                <SiteNav />
                 <XpBadge />
                 <ThemeToggle />
                 <UserMenu />
-              </nav>
+              </div>
             </div>
           </header>
           <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">{children}</main>
