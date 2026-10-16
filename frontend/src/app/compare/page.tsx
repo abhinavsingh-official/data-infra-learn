@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getComparisonView } from "@/lib/api";
 import type { ComparisonView } from "@/lib/types";
+import { ParadigmMapGraph } from "@/components/compare/paradigm-map-graph";
 
 export default function ComparePage() {
   const [data, setData] = useState<ComparisonView | null>(null);
@@ -37,7 +38,15 @@ export default function ComparePage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Cross-platform comparison</h1>
-        <p className="text-muted-foreground">{data.operation}</p>
+        <p className="text-muted-foreground">
+          Same dataset, six lenses - click a node to jump into that paradigm.
+        </p>
+      </div>
+
+      <ParadigmMapGraph />
+
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold tracking-tight">{data.operation}</h2>
         <p className="text-sm text-muted-foreground">{data.why_this_operation}</p>
         <Badge variant="secondary">
           {data.real_duplicate_count} real duplicate-delivery events in the seeded data
