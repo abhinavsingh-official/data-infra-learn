@@ -117,6 +117,44 @@ def test_warehouse_databases_scd2_node_fails_without_current_filter():
     assert result["passed"] is False
 
 
+def test_pipeline_architecture_idempotent_pipelines_node_passes():
+    sql = (
+        "SELECT idempotency_key, amount FROM ("
+        "  SELECT *, ROW_NUMBER() OVER (PARTITION BY idempotency_key ORDER BY attempt) AS rn "
+        "  FROM webhook_deliveries"
+        ") t WHERE rn = 1"
+    )
+    result = check_node_submission("pipeline-architecture", "node_1_idempotent_pipelines", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_pipeline_architecture_schema_evolution_node_passes():
+    sql = "SELECT id, COALESCE(full_name_v2, customer_name_v1) AS customer_name FROM customer_events"
+    result = check_node_submission("pipeline-architecture", "node_2_schema_evolution", sql)
+    assert result["passed"] is True
+
+
+def test_pipeline_architecture_batch_vs_streaming_node_passes():
+    sql = "SELECT id, amount FROM stream_events"
+    result = check_node_submission("pipeline-architecture", "node_3_batch_vs_streaming", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_pipeline_architecture_batch_vs_streaming_node_fails_if_late_event_dropped():
+    sql = "SELECT id, amount FROM stream_events WHERE processed_at - event_time < interval '1 day'"
+    result = check_node_submission("pipeline-architecture", "node_3_batch_vs_streaming", sql)
+    assert result["passed"] is False
+
+
+def test_pipeline_architecture_monitoring_alerting_node_passes():
+    sql = "SELECT error_code, COUNT(*) AS error_count FROM pipeline_errors GROUP BY error_code ORDER BY error_count DESC"
+    result = check_node_submission("pipeline-architecture", "node_4_monitoring_alerting", sql)
+    assert result["passed"] is True
+    assert result["actual_rows"][0]["error_code"] == "ERR_NULL_FIELD"
+
+
 def test_warehouse_databases_fact_aggregate_node_passes():
     sql = (
         "SELECT a.card_network, SUM(f.transaction_amount) AS total_spent "

@@ -54,6 +54,16 @@ const PARADIGMS: StorageParadigm[] = [
       "Delta/Iceberg-style table semantics on top of the lake layer - batch and incremental append unified under one table format.",
     available: true,
   },
+  {
+    slug: "pipeline-architecture",
+    name: "Pipeline Architecture",
+    tagline: "The cross-cutting discipline, named explicitly",
+    description:
+      "Idempotent pipelines, schema evolution, batch vs. streaming, and monitoring - the same " +
+      "edge cases every paradigm above already teaches, pulled together as their own discipline " +
+      "instead of staying scattered across five phases' fault types.",
+    available: true,
+  },
 ];
 
 export default function StartPage() {

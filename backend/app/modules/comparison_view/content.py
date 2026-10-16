@@ -3,9 +3,17 @@ sample here except the MongoDB one is copied directly from a real,
 grading-verified reference query already used elsewhere in this codebase
 (see each entry's `source` field) - not written fresh for this page.
 The MongoDB pipeline is the one genuinely new piece, and it was tested
-directly against real seeded data before being written here (see
+directly against real seeded data before being added here (see
 MODULE_11_PLAN.md): it produces exactly 49,246 distinct event ids,
-matching every other paradigm's own verified answer."""
+matching every other paradigm's own verified answer.
+
+Module 23 fixed a real staleness bug caught while building the
+cross-paradigm comparison graph: the Warehouse/Lake/Lakehouse entries
+still showed DuckDB syntax (`pg.` prefixes, `delta_scan()`, `read_parquet()`)
+from before Module 19 moved all three onto real PySpark + Delta - updated
+to the real Spark SQL (`get_json_object`, `row_number() OVER (...)`,
+real Delta tables queried by name) each one actually runs today, copied
+from their own current test files, not rewritten from memory."""
 
 COMPARISON = {
     "operation": "Deduplicate transaction events by event_id, keeping the first-arrived delivery",
@@ -51,59 +59,66 @@ COMPARISON = {
             ),
         },
         {
-            "paradigm": "Warehouse (DuckDB, live-attached Postgres source)",
-            "source": "backend/app/modules/lake_phase - the same pattern reused for the warehouse phase's own ETL",
+            "paradigm": "Warehouse (real Spark SQL, live Postgres-JDBC source)",
+            "source": "backend/tests/modules/warehouse_phase/test_report.py - same row_number() technique as Lake/Lakehouse below",
             "code": (
-                "SELECT DISTINCT ON (payload_json->>'event_id')\n"
-                "  payload_json->>'event_id', ...\n"
-                "FROM (SELECT payload::JSON AS payload_json FROM pg.raw_transaction_events) t\n"
-                "WHERE payload_json->>'event_id' IS NOT NULL\n"
-                "ORDER BY payload_json->>'event_id', received_at ASC"
+                "SELECT event_id, amount, merchant, currency, event_timestamp\n"
+                "FROM (\n"
+                "  SELECT get_json_object(payload, '$.event_id') AS event_id, ...,\n"
+                "    row_number() OVER (\n"
+                "      PARTITION BY get_json_object(payload, '$.event_id') ORDER BY received_at\n"
+                "    ) AS rn\n"
+                "  FROM transactions\n"
+                ") t\n"
+                "WHERE rn = 1"
             ),
             "explanation": (
-                "Same DISTINCT ON idea as Postgres, but DuckDB doesn't have a native jsonb type - "
-                "payload has to be cast to JSON explicitly first, and DuckDB's own operator-"
-                "precedence and cast-strictness gotchas apply (see MODULE_9_PLAN.md)."
+                "Spark SQL has no DISTINCT ON - the idiomatic replacement is row_number() windowed "
+                "over the same partition key, keeping only rn = 1. get_json_object() replaces "
+                "Postgres's ->>'...' since this payload column is plain text here, not jsonb."
             ),
         },
         {
-            "paradigm": "Data Lake (DuckDB + partitioned Parquet, schema-on-read)",
+            "paradigm": "Data Lake (real Spark SQL + partitioned Parquet, schema-on-read)",
             "source": "backend/tests/modules/lake_phase/test_report.py",
             "code": (
-                "SELECT DISTINCT ON (payload_json->>'event_id')\n"
-                "  payload_json->>'event_id', ...\n"
+                "SELECT event_id, amount, merchant, currency, event_timestamp\n"
                 "FROM (\n"
-                "  SELECT payload::JSON AS payload_json\n"
-                "  FROM read_parquet('<output_dir>/**/*.parquet', hive_partitioning=true, union_by_name=true)\n"
-                ") t\n"
-                "WHERE payload_json->>'event_id' IS NOT NULL\n"
-                "ORDER BY payload_json->>'event_id', received_at ASC"
+                "  SELECT get_json_object(payload, '$.event_id') AS event_id, ..., received_at,\n"
+                "    row_number() OVER (\n"
+                "      PARTITION BY get_json_object(payload, '$.event_id') ORDER BY received_at DESC\n"
+                "    ) AS rn\n"
+                "  FROM parquet.`<output_dir>`\n"
+                ") normalized\n"
+                "WHERE rn = 1"
             ),
             "explanation": (
-                "Identical dedup logic to the warehouse phase - the only difference is the "
-                "source: partitioned files on disk instead of a live-attached table, read schema-"
-                "on-read via read_parquet() instead of a database connection."
+                "Identical row_number() dedup logic to the warehouse phase - the only difference "
+                "is the source: real partitioned Parquet files on disk, read schema-on-read via "
+                "parquet.`<dir>` instead of a live database connection."
             ),
         },
         {
-            "paradigm": "Lakehouse (DuckDB + real Delta table, incremental batches)",
+            "paradigm": "Lakehouse (real Spark + Delta table, incremental batches)",
             "source": "backend/tests/modules/lakehouse_phase/test_report.py",
             "code": (
-                "SELECT DISTINCT ON (t.eid) t.eid, ...\n"
-                "FROM (SELECT payload::JSON AS pj, (payload::JSON)->>'event_id' AS eid FROM batch_2_events) t\n"
-                "LEFT JOIN delta_scan('<delta_path>') d ON d.event_id = t.eid\n"
-                "WHERE t.eid IS NOT NULL AND d.event_id IS NULL\n"
-                "ORDER BY t.eid, t.received_at ASC"
+                "SELECT n.event_id, n.amount, n.merchant, n.currency, n.event_timestamp\n"
+                "FROM (\n"
+                "  SELECT ..., row_number() OVER (PARTITION BY event_id ORDER BY received_at) AS rn\n"
+                "  FROM batch_2_events\n"
+                ") n\n"
+                "LEFT JOIN clean_transactions existing ON existing.event_id = n.event_id\n"
+                "WHERE n.rn = 1 AND existing.event_id IS NULL"
             ),
             "explanation": (
                 "The one genuinely different approach here, not just a syntax variant - a "
-                "per-batch DISTINCT ON alone is NOT enough, because real duplicate-delivery "
+                "per-batch row_number() dedup alone is NOT enough, because real duplicate-delivery "
                 "events can span two incremental batches (confirmed directly: some do, in this "
-                "project's own seeded data). The fix is an anti-join against the table's own "
-                "current committed state via delta_scan(...) - deduplicating against history, "
-                "not just within the new batch. This is the actual lesson incremental/streaming "
-                "ingestion adds on top of every other paradigm's single-shot version of the "
-                "same problem."
+                "project's own seeded data). The fix is an anti-join against the real Delta table's "
+                "own current committed state (clean_transactions, queried by name) - deduplicating "
+                "against history, not just within the new batch. This is the actual lesson "
+                "incremental/streaming ingestion adds on top of every other paradigm's single-shot "
+                "version of the same problem."
             ),
         },
     ],
