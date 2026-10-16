@@ -1,11 +1,13 @@
 import secrets
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
-from app.core.db import get_admin_connection
+from app.core.db import get_admin_connection, get_connection
+from app.core.session_auth import resolve_user
 from app.modules.grading.report import grade_submission
 from app.modules.postgres_phase import session_registry
+from app.modules.progress import store
 from app.modules.postgres_phase.session_provisioning import role_name, deprovision_session, provision_session
 from app.modules.postgres_phase.skill_tree import POSTGRES_SKILL_TREE
 from app.modules.postgres_phase.sql_execution import execute_submission
@@ -65,18 +67,29 @@ def execute(session_id: str, body: ExecuteRequest) -> dict:
 
 
 @router.post("/sessions/{session_id}/grade")
-def grade(session_id: str) -> dict:
+def grade(session_id: str, x_session_token: str | None = Header(default=None)) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
     report = grade_submission(role_name(session_id), record.password)
-    return {
+    result = {
         "passed": report.passed,
         "total_clean_rows": report.total_clean_rows,
         "structural_findings": [vars(f) for f in report.structural_findings],
         "fault_findings": [vars(f) for f in report.fault_findings],
         "fault_type_summary": report.fault_type_summary,
     }
+    # Module 22: the capstone node has no "practice" block of its own (it
+    # links out to this real session/grading flow instead), so this is
+    # the one place a capstone's completion can be recorded - signed-out
+    # grading still works exactly as before, it just doesn't earn XP/a
+    # badge, matching every other progress-tracking path in this project.
+    if report.passed:
+        user = resolve_user(x_session_token)
+        if user is not None:
+            with get_connection() as conn:
+                result["progress"] = store.record_node_completion(conn, user.id, "postgres", "capstone", "capstone")
+    return result
 
 
 @router.delete("/sessions/{session_id}")

@@ -86,3 +86,36 @@ def test_correct_submission_passes_and_updates_progress(signed_in_session):
 
     me = client.get("/progress/me", headers={"X-Session-Token": signed_in_session})
     assert me.json()["xp_total"] == 10
+
+
+def test_badges_requires_sign_in():
+    assert client.get("/progress/badges").status_code == 401
+
+
+def test_badges_catalog_includes_locked_and_earned(signed_in_session):
+    before = client.get("/progress/badges", headers={"X-Session-Token": signed_in_session}).json()
+    by_id = {b["badge_id"]: b for b in before["badges"]}
+    assert by_id["first_steps"]["earned"] is False
+    assert by_id["relational_fundamentals"]["earned"] is False
+
+    client.post(
+        "/progress/nodes/postgres/node_1_base_load/check",
+        json={"sql": _CORRECT_NODE_1_SQL},
+        headers={"X-Session-Token": signed_in_session},
+    )
+
+    after = client.get("/progress/badges", headers={"X-Session-Token": signed_in_session}).json()
+    by_id = {b["badge_id"]: b for b in after["badges"]}
+    assert by_id["first_steps"]["earned"] is True
+    assert by_id["relational_fundamentals"]["earned"] is False  # still locked, capstone not done
+
+
+def test_certificates_requires_sign_in():
+    assert client.get("/progress/certificates").status_code == 401
+
+
+def test_certificates_start_locked(signed_in_session):
+    response = client.get("/progress/certificates", headers={"X-Session-Token": signed_in_session})
+    assert response.status_code == 200
+    for cert in response.json()["certificates"].values():
+        assert cert["unlocked"] is False

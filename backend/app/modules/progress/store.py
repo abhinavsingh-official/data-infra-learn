@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from psycopg import Connection
 from psycopg.rows import dict_row
 
-from app.modules.progress.xp_rules import newly_earned_badges, update_streak, xp_for_node
+from app.modules.progress.xp_rules import capstone_badge_for, newly_earned_badges, update_streak, xp_for_node
 
 
 def get_progress(conn: Connection, user_id: int) -> dict:
@@ -112,6 +112,10 @@ def record_node_completion(conn: Connection, user_id: int, paradigm: str, node_i
             xp_total=new_xp_total,
             already_earned=already_earned,
         )
+        if node_type == "capstone":
+            capstone_badge = capstone_badge_for(paradigm)
+            if capstone_badge and capstone_badge.badge_id not in already_earned:
+                new_badges.append(capstone_badge)
         for badge in new_badges:
             cur.execute(
                 "INSERT INTO progress.badges (user_id, badge_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
