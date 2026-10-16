@@ -29,11 +29,43 @@ XP_BADGES = [
     (500, "xp_500", "Earned 500 XP"),
 ]
 
+# Module 22: one badge per paradigm's real capstone, awarded on that
+# capstone's grading report coming back `passed` (not via the node-check
+# endpoint - the capstone node has no "practice" block of its own; it
+# links out to the real full-scale session/grading flow instead). Keyed
+# by the same paradigm string each phase's skill_tree.py and grade
+# endpoint already use ("postgres", "nosql", "warehouse", "lake",
+# "lakehouse").
+CAPSTONE_BADGES: dict[str, tuple[str, str]] = {
+    "postgres": ("relational_fundamentals", "Relational Fundamentals"),
+    "nosql": ("document_modeler", "Document Modeler"),
+    "warehouse": ("star_schema_builder", "Star Schema Builder"),
+    "lake": ("schema_on_read_specialist", "Schema-on-Read Specialist"),
+    "lakehouse": ("acid_on_object_storage", "ACID on Object Storage"),
+}
+
 
 @dataclass
 class Badge:
     badge_id: str
     label: str
+
+
+def capstone_badge_for(paradigm: str) -> Badge | None:
+    entry = CAPSTONE_BADGES.get(paradigm)
+    return Badge(entry[0], entry[1]) if entry else None
+
+
+def all_badge_definitions() -> list[Badge]:
+    """Every badge that can ever be earned, not just the ones a given
+    user already has - the frontend's badge bar (Module 22) shows locked
+    badges too, so it needs the full catalog, not just `progress.badges`
+    rows."""
+    definitions = [Badge(badge_id, label) for _, badge_id, label in NODE_COUNT_BADGES]
+    definitions += [Badge(badge_id, label) for _, badge_id, label in STREAK_BADGES]
+    definitions += [Badge(badge_id, label) for _, badge_id, label in XP_BADGES]
+    definitions += [Badge(badge_id, label) for badge_id, label in CAPSTONE_BADGES.values()]
+    return definitions
 
 
 def xp_for_node(node_type: str) -> int:

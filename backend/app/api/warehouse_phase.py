@@ -1,9 +1,11 @@
 import secrets
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
-from app.core.db import get_admin_connection
+from app.core.db import get_admin_connection, get_connection
+from app.core.session_auth import resolve_user
+from app.modules.progress import store
 from app.modules.warehouse_phase import session_registry
 from app.modules.warehouse_phase.report import grade_submission
 from app.modules.warehouse_phase.session_provisioning import (
@@ -78,18 +80,24 @@ def simulate_changes(session_id: str) -> dict:
 
 
 @router.post("/sessions/{session_id}/grade")
-def grade(session_id: str) -> dict:
+def grade(session_id: str, x_session_token: str | None = Header(default=None)) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
     report = grade_submission(record.spark_session, session_id)
-    return {
+    result = {
         "passed": report.passed,
         "total_accounts": report.total_accounts,
         "total_users": report.total_users,
         "total_transactions": report.total_transactions,
         "findings": [vars(f) for f in report.findings],
     }
+    if report.passed:
+        user = resolve_user(x_session_token)
+        if user is not None:
+            with get_connection() as conn:
+                result["progress"] = store.record_node_completion(conn, user.id, "warehouse", "capstone", "capstone")
+    return result
 
 
 @router.delete("/sessions/{session_id}")

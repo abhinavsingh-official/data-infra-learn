@@ -1,10 +1,12 @@
 import secrets
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
-from app.core.db import get_admin_connection, get_mongo_admin_client
+from app.core.db import get_admin_connection, get_connection, get_mongo_admin_client
+from app.core.session_auth import resolve_user
 from app.modules.nosql_phase import session_registry
+from app.modules.progress import store
 from app.modules.nosql_phase.mongo_execution import execute_submission as execute_mongo_command
 from app.modules.nosql_phase.report import grade_submission
 from app.modules.nosql_phase.session_provisioning import (
@@ -95,18 +97,24 @@ def execute(session_id: str, body: ExecuteRequest) -> dict:
 
 
 @router.post("/sessions/{session_id}/grade")
-def grade(session_id: str) -> dict:
+def grade(session_id: str, x_session_token: str | None = Header(default=None)) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
     with get_admin_connection() as pg_conn, get_mongo_admin_client() as mongo_client:
         report = grade_submission(pg_conn, mongo_client, session_id)
-    return {
+    result = {
         "passed": report.passed,
         "total_profiles": report.total_profiles,
         "total_accounts": report.total_accounts,
         "findings": [vars(f) for f in report.findings],
     }
+    if report.passed:
+        user = resolve_user(x_session_token)
+        if user is not None:
+            with get_connection() as conn:
+                result["progress"] = store.record_node_completion(conn, user.id, "nosql", "capstone", "capstone")
+    return result
 
 
 @router.delete("/sessions/{session_id}")

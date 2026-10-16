@@ -6,7 +6,7 @@
 // can't read this cookie themselves).
 
 import { cookies } from "next/headers";
-import type { DailyChallengeDto, ProgressDto } from "./types";
+import type { BadgeDto, CertificateStatusDto, DailyChallengeDto, ProgressDto } from "./types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -43,6 +43,36 @@ export async function fetchDailyChallengeServerSide(): Promise<DailyChallengeDto
     });
     if (!response.ok) return null;
     return (await response.json()) as DailyChallengeDto;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchBadgesServerSide(): Promise<BadgeDto[] | null> {
+  const token = await sessionToken();
+  if (!token) return null;
+  try {
+    const response = await fetch(`${API_BASE_URL}/progress/badges`, {
+      headers: { "X-Session-Token": token },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return ((await response.json()) as { badges: BadgeDto[] }).badges;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchCertificatesServerSide(): Promise<Record<string, CertificateStatusDto> | null> {
+  const token = await sessionToken();
+  if (!token) return null;
+  try {
+    const response = await fetch(`${API_BASE_URL}/progress/certificates`, {
+      headers: { "X-Session-Token": token },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return ((await response.json()) as { certificates: Record<string, CertificateStatusDto> }).certificates;
   } catch {
     return null;
   }
