@@ -15,10 +15,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PageHero } from "@/components/shared/page-hero";
 import { TypingCode } from "@/components/shared/typing-code";
 import { ParadigmMapGraph } from "@/components/learn/paradigm-map-graph";
-import { getLearnPage } from "@/lib/api";
+import { getLearnPage, getSkillTree } from "@/lib/api";
 import { PHASE_THEME, type PhaseSlug } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
-import type { LearnPage } from "@/lib/types";
+import type { LearnPage, SkillTreeDto } from "@/lib/types";
 
 const PATHS: { match: string; slug: PhaseSlug; href: string }[] = [
   { match: "Postgres", slug: "postgres", href: "/sql" },
@@ -28,14 +28,29 @@ const PATHS: { match: string; slug: PhaseSlug; href: string }[] = [
   { match: "Lakehouse", slug: "lakehouse", href: "/lakehouse" },
 ];
 
+// The fundamentals/phase tracks whose `teach` blocks are real, verified
+// worked examples - surfaced here as a skimmable reference, the same
+// material a learner would otherwise only see mid-exercise.
+const REFERENCE_TRACKS: { routePrefix: string; label: string; slug: PhaseSlug }[] = [
+  { routePrefix: "sql-databases-track", label: "SQL Databases", slug: "postgres" },
+  { routePrefix: "postgres-phase", label: "Postgres", slug: "postgres" },
+  { routePrefix: "mongo-databases-track", label: "MongoDB Databases", slug: "nosql" },
+  { routePrefix: "warehouse-databases-track", label: "Warehouse Databases", slug: "warehouse" },
+  { routePrefix: "pipeline-architecture-track", label: "Pipeline Architecture", slug: "pipeline-architecture" },
+];
+
 export default function LearnPagePage() {
   const [data, setData] = useState<LearnPage | null>(null);
+  const [referenceTrees, setReferenceTrees] = useState<SkillTreeDto[] | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     getLearnPage()
       .then(setData)
       .catch(() => setFailed(true));
+    Promise.all(REFERENCE_TRACKS.map((t) => getSkillTree(t.routePrefix)))
+      .then(setReferenceTrees)
+      .catch(() => setReferenceTrees([]));
   }, []);
 
   if (failed) {
@@ -122,6 +137,47 @@ export default function LearnPagePage() {
           </CardContent>
         </Card>
       </section>
+
+      {referenceTrees && referenceTrees.length > 0 && (
+        <section className="space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Quick reference</h2>
+            <p className="text-sm text-muted-foreground">
+              Every worked example from the fundamentals tracks, in one skimmable place - no need
+              to start an exercise just to see the syntax again.
+            </p>
+          </div>
+          {REFERENCE_TRACKS.map((track, i) => {
+            const tree = referenceTrees[i];
+            const theme = PHASE_THEME[track.slug];
+            const teachNodes = tree?.nodes.filter((n) => n.type === "skill" && n.teach) ?? [];
+            if (teachNodes.length === 0) return null;
+            return (
+              <div key={track.routePrefix} className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className={cn("size-2.5 rounded-full", theme.bgSolid)} />
+                  <h3 className="font-medium">{track.label}</h3>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {teachNodes.map((node) => (
+                    <Card key={node.id} className={cn("border-l-4", theme.border)}>
+                      <CardHeader>
+                        <CardTitle className="text-sm">{node.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <pre className="overflow-x-auto rounded-md border bg-muted/30 p-3 text-xs">
+                          <code>{node.teach!.sql}</code>
+                        </pre>
+                        <p className="text-sm text-muted-foreground">{node.teach!.note}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </section>
+      )}
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight">Every edge case, explained</h2>
