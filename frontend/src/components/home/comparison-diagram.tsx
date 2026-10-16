@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { Background, Controls, ReactFlow, type Edge, type Node } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,108 +11,95 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { PhaseSlug } from "@/lib/phase-theme";
+import { PHASE_THEME, type PhaseSlug } from "@/lib/phase-theme";
+import { cn } from "@/lib/utils";
 import type { ComparisonEntry } from "@/lib/types";
 
-/** The homepage's own version of the cross-approach map: the five
- * code-comparable storage approaches open an in-place query popup on
- * click (cycle through all five with the arrows, no page leaves);
- * Pipeline Architecture has no comparable query, so it stays a plain
- * link through to its own page instead. */
+/** A fixed, non-draggable wheel (not a pannable/zoomable graph canvas) -
+ * it spins into place once on load like the looping demo on /start, then
+ * only turns when you click the side arrows. Clicking a node on the
+ * wheel itself opens the query popup (unchanged from before). */
 
-const CENTER: Node = {
-  id: "dataset",
-  position: { x: 320, y: 220 },
-  data: { label: "One fintech dataset" },
-  style: {
-    background: "var(--primary)",
-    color: "var(--primary-foreground)",
-    borderRadius: 9999,
-    fontWeight: 600,
-    width: 160,
-    textAlign: "center",
-  },
-};
+const RADIUS = 160;
+const STEP_DEG = 360 / 5;
+const SETTLE_MS = 1100;
+const TURN_MS = 450;
 
-const APPROACH_LAYOUT: { slug: PhaseSlug; name: string; x: number; y: number }[] = [
-  { slug: "postgres", name: "SQL (Postgres)", x: 20, y: 20 },
-  { slug: "nosql", name: "NoSQL (MongoDB)", x: 560, y: 20 },
-  { slug: "warehouse", name: "Data Warehouse", x: 640, y: 260 },
-  { slug: "lake", name: "Data Lake", x: 400, y: 420 },
-  { slug: "lakehouse", name: "Lakehouse", x: 80, y: 420 },
+const APPROACHES: { slug: PhaseSlug; name: string }[] = [
+  { slug: "postgres", name: "SQL (Postgres)" },
+  { slug: "nosql", name: "NoSQL (MongoDB)" },
+  { slug: "warehouse", name: "Data Warehouse" },
+  { slug: "lake", name: "Data Lake" },
+  { slug: "lakehouse", name: "Lakehouse" },
 ];
 
-const PIPELINE_NODE = {
-  slug: "pipeline-architecture" as const,
-  href: "/pipeline-architecture",
-  name: "Pipeline Architecture",
-  x: 0,
-  y: 260,
-};
-
 export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
+  const [rotation, setRotation] = useState(-360);
+  const [settled, setSettled] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const active = openIndex !== null ? entries[openIndex] : null;
 
-  const nodes = useMemo<Node[]>(() => {
-    const approachNodes: Node[] = APPROACH_LAYOUT.map(({ slug, name, x, y }, i) => ({
-      id: slug,
-      position: { x, y },
-      data: {
-        label: (
-          <button
-            type="button"
-            onClick={() => setOpenIndex(i)}
-            className="block w-full cursor-pointer px-1 py-0.5 text-left text-sm font-medium"
-          >
-            {name}
-          </button>
-        ),
-      },
-      style: {
-        background: "var(--card)",
-        color: "var(--card-foreground)",
-        borderColor: `var(--phase-${slug})`,
-        borderWidth: 2,
-        borderRadius: 12,
-      },
-    }));
-    const pipelineNode: Node = {
-      id: PIPELINE_NODE.slug,
-      position: { x: PIPELINE_NODE.x, y: PIPELINE_NODE.y },
-      data: {
-        label: (
-          <Link href={PIPELINE_NODE.href} className="block px-1 py-0.5 text-sm font-medium">
-            {PIPELINE_NODE.name}
-          </Link>
-        ),
-      },
-      style: {
-        background: "var(--card)",
-        color: "var(--card-foreground)",
-        borderColor: `var(--phase-${PIPELINE_NODE.slug})`,
-        borderWidth: 2,
-        borderRadius: 12,
-      },
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setRotation(0));
+    const done = setTimeout(() => setSettled(true), SETTLE_MS + 50);
+    return () => {
+      cancelAnimationFrame(id);
+      clearTimeout(done);
     };
-    return [CENTER, ...approachNodes, pipelineNode];
   }, []);
 
-  const edges = useMemo<Edge[]>(
-    () => [
-      ...APPROACH_LAYOUT.map(({ slug }) => ({ id: `dataset-${slug}`, source: "dataset", target: slug })),
-      { id: `dataset-${PIPELINE_NODE.slug}`, source: "dataset", target: PIPELINE_NODE.slug, animated: true },
-    ],
-    [],
-  );
+  function turn(direction: 1 | -1) {
+    setRotation((r) => r + direction * STEP_DEG);
+  }
 
   return (
     <>
-      <div style={{ height: 480 }} className="overflow-hidden rounded-lg border">
-        <ReactFlow nodes={nodes} edges={edges} fitView nodesDraggable={false} proOptions={{ hideAttribution: true }}>
-          <Background />
-          <Controls showInteractive={false} />
-        </ReactFlow>
+      <div className="flex items-center justify-center gap-4 sm:gap-8">
+        <Button variant="outline" size="icon" className="shrink-0" onClick={() => turn(-1)} aria-label="Rotate left">
+          <ChevronLeft className="size-5" />
+        </Button>
+
+        <div className="relative size-[22rem] shrink-0">
+          <div className="pixel-box retro-box absolute top-1/2 left-1/2 flex size-28 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-primary p-3 text-center text-xs font-medium text-primary-foreground">
+            One fintech dataset
+          </div>
+          {APPROACHES.map((approach, i) => {
+            const angleDeg = i * STEP_DEG + rotation - 90;
+            const angleRad = (angleDeg * Math.PI) / 180;
+            const x = RADIUS * Math.cos(angleRad);
+            const y = RADIUS * Math.sin(angleRad);
+            return (
+              <button
+                key={approach.slug}
+                type="button"
+                onClick={() => setOpenIndex(i)}
+                style={{
+                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
+                  transitionDuration: `${settled ? TURN_MS : SETTLE_MS}ms`,
+                }}
+                className={cn(
+                  "pixel-box retro-box absolute top-1/2 left-1/2 flex size-24 cursor-pointer items-center justify-center bg-card p-2 text-center text-xs font-medium transition-transform ease-out",
+                  PHASE_THEME[approach.slug].border,
+                )}
+              >
+                {approach.name}
+              </button>
+            );
+          })}
+        </div>
+
+        <Button variant="outline" size="icon" className="shrink-0" onClick={() => turn(1)} aria-label="Rotate right">
+          <ChevronRight className="size-5" />
+        </Button>
+      </div>
+
+      <div className="flex justify-center">
+        <Link
+          href="/pipeline-architecture"
+          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Pipeline Architecture (the discipline underneath all five) →
+        </Link>
       </div>
 
       <Dialog open={active !== null} onOpenChange={(open) => !open && setOpenIndex(null)}>
@@ -125,7 +110,7 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
                 <DialogTitle>{active.paradigm}</DialogTitle>
                 <DialogDescription>{active.explanation}</DialogDescription>
               </DialogHeader>
-              <pre className="max-h-64 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-xs">
+              <pre className="max-h-64 overflow-auto border-2 border-panel-edge/50 bg-muted/40 p-3 font-mono text-xs">
                 <code>{active.code}</code>
               </pre>
               <div className="flex items-center justify-between pt-1">

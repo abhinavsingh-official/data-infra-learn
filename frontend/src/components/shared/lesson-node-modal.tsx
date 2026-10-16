@@ -112,7 +112,7 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{node.title}</DialogTitle>
           {node.body && <DialogDescription>{node.body}</DialogDescription>}
@@ -124,10 +124,6 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
         overflow-x-auto, since a grid item's default min-width is content-based,
         not 0. */}
         <div className="min-w-0 space-y-4">
-
-        {node.type === "intro" && (
-          <p className="text-sm leading-relaxed">{node.body}</p>
-        )}
 
         {node.type === "review" && (
           <p className="text-sm leading-relaxed text-muted-foreground">{node.prompt}</p>
