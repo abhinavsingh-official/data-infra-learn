@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Baloo_2, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -10,8 +10,14 @@ import { SiteNav } from "@/components/site-nav";
 import { UserMenu } from "@/components/user-menu";
 import { XpBadge } from "@/components/progress/xp-badge";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Chunky, rounded, game-UI-friendly - and unlike the previous Geist Sans
+// setup, this one's CSS variable is actually named --font-sans to match
+// what globals.css's @theme inline block reads (the old mismatched
+// --font-geist-sans name meant the custom font was never really applying
+// at all - every page was silently falling back to the browser default).
+const gameSans = Baloo_2({
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
 });
 
@@ -30,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${gameSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

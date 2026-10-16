@@ -44,6 +44,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-panel-edge: var(--panel-edge);
   --color-phase-postgres: var(--phase-postgres);
   --color-phase-nosql: var(--phase-nosql);
   --color-phase-warehouse: var(--phase-warehouse);
@@ -60,116 +61,115 @@
 }
 
 :root {
-  /* A warmer, friendlier palette than the earlier near-black/vivid-red
-     combo - this product teaches beginners, so the chrome shouldn't read
-     as alarming. Indigo/violet as the primary accent (the color most
-     learning/creativity-oriented products lean on) plus a warm amber as
-     a second accent for gradient backgrounds, on a soft blue-tinted
-     neutral scale instead of a warm-gray one. */
-  --background: oklch(0.99 0.003 265);
-  --foreground: oklch(0.22 0.02 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 265);
-  --primary: oklch(0.56 0.19 280);
+  /* "Day" theme: sky blue, grass green, dirt brown - the Minecraft trio -
+     with green as the primary action color (grass) and brown as the
+     grounding neutral used for panel edges/borders (dirt/wood), so the
+     chrome reads as an actual place rather than a generic SaaS gray. */
+  --background: oklch(0.94 0.035 231);
+  --foreground: oklch(0.27 0.035 50);
+  --card: oklch(0.98 0.017 225);
+  --card-foreground: oklch(0.27 0.035 50);
+  --popover: oklch(0.98 0.017 225);
+  --popover-foreground: oklch(0.27 0.035 50);
+  --primary: oklch(0.58 0.15 142);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.95 0.015 270);
-  --secondary-foreground: oklch(0.3 0.03 270);
-  --muted: oklch(0.96 0.01 270);
-  --muted-foreground: oklch(0.48 0.02 265);
-  --accent: oklch(0.93 0.05 280);
-  --accent-foreground: oklch(0.35 0.15 280);
-  --accent-warm: oklch(0.78 0.14 55);
+  --secondary: oklch(0.9 0.025 230);
+  --secondary-foreground: oklch(0.32 0.04 50);
+  --muted: oklch(0.91 0.02 230);
+  --muted-foreground: oklch(0.46 0.03 60);
+  --accent: oklch(0.89 0.06 142);
+  --accent-foreground: oklch(0.32 0.1 142);
+  --accent-warm: oklch(0.58 0.09 55);
   --destructive: oklch(0.577 0.22 27);
-  --border: oklch(0.9 0.02 265);
-  --input: oklch(0.9 0.02 265);
-  --ring: oklch(0.56 0.19 280 / 0.5);
+  --border: oklch(0.6 0.05 55 / 0.35);
+  --input: oklch(0.6 0.05 55 / 0.35);
+  --ring: oklch(0.58 0.15 142 / 0.5);
+  /* The chunky panel/button bevel color - a wood-plank brown, distinct
+     from --foreground so panels read as a consistent material regardless
+     of day/night text color. */
+  --panel-edge: oklch(0.4 0.055 55);
   /* Semantic states - a graded submission needs "this passed" to read as
      unambiguously different from "this is the primary brand color." */
   --success: oklch(0.55 0.15 150);
   --success-foreground: oklch(0.99 0 0);
   --warning: oklch(0.7 0.18 80);
   --warning-foreground: oklch(0.2 0.02 80);
-  /* One accent per storage paradigm - used consistently for that phase's
-     badges, progress bar, and primary buttons so a learner starts
-     recognizing "blue = relational, green = document store" the same way
-     Duolingo color-codes its skill tree. Postgres/Mongo's own real brand
-     colors informed the first two. */
-  --phase-postgres: oklch(0.5 0.15 255);
-  --phase-nosql: oklch(0.58 0.14 150);
-  --phase-warehouse: oklch(0.72 0.15 70);
-  --phase-lake: oklch(0.62 0.11 220);
-  --phase-lakehouse: oklch(0.53 0.18 320);
-  /* Deliberately a subdued graphite, not another saturated hue - this
-     track is the cross-cutting discipline underneath the other five
-     paradigms, not a sixth storage system competing for the same visual
-     "pick one" language. */
-  --phase-pipeline-architecture: oklch(0.5 0.03 240);
+  /* One accent per storage approach, loosely mapped to Minecraft biomes so
+     the six feel like one world instead of a clashing rainbow: forest
+     (postgres), ocean (nosql/Mongo), desert (warehouse), mesa (lake),
+     the End (lakehouse - the "end game" paradigm), and the Nether
+     (pipeline architecture - the engine room underneath everything). */
+  --phase-postgres: oklch(0.5 0.1 165);
+  --phase-nosql: oklch(0.55 0.14 220);
+  --phase-warehouse: oklch(0.72 0.14 85);
+  --phase-lake: oklch(0.62 0.17 45);
+  --phase-lakehouse: oklch(0.55 0.18 300);
+  --phase-pipeline-architecture: oklch(0.5 0.19 20);
   --chart-1: var(--phase-postgres);
   --chart-2: var(--phase-nosql);
   --chart-3: var(--phase-warehouse);
   --chart-4: var(--phase-lake);
   --chart-5: var(--phase-lakehouse);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.95 0.015 270);
-  --sidebar-foreground: oklch(0.22 0.02 265);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.9 0.025 230);
+  --sidebar-foreground: oklch(0.27 0.035 50);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.93 0.05 280);
-  --sidebar-accent-foreground: oklch(0.35 0.15 280);
-  --sidebar-border: oklch(0.9 0.02 265);
-  --sidebar-ring: oklch(0.56 0.19 280 / 0.5);
+  --sidebar-accent: oklch(0.89 0.06 142);
+  --sidebar-accent-foreground: oklch(0.32 0.1 142);
+  --sidebar-border: oklch(0.6 0.05 55 / 0.35);
+  --sidebar-ring: oklch(0.58 0.15 142 / 0.5);
 }
 
 .dark {
-  /* A soft blue-charcoal, not near-black - warmer and easier to sit with
-     for a learning product than a stark dark theme. Indigo/violet stays
-     the primary accent; a warm amber accent pairs with it for the
-     gradient "glow" backgrounds used in page heroes, so those read as a
-     soft two-color aurora instead of one hard-edged brand blob. */
-  --background: oklch(0.17 0.015 265);
-  --foreground: oklch(0.94 0.008 270);
-  --card: oklch(0.21 0.017 265);
-  --card-foreground: oklch(0.94 0.008 270);
-  --popover: oklch(0.21 0.017 265);
-  --popover-foreground: oklch(0.94 0.008 270);
-  --primary: oklch(0.68 0.18 280);
-  --primary-foreground: oklch(0.12 0.02 280);
-  --secondary: oklch(0.25 0.018 265);
-  --secondary-foreground: oklch(0.94 0.008 270);
-  --muted: oklch(0.24 0.016 265);
-  --muted-foreground: oklch(0.66 0.015 270);
-  --accent: oklch(0.32 0.06 280);
-  --accent-foreground: oklch(0.9 0.08 280);
-  --accent-warm: oklch(0.78 0.13 55);
+  /* "Night" theme: a dark cave/wood brown instead of a blue-black, with
+     orange (torchlight/glowstone) replacing green as the primary pop
+     color - green and brown stay the connecting thread between day and
+     night (brown as the base neutral both times, green demoted to the
+     success/secondary role here instead of disappearing). */
+  --background: oklch(0.19 0.025 50);
+  --foreground: oklch(0.93 0.015 70);
+  --card: oklch(0.24 0.03 50);
+  --card-foreground: oklch(0.93 0.015 70);
+  --popover: oklch(0.24 0.03 50);
+  --popover-foreground: oklch(0.93 0.015 70);
+  --primary: oklch(0.72 0.17 55);
+  --primary-foreground: oklch(0.16 0.02 50);
+  --secondary: oklch(0.3 0.03 50);
+  --secondary-foreground: oklch(0.93 0.015 70);
+  --muted: oklch(0.28 0.025 50);
+  --muted-foreground: oklch(0.68 0.025 60);
+  --accent: oklch(0.36 0.07 55);
+  --accent-foreground: oklch(0.92 0.1 70);
+  --accent-warm: oklch(0.5 0.07 55);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.68 0.18 280 / 0.5);
-  --success: oklch(0.7 0.15 150);
+  --border: oklch(0.75 0.06 55 / 0.2);
+  --input: oklch(0.75 0.06 55 / 0.22);
+  --ring: oklch(0.72 0.17 55 / 0.5);
+  --panel-edge: oklch(0.55 0.08 50);
+  --success: oklch(0.68 0.15 150);
   --success-foreground: oklch(0.12 0.02 150);
   --warning: oklch(0.75 0.18 80);
   --warning-foreground: oklch(0.16 0.02 80);
-  --phase-postgres: oklch(0.68 0.14 255);
-  --phase-nosql: oklch(0.72 0.13 150);
-  --phase-warehouse: oklch(0.78 0.14 70);
-  --phase-lake: oklch(0.74 0.1 220);
-  --phase-lakehouse: oklch(0.7 0.15 320);
-  --phase-pipeline-architecture: oklch(0.7 0.02 240);
+  --phase-postgres: oklch(0.68 0.11 165);
+  --phase-nosql: oklch(0.72 0.13 220);
+  --phase-warehouse: oklch(0.8 0.13 85);
+  --phase-lake: oklch(0.74 0.16 45);
+  --phase-lakehouse: oklch(0.72 0.17 300);
+  --phase-pipeline-architecture: oklch(0.68 0.18 20);
   --chart-1: var(--phase-postgres);
   --chart-2: var(--phase-nosql);
   --chart-3: var(--phase-warehouse);
   --chart-4: var(--phase-lake);
   --chart-5: var(--phase-lakehouse);
-  --sidebar: oklch(0.2 0.016 265);
-  --sidebar-foreground: oklch(0.94 0.008 270);
+  --sidebar: oklch(0.22 0.028 50);
+  --sidebar-foreground: oklch(0.93 0.015 70);
   --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: oklch(0.12 0.02 280);
-  --sidebar-accent: oklch(0.32 0.06 280);
-  --sidebar-accent-foreground: oklch(0.9 0.08 280);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.68 0.18 280 / 0.5);
+  --sidebar-primary-foreground: oklch(0.16 0.02 50);
+  --sidebar-accent: oklch(0.36 0.07 55);
+  --sidebar-accent-foreground: oklch(0.92 0.1 70);
+  --sidebar-border: oklch(0.75 0.06 55 / 0.2);
+  --sidebar-ring: oklch(0.72 0.17 55 / 0.5);
 }
 
 @layer base {
@@ -185,11 +185,13 @@
 }
 
 @layer components {
-  /* A light retro/2D-game touch for primary CTAs and a few key cards - a
-     chunky 2px border plus a hard (non-blurred) offset shadow instead of
-     a soft drop shadow, with a "pressed button" effect on click. Used
-     selectively, not sitewide, per the "light touches only" direction. */
+  /* A chunky game-UI panel bevel - a wood-plank border color (--panel-edge,
+     not plain foreground, so it reads as one consistent material in both
+     themes), a hard offset shadow, plus a thin inset highlight/shadow
+     pair so it reads as a raised button rather than a flat card with a
+     shadow stapled on - the classic inventory-slot look, without going
+     all the way to pixel-art sprites. */
   .retro-box {
-    @apply border-2 border-foreground/80 shadow-[4px_4px_0_0_var(--foreground)] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_var(--foreground)];
+    @apply border-2 border-panel-edge shadow-[4px_4px_0_0_var(--panel-edge),inset_0_1px_0_0_rgb(255_255_255/0.25),inset_0_-2px_0_0_rgb(0_0_0/0.2)] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_var(--panel-edge)];
   }
 }
