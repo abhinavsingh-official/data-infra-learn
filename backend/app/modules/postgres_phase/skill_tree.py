@@ -32,6 +32,63 @@ _RECAPS = [
     "A length/flag heuristic catches integer-cents amounts before they're miscounted as whole dollars.",
 ]
 
+# A concrete "here's what actually breaks if you skip this step" callout per
+# node - the honest failure mode, not a restatement of the fix. These are
+# prose-only (no new practice data), grounded in the same real fault types
+# the capstone's own grader and remediation.py already check for.
+_FAILURE_MODES = [
+    "Skip this step and the naive query still runs without erroring - it just silently produces "
+    "wrong output the moment the feed stops being perfectly clean, which in a 51,495-row real "
+    "feed is almost immediately. There's no stack trace to point you at the problem; the first "
+    "sign is usually a row count or a total that's subtly off from what a human expects.",
+    "Forgetting the COALESCE means every renamed-field row loads with merchant = NULL instead of "
+    "the real name - not an error, just a quietly incomplete row sitting in clean_transactions "
+    "looking exactly as valid as every other row. Forgetting the WHERE-clause guard on amount "
+    "means the unrecoverable row either fails the whole batch load or, worse, loads with a "
+    "fabricated amount that was never in the source payload at all.",
+    "Deduping on source_delivery_id instead of the payload's own event_id is the single most "
+    "common mistake here - it looks like a dedup, it runs without error, and it does nothing at "
+    "all, because every redelivery already has a unique source_delivery_id by construction. The "
+    "duplicate event_id sails straight through, double-counted in every downstream aggregate.",
+    "A rolling-window load (e.g. 'process everything received today') looks correct on every "
+    "ordinary day and silently drops the one late arrival a day it actually matters - the failure "
+    "is invisible until someone notices a specific real transaction is simply missing, usually "
+    "much later, during a reconciliation against an external source of truth.",
+    "Casting every amount the same way either throws a type error on the integer-cents rows (if "
+    "the cast assumes a decimal string) or, worse, silently treats 360961 cents as $360,961.00 "
+    "instead of $3,609.61 - a 100x error that passes every NULL check and every schema check, "
+    "because the value is a perfectly valid-looking number, just the wrong one.",
+]
+
+# What makes each step matter once it's not seven toy rows but 51,495 real
+# ones - the honest "why does this scale" note, distinct from the mechanics
+# already covered by the step's own sql/note.
+_SCALE_NOTES = [
+    "At seven rows you could eyeball whether the output 'looks right'; at 51,495 rows you "
+    "can't - which is exactly why the real task is graded against a precomputed ground truth "
+    "rather than by inspection, and why building the habit of verifying against a known-good "
+    "answer (not just 'it ran without error') matters more as volume grows, not less.",
+    "A hand-written COALESCE works fine for one known historical rename - a real feed that's "
+    "been running for years may carry three or four renamed-field generations at once, which is "
+    "why production pipelines usually externalize this mapping into a schema registry or config "
+    "table instead of hardcoding each old name directly into the query.",
+    "Deduping with ROW_NUMBER() OVER (PARTITION BY ...) is cheap at seven rows and still "
+    "perfectly fine at 51,495 - Postgres can sort-and-window a dataset this size in milliseconds. "
+    "The real cost only shows up at much larger scale, where a partition-by-business-key window "
+    "function becomes expensive enough that some pipelines prefer an upsert (ON CONFLICT) at "
+    "write time instead of a dedup pass at read time.",
+    "A 48-hour watermark was chosen deliberately, not arbitrarily - wide enough to catch "
+    "realistic network/processing delays, narrow enough that 'final' output is still available "
+    "within a reasonable time. Every watermark is this same tradeoff: wider catches more "
+    "stragglers but delays finality; the 48-hour figure here isn't a universal constant, it's "
+    "this task's own documented choice.",
+    "This heuristic (checking the JSON value's type/length to infer cents vs. decimal) is a "
+    "pragmatic fix for a feed that mixes both representations - the more robust long-term fix is "
+    "never letting a source emit amounts in two different units to begin with, which is a data-"
+    "contract problem to raise with whoever owns the upstream feed, not something a downstream "
+    "query should have to keep guessing around forever.",
+]
+
 
 def _teach_steps(index: int) -> list[dict]:
     step = _STEPS[index]
@@ -39,6 +96,8 @@ def _teach_steps(index: int) -> list[dict]:
         {"body": _HOOKS[index]},
         {"body": "The real query for this step:", "sql": step["sql"]},
         {"body": step["note"]},
+        {"body": _FAILURE_MODES[index]},
+        {"body": _SCALE_NOTES[index]},
         {"body": f"{_RECAPS[index]} Try it yourself in the Practice tab."},
     ]
 
