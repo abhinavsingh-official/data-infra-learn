@@ -30,7 +30,7 @@ export function TypingCode({ code }: { code: string }) {
   }, [code]);
 
   return (
-    <pre className="overflow-x-auto rounded-md border bg-muted/30 p-3 text-xs">
+    <pre className="whitespace-pre-wrap break-words rounded-md border bg-muted/30 p-3 text-xs">
       <code>
         {code.slice(0, typedChars)}
         {!done && <span className="animate-pulse">▍</span>}

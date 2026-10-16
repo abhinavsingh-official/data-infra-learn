@@ -75,7 +75,7 @@ export default function ReferencePage() {
                   <CardTitle className="text-lg">{node.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-6 lg:grid-cols-2">
-                  <pre className="min-h-48 overflow-auto rounded-lg border bg-muted/30 p-5 font-mono text-sm leading-relaxed">
+                  <pre className="min-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/30 p-5 font-mono text-sm leading-relaxed">
                     <code>{node.teach!.sql}</code>
                   </pre>
                   <ul className="space-y-4">

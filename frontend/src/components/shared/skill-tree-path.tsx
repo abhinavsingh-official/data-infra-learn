@@ -19,8 +19,10 @@ function unlocks(node: SkillNodeDto, completedIds: Set<string>): boolean {
 
 function isDisplayComplete(node: SkillNodeDto, completedIds: Set<string>, viewedIds: Set<string>): boolean {
   if (node.type === "intro" || node.type === "review") return viewedIds.has(node.id);
-  if (node.type === "skill") return completedIds.has(node.id);
-  return true;
+  // Capstones are real backend-graded completions too (the real task page
+  // posts back under this same node id) - never assume "done" by default,
+  // that's exactly the "everything already looks finished" bug.
+  return completedIds.has(node.id);
 }
 
 const NODE_ICON: Record<SkillNodeDto["type"], typeof BookOpen> = {

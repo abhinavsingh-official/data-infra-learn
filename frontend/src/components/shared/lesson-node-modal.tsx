@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -112,7 +112,7 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+      <DialogContent className="h-[85vh] w-[85vw] max-w-5xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{node.title}</DialogTitle>
           {node.body && <DialogDescription>{node.body}</DialogDescription>}
@@ -152,7 +152,7 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground">{node.teach.note}</p>
-                  <pre className="overflow-x-auto rounded-md border bg-muted/40 p-3 font-mono text-xs">
+                  <pre className="whitespace-pre-wrap break-words rounded-md border bg-muted/40 p-3 font-mono text-xs">
                     {node.teach.sql}
                   </pre>
                 </>
@@ -242,7 +242,8 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            <ArrowLeft className="size-4" />
+            Back to skill tree
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -48,14 +48,14 @@ export function ReferenceSolution({ solution, note, steps }: ReferenceSolutionPr
           {steps.map((step) => (
             <li key={step.title} className="space-y-1.5 border-l-2 border-border pl-3">
               <p className="text-sm font-medium">{step.title}</p>
-              <pre className="overflow-x-auto rounded-md bg-background p-3 font-mono text-xs">{step.sql}</pre>
+              <pre className="whitespace-pre-wrap break-words rounded-md bg-background p-3 font-mono text-xs">{step.sql}</pre>
               {step.note && <p className="text-xs text-muted-foreground">{step.note}</p>}
             </li>
           ))}
         </ol>
       ) : (
         <>
-          <pre className="overflow-x-auto rounded-md bg-background p-3 font-mono text-xs">{solution}</pre>
+          <pre className="whitespace-pre-wrap break-words rounded-md bg-background p-3 font-mono text-xs">{solution}</pre>
           {note && <p className="text-xs text-muted-foreground">{note}</p>}
         </>
       )}

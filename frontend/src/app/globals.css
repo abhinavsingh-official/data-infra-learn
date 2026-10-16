@@ -184,7 +184,12 @@
     @apply bg-background text-foreground;
   }
   html {
+    /* VT323 has a short x-height and tight default spacing compared to a
+       normal UI sans at the same pixel size - without bumping both, it
+       reads noticeably smaller/denser than everything did before it. */
     @apply font-sans;
+    font-size: 118%;
+    letter-spacing: 0.035em;
   }
 }
 

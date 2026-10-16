@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,15 +15,16 @@ import { PHASE_THEME, type PhaseSlug } from "@/lib/phase-theme";
 import { cn } from "@/lib/utils";
 import type { ComparisonEntry } from "@/lib/types";
 
-/** A fixed, non-draggable wheel (not a pannable/zoomable graph canvas) -
- * it spins into place once on load like the looping demo on /start, then
- * only turns when you click the side arrows. Clicking a node on the
- * wheel itself opens the query popup (unchanged from before). */
+/** A fixed, non-draggable wheel (not a pannable/zoomable graph canvas).
+ * It spins into place once on load, and clicking a node spins the wheel
+ * to bring that node to the front before its query popup opens - there's
+ * no separate manual spin control, the rotation IS the response to your
+ * click, not something you drive yourself. */
 
-const RADIUS = 160;
+const RADIUS = 150;
 const STEP_DEG = 360 / 5;
 const SETTLE_MS = 1100;
-const TURN_MS = 450;
+const TURN_MS = 700;
 
 const APPROACHES: { slug: PhaseSlug; name: string }[] = [
   { slug: "postgres", name: "SQL (Postgres)" },
@@ -37,6 +38,7 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
   const [rotation, setRotation] = useState(-360);
   const [settled, setSettled] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const pendingOpen = useRef<ReturnType<typeof setTimeout> | null>(null);
   const active = openIndex !== null ? entries[openIndex] : null;
 
   useEffect(() => {
@@ -48,18 +50,18 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
     };
   }, []);
 
-  function turn(direction: 1 | -1) {
-    setRotation((r) => r + direction * STEP_DEG);
+  function selectNode(i: number) {
+    // Spin so node i lands at the top (front) position, then reveal its
+    // query once the spin has actually finished playing.
+    setRotation(-i * STEP_DEG);
+    if (pendingOpen.current) clearTimeout(pendingOpen.current);
+    pendingOpen.current = setTimeout(() => setOpenIndex(i), TURN_MS);
   }
 
   return (
     <>
-      <div className="flex items-center justify-center gap-4 sm:gap-8">
-        <Button variant="outline" size="icon" className="shrink-0" onClick={() => turn(-1)} aria-label="Rotate left">
-          <ChevronLeft className="size-5" />
-        </Button>
-
-        <div className="relative size-[22rem] shrink-0">
+      <div className="flex justify-center pt-12 pb-4">
+        <div className="relative size-[20rem] shrink-0">
           <div className="pixel-box retro-box absolute top-1/2 left-1/2 flex size-28 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-primary p-3 text-center text-xs font-medium text-primary-foreground">
             One fintech dataset
           </div>
@@ -72,7 +74,7 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
               <button
                 key={approach.slug}
                 type="button"
-                onClick={() => setOpenIndex(i)}
+                onClick={() => selectNode(i)}
                 style={{
                   transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
                   transitionDuration: `${settled ? TURN_MS : SETTLE_MS}ms`,
@@ -87,10 +89,6 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
             );
           })}
         </div>
-
-        <Button variant="outline" size="icon" className="shrink-0" onClick={() => turn(1)} aria-label="Rotate right">
-          <ChevronRight className="size-5" />
-        </Button>
       </div>
 
       <div className="flex justify-center">
@@ -110,14 +108,14 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
                 <DialogTitle>{active.paradigm}</DialogTitle>
                 <DialogDescription>{active.explanation}</DialogDescription>
               </DialogHeader>
-              <pre className="max-h-64 overflow-auto border-2 border-panel-edge/50 bg-muted/40 p-3 font-mono text-xs">
+              <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap break-words border-2 border-panel-edge/50 bg-muted/40 p-3 font-mono text-xs">
                 <code>{active.code}</code>
               </pre>
               <div className="flex items-center justify-between pt-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setOpenIndex((i) => ((i ?? 0) - 1 + entries.length) % entries.length)}
+                  onClick={() => selectNode(((openIndex ?? 0) - 1 + entries.length) % entries.length)}
                 >
                   <ArrowLeft className="size-4" />
                   Prev
@@ -128,7 +126,7 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setOpenIndex((i) => ((i ?? 0) + 1) % entries.length)}
+                  onClick={() => selectNode(((openIndex ?? 0) + 1) % entries.length)}
                 >
                   Next
                   <ArrowRight className="size-4" />

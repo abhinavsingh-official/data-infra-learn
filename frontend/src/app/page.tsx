@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Check, GitBranch, Warehouse, Waves, Network } from "lucide-react";
+import { ArrowRight, Check, History, Warehouse, Waves, Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { QueryDemo } from "@/components/query-demo";
@@ -34,12 +34,12 @@ const HOW_IT_WORKS = [
   { title: "A real grading report", body: "Per-edge-case findings with the actual root cause and fix, so you learn why it broke, not just that it did." },
 ];
 
-const PARADIGM_PREVIEW: { slug: PhaseSlug; name: string; tagline: string; detail: string; logo?: string; icon?: typeof GitBranch }[] = [
+const PARADIGM_PREVIEW: { slug: PhaseSlug; name: string; tagline: string; detail: string; logo?: string; icon?: typeof History }[] = [
   { slug: "postgres", name: "SQL / Postgres", tagline: "Schemas, joins, constraints", detail: "Fundamentals, then deep internals", logo: "/images/logos/postgresql.svg" },
   { slug: "nosql", name: "NoSQL", tagline: "The same data, remodeled", detail: "Embedding vs. referencing, for real", logo: "/images/logos/mongodb.svg" },
   { slug: "warehouse", name: "Warehouse", tagline: "Star schemas, SCD", detail: "Kimball's own design process", icon: Warehouse },
   { slug: "lake", name: "Lake", tagline: "Partitioned, schema-on-read", detail: "Parquet internals, partition pruning", icon: Waves },
-  { slug: "lakehouse", name: "Lakehouse", tagline: "ACID on object storage", detail: "Delta commits and time travel", icon: GitBranch },
+  { slug: "lakehouse", name: "Lakehouse", tagline: "ACID on object storage", detail: "Delta commits and time travel", icon: History },
   { slug: "pipeline-architecture", name: "Pipeline Architecture", tagline: "The discipline underneath it all", detail: "Idempotency, schema drift, monitoring", icon: Network },
 ];
 
