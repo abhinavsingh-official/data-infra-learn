@@ -6,7 +6,7 @@
 // can't read this cookie themselves).
 
 import { cookies } from "next/headers";
-import type { ProgressDto } from "./types";
+import type { DailyChallengeDto, ProgressDto } from "./types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -28,6 +28,21 @@ export async function fetchProgressServerSide(): Promise<ProgressDto | null> {
     });
     if (!response.ok) return null;
     return (await response.json()) as ProgressDto;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchDailyChallengeServerSide(): Promise<DailyChallengeDto | null> {
+  const token = await sessionToken();
+  if (!token) return null;
+  try {
+    const response = await fetch(`${API_BASE_URL}/progress/daily/today`, {
+      headers: { "X-Session-Token": token },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as DailyChallengeDto;
   } catch {
     return null;
   }
