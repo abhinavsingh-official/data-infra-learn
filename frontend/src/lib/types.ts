@@ -113,6 +113,19 @@ export interface DailyChallengeDto {
   python: DailyPythonChallengeDto;
 }
 
+export interface BadgeDto {
+  badge_id: string;
+  label: string;
+  earned: boolean;
+}
+
+export interface CertificateStatusDto {
+  label: string;
+  completed: number;
+  total: number;
+  unlocked: boolean;
+}
+
 export interface PythonCheckResult {
   passed: boolean;
   error_code: string | null;

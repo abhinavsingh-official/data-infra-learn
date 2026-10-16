@@ -62,3 +62,31 @@ def test_completing_multiple_distinct_nodes_accumulates_xp(test_user_id):
         "node_2_renamed_missing",
         "review",
     ]
+
+
+def test_completing_a_capstone_awards_its_own_paradigm_badge(test_user_id):
+    with get_connection() as conn:
+        result = store.record_node_completion(conn, test_user_id, "postgres", "capstone", "capstone")
+    assert "relational_fundamentals" in result["new_badges"]
+    assert "relational_fundamentals" in result["badges"]
+    assert result["newly_awarded_xp"] == 50  # the existing "capstone" XP_BY_NODE_TYPE value
+
+
+def test_capstone_badge_is_not_re_awarded_on_a_second_completion_attempt(test_user_id):
+    with get_connection() as conn:
+        store.record_node_completion(conn, test_user_id, "postgres", "capstone", "capstone")
+        second = store.record_node_completion(conn, test_user_id, "postgres", "capstone", "capstone")
+    assert second["new_badges"] == []
+    assert second["badges"].count("relational_fundamentals") == 1
+
+
+def test_a_paradigm_with_no_capstone_badge_mapping_just_skips_it(test_user_id):
+    # "sql-databases" is a fundamentals track, not a phase with its own
+    # real capstone - deliberately absent from CAPSTONE_BADGES, even
+    # though this call shape (node_type="capstone") would normally award
+    # one for a real phase paradigm.
+    with get_connection() as conn:
+        result = store.record_node_completion(conn, test_user_id, "sql-databases", "capstone", "capstone")
+    # "first_steps" (the generic node-count badge) still fires - only the
+    # paradigm-specific capstone badge is the thing that's absent here.
+    assert result["new_badges"] == ["first_steps"]

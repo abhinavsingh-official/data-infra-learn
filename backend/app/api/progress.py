@@ -9,7 +9,8 @@ from pydantic import BaseModel
 
 from app.core.db import get_connection
 from app.core.session_auth import resolve_user
-from app.modules.progress import mongo_node_practice, node_practice, store
+from app.modules.progress import certificates, mongo_node_practice, node_practice, store
+from app.modules.progress.xp_rules import all_badge_definitions
 
 router = APIRouter(prefix="/progress", tags=["progress"])
 
@@ -30,6 +31,27 @@ def get_my_progress(x_session_token: str | None = Header(default=None)) -> dict:
     user_id = _require_user_id(x_session_token)
     with get_connection() as conn:
         return store.get_progress(conn, user_id)
+
+
+@router.get("/badges")
+def get_badges(x_session_token: str | None = Header(default=None)) -> dict:
+    user_id = _require_user_id(x_session_token)
+    with get_connection() as conn:
+        earned = set(store.get_progress(conn, user_id)["badges"])
+    return {
+        "badges": [
+            {"badge_id": badge.badge_id, "label": badge.label, "earned": badge.badge_id in earned}
+            for badge in all_badge_definitions()
+        ]
+    }
+
+
+@router.get("/certificates")
+def get_certificates(x_session_token: str | None = Header(default=None)) -> dict:
+    user_id = _require_user_id(x_session_token)
+    with get_connection() as conn:
+        completed_nodes = store.get_progress(conn, user_id)["completed_nodes"]
+    return {"certificates": certificates.certificate_status(completed_nodes)}
 
 
 @router.post("/nodes/{paradigm}/{node_id}/check")

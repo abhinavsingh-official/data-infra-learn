@@ -1,9 +1,11 @@
 import secrets
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
-from app.core.db import get_admin_connection
+from app.core.db import get_admin_connection, get_connection
+from app.core.session_auth import resolve_user
+from app.modules.progress import store
 from app.modules.lakehouse_phase import session_registry
 from app.modules.lakehouse_phase.commit_batch import commit_batch
 from app.modules.lakehouse_phase.report import grade_submission
@@ -98,18 +100,24 @@ def commit(session_id: str, body: CommitBatchRequest) -> dict:
 
 
 @router.post("/sessions/{session_id}/grade")
-def grade(session_id: str) -> dict:
+def grade(session_id: str, x_session_token: str | None = Header(default=None)) -> dict:
     record = session_registry.get(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
     report = grade_submission(record.spark_session)
-    return {
+    result = {
         "passed": report.passed,
         "total_clean_rows": report.total_clean_rows,
         "structural_findings": [vars(f) for f in report.structural_findings],
         "fault_findings": [vars(f) for f in report.fault_findings],
         "fault_type_summary": report.fault_type_summary,
     }
+    if report.passed:
+        user = resolve_user(x_session_token)
+        if user is not None:
+            with get_connection() as conn:
+                result["progress"] = store.record_node_completion(conn, user.id, "lakehouse", "capstone", "capstone")
+    return result
 
 
 @router.delete("/sessions/{session_id}")
