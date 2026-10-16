@@ -11,6 +11,7 @@ from app.api.nosql_phase import router as nosql_phase_router
 from app.api.postgres_phase import router as postgres_phase_router
 from app.api.progress import router as progress_router
 from app.api.sql_databases_track import router as sql_databases_track_router
+from app.api.warehouse_databases_track import router as warehouse_databases_track_router
 from app.api.warehouse_phase import router as warehouse_phase_router
 from app.core.config import get_settings
 
@@ -35,6 +36,7 @@ app.include_router(learn_page_router)
 app.include_router(progress_router)
 app.include_router(sql_databases_track_router)
 app.include_router(mongo_databases_track_router)
+app.include_router(warehouse_databases_track_router)
 
 
 if __name__ == "__main__":

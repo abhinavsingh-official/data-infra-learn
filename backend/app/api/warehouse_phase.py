@@ -12,9 +12,15 @@ from app.modules.warehouse_phase.session_provisioning import (
     provision_session,
 )
 from app.modules.warehouse_phase.simulate_changes import apply_mutations
+from app.modules.warehouse_phase.skill_tree import WAREHOUSE_SKILL_TREE
 from app.modules.warehouse_phase.task_content import WAREHOUSE_PHASE_TASK
 
 router = APIRouter(prefix="/warehouse-phase", tags=["warehouse-phase"])
+
+
+@router.get("/skill-tree")
+def get_skill_tree() -> dict:
+    return WAREHOUSE_SKILL_TREE
 
 
 class ExecuteRequest(BaseModel):
