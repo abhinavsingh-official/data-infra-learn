@@ -119,6 +119,54 @@ TOPICS = [
                 ),
             },
         ],
+        "coding": [
+            {
+                "prompt": "Given orders(id, customer_id, amount), write a query that returns each "
+                "customer's total spend and their rank from highest to lowest spender.",
+                "solution": (
+                    "SELECT customer_id, SUM(amount) AS total_spent,\n"
+                    "       RANK() OVER (ORDER BY SUM(amount) DESC) AS spend_rank\n"
+                    "FROM orders\n"
+                    "GROUP BY customer_id\n"
+                    "ORDER BY total_spent DESC;"
+                ),
+                "note": (
+                    "GROUP BY collapses to one row per customer; RANK() OVER an ORDER BY on the "
+                    "aggregate assigns the rank in the same pass, so ties share a rank and the next "
+                    "rank skips ahead - no separate subquery needed."
+                ),
+            },
+            {
+                "prompt": "Given orders(id, customer_id, order_date), write a query that returns "
+                "customers who placed orders in at least 2 different calendar months.",
+                "solution": (
+                    "SELECT customer_id\n"
+                    "FROM orders\n"
+                    "GROUP BY customer_id\n"
+                    "HAVING COUNT(DISTINCT date_trunc('month', order_date)) >= 2;"
+                ),
+                "note": (
+                    "date_trunc('month', ...) collapses every date in the same month to the same "
+                    "value, so COUNT(DISTINCT ...) counts distinct months, not distinct dates - "
+                    "HAVING filters on that aggregate the way WHERE never could."
+                ),
+            },
+            {
+                "prompt": "Given orders(id, customer_id, order_date), write a query that returns "
+                "each customer's single earliest order, without a correlated subquery.",
+                "solution": (
+                    "SELECT DISTINCT ON (customer_id) customer_id, id, order_date\n"
+                    "FROM orders\n"
+                    "ORDER BY customer_id, order_date ASC;"
+                ),
+                "note": (
+                    "Postgres's DISTINCT ON keeps the first row per group after an explicit ORDER "
+                    "BY - the ORDER BY's leading column must match DISTINCT ON's column so 'first' "
+                    "is unambiguous. On engines without DISTINCT ON, ROW_NUMBER() OVER (PARTITION BY "
+                    "customer_id ORDER BY order_date) filtered to rn = 1 is the portable equivalent."
+                ),
+            },
+        ],
     },
     {
         "topic": "Data Modeling & Warehousing",
@@ -215,6 +263,57 @@ TOPICS = [
                 ),
             },
         ],
+        "coding": [
+            {
+                "prompt": "Given fact_sales(id, product_id, amount) and dim_products(id, category), "
+                "write a query that returns total revenue per product category, highest first.",
+                "solution": (
+                    "SELECT d.category, SUM(f.amount) AS revenue\n"
+                    "FROM fact_sales f\n"
+                    "JOIN dim_products d ON d.id = f.product_id\n"
+                    "GROUP BY d.category\n"
+                    "ORDER BY revenue DESC;"
+                ),
+                "note": (
+                    "The textbook star-schema query: one JOIN from fact to dimension, GROUP BY the "
+                    "dimension's descriptive attribute (not its key), SUM the fact's measure."
+                ),
+            },
+            {
+                "prompt": "Given a Type-2 SCD dim_customers(customer_id, tier, effective_from, "
+                "effective_to), write a query returning each customer's tier as it stood on "
+                "2026-02-15 (effective_to is NULL for the current row).",
+                "solution": (
+                    "SELECT customer_id, tier\n"
+                    "FROM dim_customers\n"
+                    "WHERE effective_from <= '2026-02-15'\n"
+                    "  AND (effective_to IS NULL OR effective_to > '2026-02-15')\n"
+                    "ORDER BY customer_id;"
+                ),
+                "note": (
+                    "The two-sided range check is the whole trick of querying an SCD2 table 'as of' "
+                    "a date - effective_from <= the date catches rows that started in time, and the "
+                    "NULL-or-after check on effective_to catches both the still-current row and any "
+                    "row that hadn't yet been superseded on that date."
+                ),
+            },
+            {
+                "prompt": "Given fact_monthly_revenue(month, revenue), write a query computing each "
+                "month's percentage revenue growth over the previous month.",
+                "solution": (
+                    "SELECT month, revenue,\n"
+                    "  ROUND((revenue - LAG(revenue) OVER (ORDER BY month))\n"
+                    "        / LAG(revenue) OVER (ORDER BY month) * 100, 1) AS pct_growth\n"
+                    "FROM fact_monthly_revenue\n"
+                    "ORDER BY month;"
+                ),
+                "note": (
+                    "LAG() reaches back one row (by month order) without a self-join - the first "
+                    "month has no prior row to compare to, so its pct_growth is correctly NULL "
+                    "rather than zero or an error."
+                ),
+            },
+        ],
     },
     {
         "topic": "NoSQL & Document Databases",
@@ -282,6 +381,51 @@ TOPICS = [
                     "to expect without guessing. Optional JSON Schema validation rules can also be "
                     "layered on a collection to catch writes that violate an agreed-upon shape "
                     "going forward, without forcing a rigid relational schema."
+                ),
+            },
+        ],
+        "coding": [
+            {
+                "prompt": "Given an orders collection with customer_id and amount fields, write an "
+                "aggregation pipeline returning each customer's total spend, sorted descending.",
+                "solution": (
+                    "db.orders.aggregate([\n"
+                    "  { $group: { _id: \"$customer_id\", total_spent: { $sum: \"$amount\" } } },\n"
+                    "  { $sort: { total_spent: -1 } },\n"
+                    "])"
+                ),
+                "note": (
+                    "$group with a $sum accumulator is Mongo's GROUP BY/SUM; grouping on "
+                    "\"$customer_id\" collapses to one document per customer, then $sort orders the "
+                    "already-grouped result - no second pass over the raw documents needed."
+                ),
+            },
+            {
+                "prompt": "Given the same orders collection with an order_date field, write an "
+                "aggregation pipeline returning each customer's single most recent order.",
+                "solution": (
+                    "db.orders.aggregate([\n"
+                    "  { $sort: { order_date: -1 } },\n"
+                    "  { $group: { _id: \"$customer_id\",\n"
+                    "              most_recent_order: { $first: \"$order_date\" },\n"
+                    "              amount: { $first: \"$amount\" } } },\n"
+                    "])"
+                ),
+                "note": (
+                    "$first inside $group only works correctly because the $sort stage runs first - "
+                    "$group preserves the incoming order within each group, so sorting newest-first "
+                    "before grouping means the 'first' document $group sees per customer is the most "
+                    "recent one."
+                ),
+            },
+            {
+                "prompt": "Write a Mongo update that increments a user document's login_count field "
+                "by 1 without reading the document first.",
+                "solution": "db.users.updateOne({ _id: \"u1\" }, { $inc: { login_count: 1 } })",
+                "note": (
+                    "$inc is applied atomically server-side - no read-modify-write race between two "
+                    "concurrent logins, unlike reading login_count into application code, adding 1, "
+                    "and writing it back."
                 ),
             },
         ],
@@ -369,6 +513,50 @@ TOPICS = [
                     "the commit is rejected and the writer must re-read and retry rather than "
                     "silently corrupting the table - avoiding the need for a heavy, shared lock on "
                     "every write at the cost of occasional retries under contention."
+                ),
+            },
+        ],
+        "coding": [
+            {
+                "prompt": "Given a date-partitioned events(id, event_date, payload) table, write a "
+                "query that only touches the 2026-02-02 partition.",
+                "solution": "SELECT * FROM events WHERE event_date = '2026-02-02';",
+                "note": (
+                    "On a real partitioned table (or a lake laid out as date=.../ directories), this "
+                    "exact filter is what lets the engine prune every other partition/file entirely "
+                    "instead of scanning the full table - the query doesn't need to 'know' about "
+                    "partitioning, the planner exploits it automatically from the WHERE clause."
+                ),
+            },
+            {
+                "prompt": "Given accounts(account_id PRIMARY KEY, balance), write the SQL equivalent "
+                "of a Delta/Iceberg MERGE that inserts a new account or updates its balance if the "
+                "account already exists.",
+                "solution": (
+                    "INSERT INTO accounts (account_id, balance) VALUES (101, 500)\n"
+                    "ON CONFLICT (account_id) DO UPDATE SET balance = EXCLUDED.balance;"
+                ),
+                "note": (
+                    "Running this exact statement a second time with a different balance updates the "
+                    "existing row in place rather than inserting a duplicate - verified against a "
+                    "real table: two runs with balance 500 then 650 leave exactly one row, "
+                    "(101, 650), which is the whole point of an idempotent upsert."
+                ),
+            },
+            {
+                "prompt": "Given an append-only commit_log(committed_at, value) table recording a "
+                "value at every commit, write a query returning the value as it stood at or before "
+                "2026-01-02 00:00:00 - a poor-man's time travel query.",
+                "solution": (
+                    "SELECT value FROM commit_log\n"
+                    "WHERE committed_at <= '2026-01-02 00:00:00'\n"
+                    "ORDER BY committed_at DESC\n"
+                    "LIMIT 1;"
+                ),
+                "note": (
+                    "This is exactly what a lakehouse table format's time travel does under the "
+                    "hood - every commit is a new row in an append-only log, so 'what was true as of "
+                    "T' is just the latest commit at or before T, never an in-place overwrite."
                 ),
             },
         ],
@@ -484,6 +672,48 @@ TOPICS = [
                     "referential integrity against dimension tables). Good monitoring alerts on the "
                     "data itself, not just job success/failure - a job can finish 'successfully' and "
                     "still silently load zero rows or garbage data if upstream changed underneath it."
+                ),
+            },
+        ],
+        "coding": [
+            {
+                "prompt": "Given raw_events(id, event_id, received_at), write a query that "
+                "deduplicates redelivered webhook events by event_id, keeping only the "
+                "earliest-received copy of each.",
+                "solution": (
+                    "SELECT id, event_id, received_at FROM (\n"
+                    "  SELECT *, ROW_NUMBER() OVER (PARTITION BY event_id ORDER BY received_at ASC) AS rn\n"
+                    "  FROM raw_events\n"
+                    ") t\n"
+                    "WHERE rn = 1;"
+                ),
+                "note": (
+                    "PARTITION BY event_id restarts the row count for every distinct event_id; "
+                    "ordering each partition by received_at ASC makes row 1 the earliest copy, so "
+                    "filtering to rn = 1 keeps exactly one row per event_id with no GROUP BY (which "
+                    "can't return non-aggregated columns like id cleanly) and no self-join."
+                ),
+            },
+            {
+                "prompt": "Given stream_events(id, event_time), write a query that only returns "
+                "events safely before a watermark of 2026-01-02 00:00:00, leaving later "
+                "(possibly-incomplete) events for the next run.",
+                "solution": "SELECT id FROM stream_events WHERE event_time < '2026-01-02 00:00:00';",
+                "note": (
+                    "The watermark itself is just a WHERE boundary applied by whatever orchestrates "
+                    "the run - the query doesn't need special syntax for it, the discipline is in "
+                    "choosing when it's safe to treat everything before that boundary as complete."
+                ),
+            },
+            {
+                "prompt": "Given transactions(id, amount), write a query that flags rows failing a "
+                "basic data-quality check (a negative amount) instead of silently dropping them.",
+                "solution": "SELECT id, amount, (amount < 0) AS quarantine FROM transactions ORDER BY id;",
+                "note": (
+                    "Flagging in-place (or routing flagged rows to a separate quarantine table) keeps "
+                    "every row visible and auditable - a pipeline that silently WHERE-filters out bad "
+                    "rows instead makes a swallowed data-quality failure indistinguishable from the "
+                    "data simply never having arrived."
                 ),
             },
         ],

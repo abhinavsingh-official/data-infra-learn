@@ -66,7 +66,7 @@ export function SessionPanel({ task }: { task: PostgresTask }) {
   }
 
   return (
-    <Card>
+    <Card className="text-base [--card-spacing:--spacing(6)]">
       <CardHeader>
         <Stepper steps={STEPS} currentIndex={step} phase="postgres" />
       </CardHeader>
@@ -74,12 +74,12 @@ export function SessionPanel({ task }: { task: PostgresTask }) {
         {step === 0 && (
           <div className="space-y-4">
             <div>
-              <CardTitle className="mb-1">{task.title}</CardTitle>
-              <CardDescription>{task.summary}</CardDescription>
+              <CardTitle className="mb-1 text-2xl">{task.title}</CardTitle>
+              <CardDescription className="text-base">{task.summary}</CardDescription>
             </div>
             <DatasetStats stats={task.dataset_stats} phase="postgres" />
             <div className="flex justify-end">
-              <Button onClick={() => setStep(1)}>Open the workspace</Button>
+              <Button size="lg" onClick={() => setStep(1)}>Open the workspace</Button>
             </div>
           </div>
         )}
@@ -88,8 +88,8 @@ export function SessionPanel({ task }: { task: PostgresTask }) {
           // Codecademy/SQLBolt-style split: instructions stay visible on the
           // left the whole time you're writing, instead of being a step you
           // navigate away from and have to re-open to re-read.
-          <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-            <aside className="space-y-6 text-sm lg:sticky lg:top-4 lg:self-start">
+          <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+            <aside className="space-y-6 text-base lg:sticky lg:top-4 lg:self-start">
               <section>
                 <h3 className="mb-2 font-medium">Source: {task.source_table}</h3>
                 <ul className="space-y-1 text-muted-foreground">
@@ -138,7 +138,7 @@ export function SessionPanel({ task }: { task: PostgresTask }) {
                     Provisions a restricted Postgres role and schema just for you, with read access
                     to the raw feed. Nothing else touches your work.
                   </p>
-                  <Button onClick={handleStart} disabled={starting}>
+                  <Button size="lg" onClick={handleStart} disabled={starting}>
                     {starting ? "Starting..." : "Start Session"}
                   </Button>
                 </div>
@@ -155,7 +155,7 @@ export function SessionPanel({ task }: { task: PostgresTask }) {
                     execute={executeSql}
                     placeholder="CREATE TABLE clean_transactions ( ... );"
                     starterValue={task.starter_sql}
-                    rows={10}
+                    rows={18}
                   />
                   <ReferenceSolution
                     solution={task.reference_solution.sql}
@@ -168,7 +168,7 @@ export function SessionPanel({ task }: { task: PostgresTask }) {
                     <Button variant="outline" onClick={handleEnd} disabled={ending}>
                       {ending ? "Ending..." : "End Session"}
                     </Button>
-                    <Button onClick={handleGrade} disabled={grading}>
+                    <Button size="lg" onClick={handleGrade} disabled={grading}>
                       {grading ? "Grading..." : "Grade Submission"}
                     </Button>
                   </div>

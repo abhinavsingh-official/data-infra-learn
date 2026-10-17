@@ -112,7 +112,7 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[85vh] w-[85vw] max-w-5xl overflow-y-auto">
+      <DialogContent className="sm:h-[85vh] sm:w-[85vw] sm:max-w-6xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{node.title}</DialogTitle>
           {node.body && <DialogDescription>{node.body}</DialogDescription>}

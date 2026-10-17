@@ -309,9 +309,16 @@ export interface InterviewQuestion {
   a: string;
 }
 
+export interface InterviewCodingQuestion {
+  prompt: string;
+  solution: string;
+  note: string;
+}
+
 export interface InterviewQuestionTopic {
   topic: string;
   questions: InterviewQuestion[];
+  coding: InterviewCodingQuestion[];
 }
 
 export interface InterviewQuestionsPage {

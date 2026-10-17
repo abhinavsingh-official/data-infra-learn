@@ -1,9 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -60,7 +57,7 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
 
   return (
     <>
-      <div className="flex justify-center pt-12 pb-4">
+      <div className="flex justify-center pt-4 pb-2">
         <div className="relative size-[20rem] shrink-0">
           <div className="pixel-box retro-box absolute top-1/2 left-1/2 flex size-28 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-primary p-3 text-center text-xs font-medium text-primary-foreground">
             One fintech dataset
@@ -91,15 +88,6 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
         </div>
       </div>
 
-      <div className="flex justify-center">
-        <Link
-          href="/pipeline-architecture"
-          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
-          Pipeline Architecture (the discipline underneath all five) →
-        </Link>
-      </div>
-
       <Dialog open={active !== null} onOpenChange={(open) => !open && setOpenIndex(null)}>
         <DialogContent className="sm:max-w-xl">
           {active && (
@@ -111,27 +99,6 @@ export function ComparisonDiagram({ entries }: { entries: ComparisonEntry[] }) {
               <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap break-words border-2 border-panel-edge/50 bg-muted/40 p-3 font-mono text-xs">
                 <code>{active.code}</code>
               </pre>
-              <div className="flex items-center justify-between pt-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => selectNode(((openIndex ?? 0) - 1 + entries.length) % entries.length)}
-                >
-                  <ArrowLeft className="size-4" />
-                  Prev
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  {(openIndex ?? 0) + 1} / {entries.length}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => selectNode(((openIndex ?? 0) + 1) % entries.length)}
-                >
-                  Next
-                  <ArrowRight className="size-4" />
-                </Button>
-              </div>
             </>
           )}
         </DialogContent>

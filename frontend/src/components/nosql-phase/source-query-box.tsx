@@ -31,10 +31,10 @@ export function SourceQueryBox({ sessionId }: { sessionId: string }) {
       <Textarea
         value={sql}
         onChange={(event) => setSql(event.target.value)}
-        rows={3}
-        className="font-mono text-sm"
+        rows={6}
+        className="font-mono text-base"
       />
-      <Button onClick={run} disabled={running || !sql.trim()}>
+      <Button size="lg" onClick={run} disabled={running || !sql.trim()}>
         {running ? "Querying..." : "Query source"}
       </Button>
 

@@ -52,10 +52,10 @@ export function MongoExecuteBox({ sessionId, starterValue = "" }: MongoExecuteBo
         value={commandText}
         onChange={(event) => setCommandText(event.target.value)}
         placeholder={PLACEHOLDER}
-        rows={8}
-        className="font-mono text-sm"
+        rows={14}
+        className="font-mono text-base"
       />
-      <Button onClick={run} disabled={running || !commandText.trim()}>
+      <Button size="lg" onClick={run} disabled={running || !commandText.trim()}>
         {running ? "Running..." : "Run Mongo command"}
       </Button>
 
@@ -75,7 +75,7 @@ export function MongoExecuteBox({ sessionId, starterValue = "" }: MongoExecuteBo
 
       {result?.success && (
         <div className="rounded-md border bg-muted/30 p-3">
-          <pre className="max-h-60 overflow-auto text-xs">{JSON.stringify(result.result, null, 2)}</pre>
+          <pre className="max-h-96 overflow-auto text-sm">{JSON.stringify(result.result, null, 2)}</pre>
           {result.truncated && (
             <p className="mt-2 text-xs text-muted-foreground">Truncated to the first 1000 documents.</p>
           )}

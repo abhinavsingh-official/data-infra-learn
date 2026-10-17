@@ -22,7 +22,7 @@ interface SqlWorkspaceProps {
 
 /** Shared across every SQL-submitting phase (Postgres, Warehouse, Lake) -
  * the UI is identical; only which endpoint `execute` calls differs. */
-export function SqlWorkspace({ sessionId, execute, placeholder, rows = 8, starterValue = "" }: SqlWorkspaceProps) {
+export function SqlWorkspace({ sessionId, execute, placeholder, rows = 14, starterValue = "" }: SqlWorkspaceProps) {
   const [sql, setSql] = useState(starterValue);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<ExecuteResult | null>(null);
@@ -46,9 +46,9 @@ export function SqlWorkspace({ sessionId, execute, placeholder, rows = 8, starte
         onChange={(event) => setSql(event.target.value)}
         placeholder={placeholder}
         rows={rows}
-        className="font-mono text-sm"
+        className="font-mono text-base"
       />
-      <Button onClick={run} disabled={running || !sql.trim()}>
+      <Button size="lg" onClick={run} disabled={running || !sql.trim()}>
         {running ? "Running..." : "Run"}
       </Button>
 
@@ -60,7 +60,7 @@ export function SqlWorkspace({ sessionId, execute, placeholder, rows = 8, starte
       )}
 
       {result?.success && result.columns.length > 0 && (
-        <div className="max-h-80 overflow-auto rounded-md border">
+        <div className="max-h-96 overflow-auto rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -73,7 +73,7 @@ export function SqlWorkspace({ sessionId, execute, placeholder, rows = 8, starte
               {result.rows.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
                   {row.map((cell, cellIndex) => (
-                    <TableCell key={cellIndex} className="font-mono text-xs">
+                    <TableCell key={cellIndex} className="font-mono text-sm">
                       {cell === null ? <span className="italic text-muted-foreground">null</span> : String(cell)}
                     </TableCell>
                   ))}

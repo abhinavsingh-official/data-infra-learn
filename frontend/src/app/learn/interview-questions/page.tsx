@@ -26,6 +26,7 @@ export default function InterviewQuestionsRoute() {
   const [data, setData] = useState<InterviewQuestionsPage | null>(null);
   const [failed, setFailed] = useState(false);
   const [topicIndex, setTopicIndex] = useState(0);
+  const [mode, setMode] = useState<"theory" | "coding">("theory");
 
   useEffect(() => {
     getInterviewQuestions()
@@ -81,18 +82,59 @@ export default function InterviewQuestionsRoute() {
         })}
       </div>
 
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant={mode === "theory" ? "default" : "outline"}
+          onClick={() => setMode("theory")}
+          className={mode === "theory" ? "retro-box" : undefined}
+        >
+          Theory
+        </Button>
+        <Button
+          size="sm"
+          variant={mode === "coding" ? "default" : "outline"}
+          onClick={() => setMode("coding")}
+          className={mode === "coding" ? "retro-box" : undefined}
+        >
+          Coding questions
+        </Button>
+      </div>
+
       <Card className={cn("border-l-4", theme.border)}>
         <CardContent className="pt-6">
-          <Accordion>
-            {activeTopic.questions.map((item, i) => (
-              <AccordionItem key={i} value={`q-${i}`}>
-                <AccordionTrigger className="text-base">{item.q}</AccordionTrigger>
-                <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
-                  {item.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          {mode === "theory" ? (
+            <Accordion>
+              {activeTopic.questions.map((item, i) => (
+                <AccordionItem key={i} value={`q-${i}`}>
+                  <AccordionTrigger className="text-base">{item.q}</AccordionTrigger>
+                  <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                    {item.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          ) : (
+            <div className="space-y-6">
+              <p className="text-sm text-muted-foreground">
+                Try writing the query yourself first, then expand to check it against a real, verified
+                solution.
+              </p>
+              <Accordion>
+                {activeTopic.coding.map((item, i) => (
+                  <AccordionItem key={i} value={`c-${i}`}>
+                    <AccordionTrigger className="text-base">{item.prompt}</AccordionTrigger>
+                    <AccordionContent className="space-y-3">
+                      <pre className="overflow-x-auto whitespace-pre-wrap break-words border-2 border-panel-edge/50 bg-muted/40 p-3 font-mono text-sm">
+                        <code>{item.solution}</code>
+                      </pre>
+                      <p className="text-sm leading-relaxed text-muted-foreground">{item.note}</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
