@@ -16,7 +16,7 @@ def test_every_error_code_the_injectors_produce_has_remediation():
         assert code in REMEDIATION, f"{code} is injected by the edge-case injectors but has no remediation entry"
 
 
-def test_every_remediation_entry_has_why_fix_and_tradeoffs():
+def test_every_remediation_entry_has_why_fix_fix_sql_and_tradeoffs():
     for code, entry in REMEDIATION.items():
-        for key in ("why", "fix", "tradeoffs"):
+        for key in ("why", "fix", "fix_sql", "tradeoffs"):
             assert entry.get(key), f"{code} is missing '{key}'"

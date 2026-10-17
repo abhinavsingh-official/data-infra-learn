@@ -17,4 +17,5 @@ def test_every_remediation_entry_has_why_fix_and_tradeoffs():
     for code, entry in REMEDIATION.items():
         assert entry["why"], f"{code} missing why"
         assert entry["fix"], f"{code} missing fix"
+        assert entry["fix_sql"], f"{code} missing fix_sql"
         assert entry["tradeoffs"], f"{code} missing tradeoffs"

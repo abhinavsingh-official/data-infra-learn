@@ -52,7 +52,13 @@ PHASES = [
 
 def _entries(remediation: dict) -> list[dict]:
     return [
-        {"error_code": code, "why": text["why"], "fix": text["fix"], "tradeoffs": text["tradeoffs"]}
+        {
+            "error_code": code,
+            "why": text["why"],
+            "fix": text["fix"],
+            "fix_sql": text["fix_sql"],
+            "tradeoffs": text["tradeoffs"],
+        }
         for code, text in remediation.items()
     ]
 

@@ -25,6 +25,7 @@ class Finding:
     detail: str
     why: str
     fix: str
+    fix_sql: str
     tradeoffs: str
 
 
@@ -40,7 +41,7 @@ class GradingReport:
 
 
 def _make_finding(error_code: str, account_id: str, detail: str) -> Finding:
-    text = REMEDIATION.get(error_code, {"why": "Unrecognized error code.", "fix": "N/A", "tradeoffs": "N/A"})
+    text = REMEDIATION.get(error_code, {"why": "Unrecognized error code.", "fix": "N/A", "fix_sql": "N/A", "tradeoffs": "N/A"})
     return Finding(error_code=error_code, account_id=account_id, detail=detail, **text)
 
 

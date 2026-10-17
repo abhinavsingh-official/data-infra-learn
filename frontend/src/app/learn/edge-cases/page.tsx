@@ -102,19 +102,24 @@ export default function EdgeCasesPage() {
               <Badge variant="destructive">{entry.error_code}</Badge>
             </CardHeader>
             <CardContent className="grid gap-6 md:grid-cols-2">
-              <div className="flex gap-3 border-r-0 pr-0 md:border-r md:pr-6">
-                <Lightbulb className="mt-1 size-5 shrink-0 text-warning" />
-                <p className="text-sm leading-relaxed">{entry.why}</p>
-              </div>
-              <div className="space-y-4">
-                <div className="flex gap-3 border-b pb-4">
-                  <Wrench className="mt-1 size-5 shrink-0 text-success" />
-                  <p className="text-sm leading-relaxed">{entry.fix}</p>
+              <div className="space-y-4 border-r-0 pr-0 md:border-r md:pr-6">
+                <div className="flex gap-3">
+                  <Lightbulb className="mt-1 size-5 shrink-0 text-warning" />
+                  <p className="text-sm leading-relaxed">{entry.why}</p>
                 </div>
                 <div className="flex gap-3">
                   <Scale className="mt-1 size-5 shrink-0 text-primary" />
                   <p className="text-sm leading-relaxed">{entry.tradeoffs}</p>
                 </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <Wrench className="mt-1 size-5 shrink-0 text-success" />
+                  <p className="text-sm leading-relaxed">{entry.fix}</p>
+                </div>
+                <pre className="overflow-x-auto whitespace-pre-wrap break-words border-2 border-panel-edge/50 bg-muted/40 p-3 font-mono text-sm">
+                  <code>{entry.fix_sql}</code>
+                </pre>
               </div>
             </CardContent>
           </Card>

@@ -289,6 +289,7 @@ export interface RemediationEntry {
   error_code: string;
   why: string;
   fix: string;
+  fix_sql: string;
   tradeoffs: string;
 }
 

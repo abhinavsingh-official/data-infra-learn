@@ -21,6 +21,7 @@ def test_learn_page_aggregates_every_phases_real_remediation_content():
             assert entry["error_code"].startswith("ERR_")
             assert entry["why"].strip()
             assert entry["fix"].strip()
+            assert entry["fix_sql"].strip()
             assert entry["tradeoffs"].strip()
 
     assert len(body["comparison"]["entries"]) == 5
