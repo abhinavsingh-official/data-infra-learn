@@ -21,7 +21,9 @@ const PARADIGM_ACCENT: Record<string, string> = {
   warehouse: "--phase-warehouse",
   "warehouse-databases": "--phase-warehouse",
   lake: "--phase-lake",
+  "lake-databases": "--phase-lake",
   lakehouse: "--phase-lakehouse",
+  "lakehouse-databases": "--phase-lakehouse",
   "pipeline-architecture": "--phase-pipeline-architecture",
 };
 

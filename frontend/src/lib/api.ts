@@ -6,6 +6,7 @@ import type {
   GradingReport,
   LakeTask,
   LakehouseTask,
+  InterviewQuestionsPage,
   LearnPage,
   MongoExecuteResult,
   NodeCheckResult,
@@ -283,6 +284,10 @@ export function getComparisonView() {
 
 export function getLearnPage() {
   return request<LearnPage>("/learn-page");
+}
+
+export function getInterviewQuestions() {
+  return request<InterviewQuestionsPage>("/interview-questions");
 }
 
 export { ApiError };

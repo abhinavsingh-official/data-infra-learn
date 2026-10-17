@@ -29,6 +29,8 @@ from psycopg import Connection, sql
 from app.core.config import get_settings
 from app.core.db import get_admin_connection
 from app.core.session_ids import validate_session_id
+from app.modules.lake_databases_track.skill_tree import LAKE_DATABASES_SKILL_TREE
+from app.modules.lakehouse_databases_track.skill_tree import LAKEHOUSE_DATABASES_SKILL_TREE
 from app.modules.mongo_databases_track.skill_tree import MONGO_DATABASES_SKILL_TREE
 from app.modules.postgres_phase.session_provisioning import STATEMENT_TIMEOUT
 from app.modules.postgres_phase.skill_tree import POSTGRES_SKILL_TREE
@@ -51,6 +53,8 @@ _SKILL_TREES: dict[str, dict] = {
     "sql-databases": SQL_DATABASES_SKILL_TREE,
     "mongo-databases": MONGO_DATABASES_SKILL_TREE,
     "warehouse-databases": WAREHOUSE_DATABASES_SKILL_TREE,
+    "lake-databases": LAKE_DATABASES_SKILL_TREE,
+    "lakehouse-databases": LAKEHOUSE_DATABASES_SKILL_TREE,
     "pipeline-architecture": PIPELINE_ARCHITECTURE_SKILL_TREE,
 }
 

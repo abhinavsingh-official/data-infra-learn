@@ -304,6 +304,20 @@ export interface LearnPage {
   comparison: ComparisonView;
 }
 
+export interface InterviewQuestion {
+  q: string;
+  a: string;
+}
+
+export interface InterviewQuestionTopic {
+  topic: string;
+  questions: InterviewQuestion[];
+}
+
+export interface InterviewQuestionsPage {
+  topics: InterviewQuestionTopic[];
+}
+
 export interface ComparisonEntry {
   paradigm: string;
   source: string;

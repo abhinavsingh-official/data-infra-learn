@@ -4,7 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.comparison_view import router as comparison_view_router
 from app.api.daily_challenge import router as daily_challenge_router
 from app.api.health import router as health_router
+from app.api.interview_questions import router as interview_questions_router
+from app.api.lake_databases_track import router as lake_databases_track_router
 from app.api.lake_phase import router as lake_phase_router
+from app.api.lakehouse_databases_track import router as lakehouse_databases_track_router
 from app.api.lakehouse_phase import router as lakehouse_phase_router
 from app.api.learn_page import router as learn_page_router
 from app.api.mongo_databases_track import router as mongo_databases_track_router
@@ -40,7 +43,10 @@ app.include_router(daily_challenge_router)
 app.include_router(sql_databases_track_router)
 app.include_router(mongo_databases_track_router)
 app.include_router(warehouse_databases_track_router)
+app.include_router(lake_databases_track_router)
+app.include_router(lakehouse_databases_track_router)
 app.include_router(pipeline_architecture_track_router)
+app.include_router(interview_questions_router)
 
 
 if __name__ == "__main__":

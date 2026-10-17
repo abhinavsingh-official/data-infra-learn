@@ -349,3 +349,179 @@ def test_warehouse_databases_fact_aggregate_node_passes():
     result = check_node_submission("warehouse-databases", "node_4_fact_aggregate", sql)
     assert result["passed"] is True
     assert result["actual_rows"][0]["card_network"] == "Mastercard"
+
+
+def test_lake_databases_schema_on_read_node_passes():
+    sql = "SELECT payload->>'user_id' AS user_id, payload->>'action' AS action FROM raw_user_events"
+    result = check_node_submission("lake-databases", "node_1_schema_on_read", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 3
+
+
+def test_lake_databases_columnar_storage_node_passes():
+    sql = "SELECT user_id, page_url FROM clickstream_wide"
+    result = check_node_submission("lake-databases", "node_2_columnar_storage", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lake_databases_partitioning_node_passes():
+    sql = "SELECT id, user_id, event_type FROM raw_events_by_day WHERE event_date = '2026-02-02'"
+    result = check_node_submission("lake-databases", "node_3_partitioning", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lake_databases_partition_pruning_node_passes():
+    sql = (
+        "SELECT id, amount FROM sales_by_day "
+        "WHERE sale_date >= '2026-02-02' AND sale_date < '2026-02-05'"
+    )
+    result = check_node_submission("lake-databases", "node_4_partition_pruning", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lake_databases_schema_drift_node_passes():
+    sql = (
+        "SELECT id, user_id, COALESCE(full_name_v2, customer_name_v1) AS customer_name "
+        "FROM raw_profile_events"
+    )
+    result = check_node_submission("lake-databases", "node_5_schema_drift", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lake_databases_dedupe_redelivery_node_passes():
+    sql = (
+        "SELECT event_id, amount FROM ("
+        "  SELECT *, ROW_NUMBER() OVER (PARTITION BY event_id ORDER BY received_at) AS rn"
+        "  FROM raw_bronze_events"
+        ") t WHERE rn = 1"
+    )
+    result = check_node_submission("lake-databases", "node_6_dedupe_redelivery", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lake_databases_medallion_bronze_silver_node_passes():
+    sql = "SELECT DISTINCT id, LOWER(TRIM(status)) AS status, customer_name FROM bronze_orders"
+    result = check_node_submission("lake-databases", "node_7_medallion_bronze_silver", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lake_databases_small_file_compaction_node_passes():
+    sql = (
+        "SELECT partition_key, SUM(row_count) AS total_rows, COUNT(*) AS file_count "
+        "FROM small_file_fragments GROUP BY partition_key"
+    )
+    result = check_node_submission("lake-databases", "node_8_small_file_compaction", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lake_databases_late_arriving_data_node_passes():
+    sql = "SELECT id, value FROM raw_zone_events WHERE ingested_at - event_time > interval '1 day'"
+    result = check_node_submission("lake-databases", "node_9_late_arriving_data", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lake_databases_data_skipping_node_passes():
+    sql = "SELECT id, chunk_id, amount FROM order_amounts WHERE amount > 1000"
+    result = check_node_submission("lake-databases", "node_10_data_skipping", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lakehouse_databases_atomic_commits_node_passes():
+    sql = "SELECT order_id, amount FROM commit_batches WHERE status = 'committed'"
+    result = check_node_submission("lakehouse-databases", "node_1_atomic_commits", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lakehouse_databases_schema_enforcement_node_passes():
+    sql = (
+        "SELECT id, account_id, amount FROM incoming_writes "
+        "WHERE account_id IS NOT NULL AND amount > 0"
+    )
+    result = check_node_submission("lakehouse-databases", "node_2_schema_enforcement", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lakehouse_databases_schema_evolution_node_passes():
+    sql = "SELECT id, user_id, COALESCE(source_app, 'unknown') AS source_app FROM events"
+    result = check_node_submission("lakehouse-databases", "node_3_schema_evolution", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lakehouse_databases_merge_upsert_node_passes():
+    sql = (
+        "INSERT INTO accounts_current (id, balance) VALUES (1, 250.00) "
+        "ON CONFLICT (id) DO UPDATE SET balance = EXCLUDED.balance "
+        "RETURNING id, balance"
+    )
+    result = check_node_submission("lakehouse-databases", "node_4_merge_upsert", sql)
+    assert result["passed"] is True
+    assert result["actual_rows"] == [{"id": 1, "balance": 250.00}]
+
+
+def test_lakehouse_databases_time_travel_node_passes():
+    sql = "SELECT account_id, balance FROM accounts_versions WHERE version = 2"
+    result = check_node_submission("lakehouse-databases", "node_5_time_travel", sql)
+    assert result["passed"] is True
+    assert result["actual_rows"] == [{"account_id": 101, "balance": 150.00}]
+
+
+def test_lakehouse_databases_transaction_log_node_passes():
+    sql = (
+        "SELECT account_id, SUM(CASE WHEN op = 'withdraw' THEN -amount ELSE amount END) AS balance "
+        "FROM txn_log GROUP BY account_id"
+    )
+    result = check_node_submission("lakehouse-databases", "node_6_transaction_log", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lakehouse_databases_optimistic_concurrency_node_detects_conflict():
+    sql = (
+        "UPDATE accounts_optimistic SET balance = 500, version = version + 1 "
+        "WHERE id = 1 AND version = 1 RETURNING id, balance, version"
+    )
+    result = check_node_submission("lakehouse-databases", "node_7_optimistic_concurrency", sql)
+    assert result["passed"] is True
+    assert result["actual_rows"] == []
+
+
+def test_lakehouse_databases_optimistic_concurrency_node_fails_if_version_check_skipped():
+    sql = "UPDATE accounts_optimistic SET balance = 500, version = version + 1 WHERE id = 1 RETURNING id, balance, version"
+    result = check_node_submission("lakehouse-databases", "node_7_optimistic_concurrency", sql)
+    assert result["passed"] is False
+
+
+def test_lakehouse_databases_compaction_optimize_node_passes():
+    sql = (
+        "SELECT table_partition, SUM(rows_written) AS total_rows, COUNT(*) AS commit_count "
+        "FROM commit_log_fragments GROUP BY table_partition"
+    )
+    result = check_node_submission("lakehouse-databases", "node_8_compaction_optimize", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2
+
+
+def test_lakehouse_databases_zorder_data_skipping_node_passes():
+    sql = "SELECT id, region, amount FROM order_records WHERE region = 'US' AND amount > 500"
+    result = check_node_submission("lakehouse-databases", "node_9_zorder_data_skipping", sql)
+    assert result["passed"] is True
+    assert result["actual_rows"] == [{"id": 1, "region": "US", "amount": 600.00}]
+
+
+def test_lakehouse_databases_retention_vacuum_node_passes():
+    sql = "SELECT version FROM table_versions WHERE committed_at < '2026-01-10'"
+    result = check_node_submission("lakehouse-databases", "node_10_retention_vacuum", sql)
+    assert result["passed"] is True
+    assert len(result["actual_rows"]) == 2

@@ -17,6 +17,8 @@ const REFERENCE_TRACKS: { routePrefix: string; label: string; slug: PhaseSlug }[
   { routePrefix: "postgres-phase", label: "Postgres", slug: "postgres" },
   { routePrefix: "mongo-databases-track", label: "MongoDB Databases", slug: "nosql" },
   { routePrefix: "warehouse-databases-track", label: "Warehouse Databases", slug: "warehouse" },
+  { routePrefix: "lake-databases-track", label: "Lake Databases", slug: "lake" },
+  { routePrefix: "lakehouse-databases-track", label: "Lakehouse Databases", slug: "lakehouse" },
   { routePrefix: "pipeline-architecture-track", label: "Pipeline Architecture", slug: "pipeline-architecture" },
 ];
 

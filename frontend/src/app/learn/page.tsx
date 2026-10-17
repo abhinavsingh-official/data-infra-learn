@@ -87,6 +87,20 @@ export default function LearnPagePage() {
               </CardHeader>
             </Card>
           </Link>
+          <Link href="/learn/interview-questions" className="block">
+            <Card className="h-full border-l-4 border-primary/40 transition-colors hover:border-foreground/30">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <span className="size-2.5 rounded-full bg-primary" />
+                  <CardTitle className="text-base">Interview Questions</CardTitle>
+                </div>
+                <CardDescription>
+                  Commonly-asked, publicly-known data engineering interview questions, grouped by
+                  topic.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
         </div>
       </section>
     </div>

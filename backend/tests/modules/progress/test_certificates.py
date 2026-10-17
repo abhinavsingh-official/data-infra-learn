@@ -9,12 +9,48 @@ def test_every_group_is_locked_with_no_completions():
         assert status[group_id]["total"] > 0
 
 
-def test_lake_unlocks_once_its_only_node_is_done():
-    # Lake's tree is intro+capstone only - "capstone" is its sole
-    # gradable requirement.
-    status = certificate_status({"lake": ["capstone"]})
-    assert status["lake"]["unlocked"] is True
-    assert status["lake"]["completed"] == status["lake"]["total"]
+def test_lake_requires_both_lake_databases_and_lake_tracks():
+    lake_databases_nodes = [
+        "node_1_schema_on_read",
+        "node_2_columnar_storage",
+        "node_3_partitioning",
+        "node_4_partition_pruning",
+        "node_5_schema_drift",
+        "node_6_dedupe_redelivery",
+        "node_7_medallion_bronze_silver",
+        "node_8_small_file_compaction",
+        "node_9_late_arriving_data",
+        "node_10_data_skipping",
+    ]
+    partial = certificate_status({"lake-databases": lake_databases_nodes})
+    assert partial["lake"]["unlocked"] is False
+    assert partial["lake"]["completed"] == len(lake_databases_nodes)
+
+    full = certificate_status({"lake-databases": lake_databases_nodes, "lake": ["capstone"]})
+    assert full["lake"]["unlocked"] is True
+
+
+def test_lakehouse_requires_both_lakehouse_databases_and_lakehouse_tracks():
+    lakehouse_databases_nodes = [
+        "node_1_atomic_commits",
+        "node_2_schema_enforcement",
+        "node_3_schema_evolution",
+        "node_4_merge_upsert",
+        "node_5_time_travel",
+        "node_6_transaction_log",
+        "node_7_optimistic_concurrency",
+        "node_8_compaction_optimize",
+        "node_9_zorder_data_skipping",
+        "node_10_retention_vacuum",
+    ]
+    partial = certificate_status({"lakehouse-databases": lakehouse_databases_nodes})
+    assert partial["lakehouse"]["unlocked"] is False
+    assert partial["lakehouse"]["completed"] == len(lakehouse_databases_nodes)
+
+    full = certificate_status(
+        {"lakehouse-databases": lakehouse_databases_nodes, "lakehouse": ["capstone"]}
+    )
+    assert full["lakehouse"]["unlocked"] is True
 
 
 def test_sql_requires_both_sql_databases_and_postgres_tracks():
