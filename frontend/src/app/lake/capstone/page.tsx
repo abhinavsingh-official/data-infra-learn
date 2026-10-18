@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SessionPanel } from "@/components/lake-phase/session-panel";
+import { LocalOnlyCapstoneNotice, sparkPhasesEnabled } from "@/components/shared/local-only-capstone-notice";
 import { getLakeTask } from "@/lib/api";
 import type { LakeTask } from "@/lib/types";
 
@@ -11,10 +12,15 @@ export default function LakePhasePage() {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    if (!sparkPhasesEnabled()) return;
     getLakeTask()
       .then(setTask)
       .catch(() => setFailed(true));
   }, []);
+
+  if (!sparkPhasesEnabled()) {
+    return <LocalOnlyCapstoneNotice phase="lake" />;
+  }
 
   if (failed) {
     return (
