@@ -1,21 +1,10 @@
-"""The "Pipeline Architecture" track - a cross-cutting track covering
-scheduling, data quality, schema evolution, batch vs. streaming,
-idempotent pipelines, and monitoring. These topics don't map to any
-single storage paradigm; they show up as edge-case fault types scattered
-across the other phases (schema drift, redelivery dedup, watermark
-checks) rather than being presented as their own discipline, so this
-track pulls them together explicitly.
-
-Unlike the other fundamentals tracks, this one has no sibling "phase"
-with a real capstone dataset - it's cross-cutting by design, so there's
-no capstone node here, same as sql_databases_track has none (its capstone
-lives in the sibling postgres_phase tree instead). This track's "capstone"
-is conceptual: the review node points back at where each concept already
-shows up for real, across the five existing capstones.
-
-Every example row and expected output below was captured by creating
-these exact tables and running these exact queries against real
-Postgres."""
+"""The "Pipeline Architecture" track - cross-cutting topics (scheduling,
+data quality, schema evolution, batch vs. streaming, idempotency,
+monitoring) that show up as edge-case fault types scattered across the
+other phases rather than as their own discipline. No capstone node -
+cross-cutting by design, so the review node just points back at where
+each concept shows up for real across the five capstones. Every
+example row/expected output was captured against real Postgres."""
 
 PIPELINE_ARCHITECTURE_SKILL_TREE = {
     "paradigm": "pipeline-architecture",

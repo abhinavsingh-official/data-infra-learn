@@ -1,22 +1,10 @@
-"""The "Lake Databases" track - generic data-lake fundamentals (schema-on-
-read, columnar storage, partitioning and partition pruning, schema drift,
-deduplication, the medallion architecture, the small-file problem, late-
-arriving data, and data skipping via file stats), grounded in the real
-mechanics of a schema-on-read lake even though every exercise here runs
-against small, hand-sized Postgres tables. Same division of labor as
-sql_databases_track vs. postgres_phase, mongo_databases_track vs.
-nosql_phase, and warehouse_databases_track vs. warehouse_phase: this is
-the paired fundamentals track for the real lake_phase capstone, which
-runs on actual Spark/Delta Lake at scale (see node_practice.py's own
-docstring - the fundamentals-track engine isn't tied to whatever the real
-capstone happens to run on). Each node's `note` explains the real-lake
-concept even though the SQL practice is a Postgres analogy - there is no
-real object storage, no real Parquet files, and no real partitioned
-directory layout here, just small tables whose shape and queries mirror
-the consequences those real mechanics have. Every example row and
-expected output below was captured by creating these exact tables and
-running these exact queries against real Postgres, then copying the real
-result rather than hand-typing it."""
+"""The "Lake Databases" track - data-lake fundamentals (schema-on-read,
+columnar storage, partitioning, schema drift, dedup, medallion
+architecture, small files, late arrivals, data skipping) taught via
+small Postgres tables, paired with the real lake_phase capstone
+(Spark/Delta at scale) the same way sql_databases_track pairs with
+postgres_phase. Every example row/expected output was captured by
+actually running these queries against Postgres, not hand-typed."""
 
 LAKE_DATABASES_SKILL_TREE = {
     "paradigm": "lake-databases",

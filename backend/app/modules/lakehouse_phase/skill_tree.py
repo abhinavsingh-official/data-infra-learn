@@ -1,10 +1,7 @@
-"""Lakehouse-phase skill tree - a thin intro+capstone wrapper around the
-existing capstone task (LAKEHOUSE_PHASE_TASK), mirroring
-nosql_phase.skill_tree's shape. There's no sibling fundamentals track
-here: the transaction log, atomic commits, and time travel (DESCRIBE
-HISTORY / VERSION AS OF) are real Delta semantics with no Postgres
-equivalent, so there's nothing node_practice.py's plain-Postgres engine
-could faithfully grade."""
+"""Lakehouse-phase skill tree - a thin intro+capstone wrapper around
+LAKEHOUSE_PHASE_TASK. No sibling fundamentals track: the transaction
+log, atomic commits, and time travel are real Delta semantics with no
+Postgres equivalent to grade against."""
 
 from app.modules.lakehouse_phase.task_content import LAKEHOUSE_PHASE_TASK
 

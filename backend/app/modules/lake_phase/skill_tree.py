@@ -1,12 +1,7 @@
-"""The Lake-phase skill tree - a thin intro+capstone wrapper around the
-existing capstone task (LAKE_PHASE_TASK), mirroring nosql_phase.skill_tree's
-shape. Unlike Warehouse, Lake gets no sibling "fundamentals" track: its
-real fundamentals (Parquet's columnar internals, partition pruning,
-schema-on-read via a real filesystem) have no Postgres analog at all -
-node_practice.py's engine is always plain Postgres, which would turn a
-Parquet/partitioning lesson into a generic-JSON-in-Postgres exercise and
-lose the point of the paradigm. So this tree, like nosql_phase's, has no
-step-by-step skill nodes; the capstone is the whole lesson."""
+"""Lake-phase skill tree - a thin intro+capstone wrapper around
+LAKE_PHASE_TASK. No step-by-step nodes: Parquet/partitioning/schema-on-
+read have no Postgres analog, so node_practice's plain-Postgres engine
+couldn't grade them faithfully. The capstone is the whole lesson."""
 
 from app.modules.lake_phase.task_content import LAKE_PHASE_TASK
 
