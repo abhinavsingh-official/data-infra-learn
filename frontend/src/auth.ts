@@ -14,13 +14,19 @@ import { Pool } from "pg";
  * A256CBC-HS512), which the FastAPI backend would need real cryptographic
  * work to verify. With database sessions, the backend can instead just
  * read the same `auth.sessions` table directly via its own existing
- * Postgres admin connection - no cross-language token verification needed. */
+ * Postgres admin connection - no cross-language token verification needed.
+ *
+ * AUTH_DB_SSL: unset locally (self-hosted Docker Postgres has no TLS
+ * configured at all, so requesting SSL would just fail the handshake) -
+ * set to "true" on the hosted deployment, where the database is Neon,
+ * which refuses any non-TLS connection outright. */
 const pool = new Pool({
   host: process.env.AUTH_DB_HOST,
   port: Number(process.env.AUTH_DB_PORT ?? 5433),
   database: process.env.AUTH_DB_NAME,
   user: process.env.AUTH_DB_USER,
   password: process.env.AUTH_DB_PASSWORD,
+  ssl: process.env.AUTH_DB_SSL === "true" ? true : undefined,
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
