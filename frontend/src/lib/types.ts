@@ -39,6 +39,10 @@ export interface SkillNodePracticeDto {
    * never assume both are set. */
   schema?: SkillNodeSchemaColumnDto[];
   example_rows?: Record<string, unknown>[];
+  /** Only present on single-table nodes; falls back to
+   * "raw_transaction_events" when absent, matching the backend's own
+   * default (app.modules.progress.node_practice._practice_tables). */
+  table_name?: string;
   tables?: SkillNodePracticeTableDto[];
   expected_output_rows: Record<string, unknown>[];
   starter_sql?: string;
