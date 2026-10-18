@@ -33,9 +33,14 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(postgres_phase_router)
 app.include_router(nosql_phase_router)
-app.include_router(warehouse_phase_router)
-app.include_router(lake_phase_router)
-app.include_router(lakehouse_phase_router)
+# Real PySpark/Delta, needs a JVM - off on the hosted deployment, where
+# these three capstones aren't run live (see README's "Running it
+# locally" section). Importing these routers is always safe either way;
+# only a provisioning request actually starts the JVM.
+if settings.enable_spark_phases:
+    app.include_router(warehouse_phase_router)
+    app.include_router(lake_phase_router)
+    app.include_router(lakehouse_phase_router)
 app.include_router(comparison_view_router)
 app.include_router(learn_page_router)
 app.include_router(progress_router)

@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
+    # Warehouse/Lake/Lakehouse capstones need a JVM for real PySpark/Delta -
+    # true locally, false on the hosted deployment (no JVM there, and not
+    # worth the memory just to keep a portfolio demo live). False only
+    # skips registering those three routers; nothing else changes.
+    enable_spark_phases: bool = True
+
     # Local frontend dev server origin. Kept as a single configurable
     # value (not "allow all") so the CORS surface stays deliberate even
     # though this never runs multi-tenant in local dev.
@@ -39,6 +45,29 @@ class Settings(BaseSettings):
     mongo_port: int = 27017
     mongo_superuser: str = "mongo_admin"
     mongo_superuser_password: str = "mongo_admin_dev_password"
+    # Set on the hosted deployment only - self-hosted Mongo (local dev)
+    # supports direct `db.command("createUser"/"dropUser", ...)`, but
+    # Atlas's free M0 tier doesn't accept that database command for
+    # managing Atlas-level database users; those have to go through
+    # Atlas's own Administration API instead (see
+    # app/core/mongo_atlas_admin.py).
+    mongo_provisioning_backend: str = "self_hosted"
+    # Atlas connection string for the one fixed, project-scoped admin-
+    # equivalent database user (readWriteAnyDatabase + dbAdminAnyDatabase)
+    # - only used when mongo_provisioning_backend == "atlas_api". A
+    # mongodb+srv:// URI, not reconstructed from host/port like the
+    # self-hosted mongo_admin_uri below.
+    mongo_atlas_admin_uri: str = ""
+    # Atlas Administration API credentials (org-level API key, scoped to
+    # this one project) - only used to create/delete the per-session/
+    # per-check scoped database users themselves, never for data access.
+    mongo_atlas_public_key: str = ""
+    mongo_atlas_private_key: str = ""
+    mongo_atlas_project_id: str = ""
+    # The mongodb+srv:// host (e.g. "datalearn.9aalmnx.mongodb.net"), used
+    # to build a fresh connection string for each newly Atlas-created
+    # scoped user.
+    mongo_atlas_host: str = ""
 
     # One DuckDB file per warehouse-phase session, not a network service,
     # so there's no admin/app split here the way Postgres and Mongo have -
@@ -66,6 +95,12 @@ class Settings(BaseSettings):
 
     @property
     def mongo_admin_uri(self) -> str:
+        # Atlas doesn't expose a bare host:port the way self-hosted Mongo
+        # does (it's a mongodb+srv:// DNS-seedlist connection) - the full
+        # URI for the one fixed admin-equivalent user is configured
+        # directly rather than assembled from host/port.
+        if self.mongo_provisioning_backend == "atlas_api":
+            return self.mongo_atlas_admin_uri
         return (
             f"mongodb://{self.mongo_superuser}:{self.mongo_superuser_password}"
             f"@{self.mongo_host}:{self.mongo_port}/?authSource=admin"

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SessionPanel } from "@/components/lakehouse-phase/session-panel";
+import { LocalOnlyCapstoneNotice, sparkPhasesEnabled } from "@/components/shared/local-only-capstone-notice";
 import { getLakehouseTask } from "@/lib/api";
 import type { LakehouseTask } from "@/lib/types";
 
@@ -11,10 +12,15 @@ export default function LakehousePhasePage() {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    if (!sparkPhasesEnabled()) return;
     getLakehouseTask()
       .then(setTask)
       .catch(() => setFailed(true));
   }, []);
+
+  if (!sparkPhasesEnabled()) {
+    return <LocalOnlyCapstoneNotice phase="lakehouse" />;
+  }
 
   if (failed) {
     return (

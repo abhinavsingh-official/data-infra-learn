@@ -16,28 +16,19 @@ is what parses that text back into a command dict before running it."""
 import json
 import math
 import secrets
-import string
 from typing import Any
 
 from pymongo import MongoClient
-from pymongo.errors import OperationFailure
 
 from app.core.db import get_mongo_admin_client
+from app.core.mongo_sessions import deprovision_scoped_mongo_user, provision_scoped_mongo_user
 from app.core.session_ids import validate_session_id
 from app.modules.nosql_phase.mongo_execution import execute_submission
 from app.modules.progress.node_practice import find_skill_node
 
-# Mongo's error code for "no such user" on a dropUser call.
-_USER_NOT_FOUND = 11
-
 
 def _db_name(check_id: str) -> str:
     return f"practice_{check_id}"
-
-
-def _generate_password() -> str:
-    alphabet = string.ascii_letters + string.digits
-    return "".join(secrets.choice(alphabet) for _ in range(32))
 
 
 def _practice_collections(practice: dict) -> list[dict]:
@@ -54,10 +45,7 @@ def _practice_collections(practice: dict) -> list[dict]:
 def _provision_practice_db(admin_client: MongoClient, check_id: str, collections: list[dict]) -> str:
     validate_session_id(check_id)
     name = _db_name(check_id)
-    password = _generate_password()
-    admin_client[name].command(
-        "createUser", name, pwd=password, roles=[{"role": "readWrite", "db": name}]
-    )
+    password = provision_scoped_mongo_user(admin_client, name)
     # Seeded via the admin client directly - the scoped user already has
     # readWrite on this exact database, so there's no access gap, and it
     # avoids opening a second (throwaway) connection just to insert.
@@ -71,13 +59,7 @@ def _provision_practice_db(admin_client: MongoClient, check_id: str, collections
 
 def _deprovision_practice_db(admin_client: MongoClient, check_id: str) -> None:
     validate_session_id(check_id)
-    name = _db_name(check_id)
-    try:
-        admin_client[name].command("dropUser", name)
-    except OperationFailure as e:
-        if e.code != _USER_NOT_FOUND:
-            raise
-    admin_client.drop_database(name)
+    deprovision_scoped_mongo_user(admin_client, _db_name(check_id))
 
 
 def _extract_docs(result: dict[str, Any]) -> list[dict] | None:

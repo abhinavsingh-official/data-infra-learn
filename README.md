@@ -14,6 +14,12 @@ Reading about star schemas or the Delta Lake transaction log is one thing; writi
 against a few hundred thousand messy rows and watching a grader explain exactly which rows you
 missed, and why, is a different kind of learning.
 
+**[Live demo →](#)** covers everything except the Warehouse/Lake/Lakehouse capstones - those run
+real PySpark + Delta Lake, which needs a JVM and real memory, not something worth paying to keep
+running 24/7 for a demo site. They run locally instead, in about two minutes - see "Running it
+locally" below. Everything else (login, the fundamentals tracks, Reference, Edge Cases, Interview
+Questions) is live.
+
 ## What it looks like
 
 ![Homepage](docs/screenshots/homepage.png)
