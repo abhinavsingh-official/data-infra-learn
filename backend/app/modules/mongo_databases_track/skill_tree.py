@@ -1,24 +1,16 @@
-"""The "MongoDB Databases" track - the NoSQL-umbrella sibling of
-sql_databases_track, with the same scope: generic document-model
-fundamentals (filtering, referencing via $lookup, aggregation with
-$group, and Mongo's own "no NULL, just a missing field" semantics) on
-small, hand-sized data, not the real 15,000-account account_profiles
-capstone - that's nosql_phase's job.
+"""The "MongoDB Databases" track - document-model fundamentals
+(filtering, $lookup, $group, "no NULL, just a missing field") on small
+data, paired with the real account_profiles capstone in nosql_phase.
 
-Practice blocks here reuse the exact same dict keys as
-postgres_phase/sql_databases_track's practice blocks (table_name,
-example_rows, tables/rows, expected_output_rows, starter_sql) even
-though these are documents, not rows - that's what lets node_practice's
-"tables" plumbing and the existing frontend (types, modal, result
-table) work unchanged. Only the backend check function
-(mongo_node_practice.py) and the submitted text's meaning (a JSON Mongo
-command, not SQL) differ; see that module's docstring. A `schema` key is
-never present here - Mongo has no fixed-column DDL to declare, and the
-frontend never reads that field for rendering anyway.
+Practice blocks reuse sql_databases_track's exact dict keys
+(table_name, example_rows, expected_output_rows, ...) even for
+documents, so node_practice's plumbing and the frontend work unchanged
+- only mongo_node_practice.py's check function and the submitted
+text's meaning (a JSON command, not SQL) differ. No `schema` key here;
+Mongo has no fixed-column DDL.
 
-Every example document and expected output below was captured by
-creating these exact collections and running these exact commands
-against real Mongo, then copying the real reply."""
+Every example document/expected output was captured against real
+Mongo."""
 
 MONGO_DATABASES_SKILL_TREE = {
     "paradigm": "mongo-databases",

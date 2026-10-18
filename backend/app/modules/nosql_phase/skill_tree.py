@@ -1,15 +1,7 @@
-"""A thin skill-tree wrapper around nosql_phase's existing capstone
-task - mirrors postgres_phase.skill_tree's intro+capstone shape, but has
-no step-by-step skill nodes of its own. Postgres's skill tree can source
-teach/practice content from its own reference_solution.steps (a staged,
-one-edge-case-at-a-time breakdown); the NoSQL capstone's
-reference_solution isn't staged that way, and its real exercise is an
-open-ended design question ("what do you embed/cap/aggregate"), not a
-sequence of individually-gradable edge cases - so there's nothing to
-turn into skill nodes here. The node-by-node fundamentals (find,
-$lookup, $group, $ifNull) live in the separate mongo_databases_track
-instead, the same division of labor the SQL umbrella uses between
-sql_databases_track and postgres_phase."""
+"""A thin intro+capstone wrapper around nosql_phase's capstone task - no
+step-by-step nodes, since the real exercise is an open-ended design
+question ("what do you embed/cap/aggregate"), not staged edge cases.
+The node-by-node fundamentals live in mongo_databases_track instead."""
 
 from app.modules.nosql_phase.task_content import NOSQL_PHASE_TASK
 

@@ -1,13 +1,8 @@
-"""The "SQL Databases" track - generic, DB-agnostic SQL fundamentals
-(WHERE, JOIN, GROUP BY/ORDER BY, NULL handling). Not the real
-51,495-row fintech feed or the real `public.transactions`/`public.accounts`
-tables - those are Postgres-track/capstone-scale content. These are
-small, hand-sized teaching copies of the same fintech domain, with only
-the few columns each lesson actually needs, not the real ~20-column
-ISO-8583-inspired schema from data_generation/schema.py. Every example
-row and expected output below was captured by creating these exact
-tables and running these exact queries against real Postgres, then
-copying the real result rather than hand-typing it."""
+"""The "SQL Databases" track - DB-agnostic SQL fundamentals (WHERE,
+JOIN, GROUP BY/ORDER BY, NULL handling), on small hand-sized teaching
+tables rather than the real capstone-scale fintech feed. Every example
+row/expected output was captured by actually running these queries
+against Postgres."""
 
 SQL_DATABASES_SKILL_TREE = {
     "paradigm": "sql-databases",

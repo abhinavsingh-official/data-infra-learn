@@ -1,10 +1,7 @@
-"""Postgres-phase skill tree - content and data model only, no
-grading/UI yet. Each skill node's `teach` block reuses
-`reference_solution.steps` from `task_content.py` (not duplicated
-logic, same source of truth); each node's `practice`/`combine` example
-rows are real rows pulled directly from this project's own seeded
-database, not invented. The capstone node references
-POSTGRES_PHASE_TASK itself rather than repeating it."""
+"""Postgres-phase skill tree. Each node's `teach` block reuses
+`reference_solution.steps` from `task_content.py` rather than
+duplicating it; `practice`/`combine` example rows are pulled from this
+project's own seeded database, not invented."""
 
 from app.modules.postgres_phase.task_content import POSTGRES_PHASE_TASK
 

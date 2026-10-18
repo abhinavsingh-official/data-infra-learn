@@ -1,24 +1,11 @@
-"""The "Lakehouse Databases" track - generic table-format fundamentals
-(atomic commits, schema enforcement at write time, schema evolution,
-MERGE/upsert semantics, time travel, the transaction log, optimistic
-concurrency, compaction, multi-column data skipping, and retention/
-VACUUM) layered ACID guarantees on top of the plain lake's schema-on-read
-storage. Same division of labor as sql_databases_track vs. postgres_phase,
-mongo_databases_track vs. nosql_phase, warehouse_databases_track vs.
-warehouse_phase, and lake_databases_track vs. lake_phase: this is the
-paired fundamentals track for the real lakehouse_phase capstone, which
-runs on actual Delta/Iceberg tables at scale (see node_practice.py's own
-docstring - the fundamentals-track engine isn't tied to whatever the real
-capstone happens to run on). Each node's `note` explains the real
-Delta/Iceberg table-format concept even though the SQL practice is a
-Postgres analogy - there is no real transaction log file, no real Parquet
-data file, and no real distributed optimistic-concurrency check here,
-just small tables and single SQL statements (including INSERT ... ON
-CONFLICT and UPDATE ... WHERE, since Postgres itself provides real ACID
-semantics for those) whose shape mirrors the consequences those real
-mechanics have. Every example row and expected output below was captured
-by creating these exact tables and running these exact queries against
-real Postgres, then copying the real result rather than hand-typing it."""
+"""The "Lakehouse Databases" track - table-format fundamentals (atomic
+commits, schema enforcement/evolution, MERGE/upsert, time travel, the
+transaction log, optimistic concurrency, compaction, data skipping,
+retention/VACUUM) taught via small Postgres tables, paired with the
+real lakehouse_phase capstone (Delta/Iceberg at scale) the same way
+sql_databases_track pairs with postgres_phase. Every example row/
+expected output was captured by actually running these queries against
+Postgres."""
 
 LAKEHOUSE_DATABASES_SKILL_TREE = {
     "paradigm": "lakehouse-databases",
