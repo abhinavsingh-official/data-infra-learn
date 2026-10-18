@@ -22,21 +22,36 @@ Questions) is live.
 
 ## What it looks like
 
-![Homepage](docs/screenshots/homepage.png)
+There's a real day/night theme, not just a dark-mode toggle bolted on - it switches the whole
+palette (sky-and-grass by day, torchlit cave by night), not just inverted grays:
 
-A short animated walkthrough of how the skill tree works before you pick a paradigm:
-
-![How it works](docs/screenshots/start.png)
+<p align="center">
+  <img src="docs/screenshots/homepage-light.png" width="49%" alt="Homepage, light theme" />
+  <img src="docs/screenshots/homepage-dark.png" width="49%" alt="Homepage, dark theme" />
+</p>
 
 A guided path through each paradigm - small fundamentals exercises first, then the real capstone
-on the full dataset:
+on the full dataset. Clicking a node opens the actual lesson: a short Teach walkthrough, then a
+Practice tab where you write real SQL against real example rows and get graded on the spot:
 
-![Skill tree](docs/screenshots/skill-tree.png)
+<p align="center">
+  <img src="docs/screenshots/skill-tree-dark.png" width="49%" alt="A skill tree, showing locked and unlocked lessons" />
+  <img src="docs/screenshots/lesson-dark.png" width="49%" alt="A lesson's practice tab, with example rows and a SQL editor" />
+</p>
 
-Every paradigm walks the same dataset, so Learn doubles as a cross-paradigm comparison - a real
-graph, plus the same operation solved six different ways:
+<p align="center">
+  <img src="docs/screenshots/lesson-light.png" width="49%" alt="The same practice tab in light theme" />
+</p>
 
-![Learn and compare](docs/screenshots/learn.png)
+Every injected fault gets a real remediation writeup, not just a pass/fail - why it broke, a
+concrete fix with actual SQL, and the tradeoffs where more than one valid approach exists:
+
+![Edge Cases](docs/screenshots/edge-cases-dark.png)
+
+Plus a standalone interview-prep reference, grouped by topic, with both theory questions and
+real coding problems:
+
+![Interview Questions](docs/screenshots/interview-questions-dark.png)
 
 ## What's actually running under the hood
 
