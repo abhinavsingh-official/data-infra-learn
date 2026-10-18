@@ -177,7 +177,8 @@ export function LessonNodeModal({ node, paradigm, open, onOpenChange, onNodeComp
                 : node.practice.example_rows && (
                     <div>
                       <p className="mb-1 text-xs font-medium text-muted-foreground">
-                        Example input ({node.practice.example_rows.length} row
+                        {node.practice.table_name ?? "raw_transaction_events"} (
+                        {node.practice.example_rows.length} row
                         {node.practice.example_rows.length === 1 ? "" : "s"})
                       </p>
                       <RowTable rows={node.practice.example_rows} />
