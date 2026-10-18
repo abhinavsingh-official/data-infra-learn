@@ -3,22 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PhaseSlug } from "@/lib/phase-theme";
 import { PHASE_THEME } from "@/lib/phase-theme";
 
-/** True only when explicitly set - the hosted deployment leaves this env
- * var unset so it defaults to "don't run Spark here", while every local
- * .env.local sets it to "true" (see .env.local.example). The backend
- * mirrors this with its own enable_spark_phases flag; this is purely the
- * frontend-side copy, not an enforcement mechanism. */
+/** Unset on the hosted deployment, "true" locally - mirrors the backend's
+ * enable_spark_phases flag, but is purely frontend copy, not enforcement. */
 const SPARK_PHASES_ENABLED = process.env.NEXT_PUBLIC_SPARK_PHASES_ENABLED === "true";
 
 export function sparkPhasesEnabled() {
   return SPARK_PHASES_ENABLED;
 }
 
-/** Shown instead of the real capstone session on the hosted deployment -
- * these three phases run real PySpark/Delta Lake, which needs a JVM and
- * real memory, not something worth paying for just to keep a portfolio
- * demo site live. The exercise itself is still genuinely worth running,
- * just on your own machine. */
 export function LocalOnlyCapstoneNotice({ phase }: { phase: PhaseSlug }) {
   const theme = PHASE_THEME[phase];
   return (

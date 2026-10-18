@@ -1,15 +1,8 @@
-"""Shared per-database-scoped Mongo user provisioning, used by both
-nosql_phase's session provisioning and progress.mongo_node_practice's
-per-check ephemeral grading databases - previously two near-identical
-copies of the same createUser/dropUser/drop_database logic, unified here
-because the two backends (self-hosted vs. Atlas) now need different
-branches of that logic, and duplicating that branch twice would be worse
-than factoring it out once.
-
-`admin_client` is still passed in by callers (rather than opened here)
-because they already open it via `get_mongo_admin_client()` as a context
-manager for other reasons (e.g. seeding collections on the same
-connection) - this module only owns the user-provisioning half."""
+"""Shared per-database-scoped Mongo user provisioning, used by
+nosql_phase's sessions and progress.mongo_node_practice's per-check
+grading databases - unified here since both now need the same
+self-hosted/Atlas branch. Callers still open `admin_client` themselves
+since they also use it to seed collections on the same connection."""
 
 import secrets
 import string

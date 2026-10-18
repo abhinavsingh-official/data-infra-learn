@@ -9,10 +9,8 @@ MESSY_RATE = 0.03
 
 
 def _typo(text: str) -> str:
-    """Genuine human data-entry mistakes - transposed, doubled, or missing
-    letters - not just casing/whitespace. Treated as a distinct failure
-    mode from formatting variance, so it gets its own function rather
-    than being folded into messy_name's cosmetic variants."""
+    """Transposed, doubled, or missing letters - a different failure
+    mode from messy_name's cosmetic casing/whitespace variants."""
     if len(text) < 3:
         return text
     i = random.randint(0, len(text) - 2)
@@ -57,9 +55,7 @@ def messy_phone(raw_digits: str) -> str:
 
 
 def maybe_empty_or_none(value: str) -> str | None:
-    """Optional free-text fields are sometimes NULL, sometimes an empty
-    string, sometimes just whitespace - three genuinely different real
-    states, not interchangeable."""
+    """NULL, empty string, or just whitespace - three different states."""
     roll = random.random()
     if roll < MESSY_RATE / 3:
         return None

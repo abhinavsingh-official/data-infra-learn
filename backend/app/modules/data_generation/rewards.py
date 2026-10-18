@@ -19,8 +19,7 @@ def generate_reward_events(
 ) -> list[dict[str, Any]]:
     events = []
     for _ in range(target_count):
-        # Not every reward is tied to a specific transaction - promotional
-        # bonuses genuinely aren't.
+        # Promotional bonuses aren't tied to a specific transaction.
         transaction_id = random.choice(transaction_id_sample) if random.random() > 0.15 else None
         redeemed = random.random() < 0.4
         earned_at = _fake.date_time_between(start_date="-2y", end_date="now", tzinfo=timezone.utc)

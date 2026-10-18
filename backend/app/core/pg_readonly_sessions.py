@@ -28,12 +28,8 @@ def _generate_password() -> str:
 
 
 def provision_pg_readonly_session(conn: Connection, role: str) -> str:
-    """Creates a Postgres role with SELECT-only access to the five
-    relational-phase source tables - no schema of its own, since this
-    role never creates anything, only reads. Returns the generated
-    password. `role` is the caller's own fully-formed role name (already
-    prefixed per-phase) - this function doesn't validate the session_id
-    itself, since by this point it's already baked into `role`."""
+    """SELECT-only role on the source tables, no schema of its own.
+    `role` is already the caller's fully-formed, prefixed name."""
     password = _generate_password()
     conn.execute(
         sql.SQL("CREATE ROLE {role} WITH LOGIN PASSWORD {password} NOSUPERUSER NOCREATEDB NOCREATEROLE").format(

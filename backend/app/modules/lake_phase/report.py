@@ -1,9 +1,7 @@
-"""The lake-phase grading report generator, run against the session's own
-Spark session object. Reuses grading.report.grade_clean_transactions
-directly for the required-output contract/ground truth (engine-agnostic,
-takes a polars DataFrame), with two lake-specific structural checks on
-top: was the output genuinely partitioned, and was payload actually
-deferred to read time rather than flattened at write time."""
+"""Lake-phase grading - reuses grading.report.grade_clean_transactions
+for the ground truth, plus two lake-specific checks: is the output
+actually partitioned, and is payload deferred to read time rather than
+flattened at write time."""
 
 import polars as pl
 

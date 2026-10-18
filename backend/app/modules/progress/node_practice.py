@@ -111,13 +111,9 @@ def _provision_practice_role(conn: Connection, check_id: str, tables: list[dict]
             role=sql.Identifier(role), password=sql.Literal(password)
         )
     )
-    # Self-hosted Postgres connects as a true superuser here, which can
-    # CREATE SCHEMA AUTHORIZATION for any role unconditionally - Neon's
-    # admin-equivalent role is deliberately NOT a true superuser, so
-    # Postgres enforces its real rule instead: you can only authorize a
-    # schema to a role you're a member of. Granting that membership to
-    # the connecting role itself (harmless no-op under a real superuser,
-    # load-bearing under Neon) makes this work under both.
+    # A true superuser can CREATE SCHEMA AUTHORIZATION for any role; Neon's
+    # admin role isn't one, so it needs membership in the role first. A
+    # no-op locally, required on Neon.
     conn.execute(sql.SQL("GRANT {role} TO CURRENT_USER").format(role=sql.Identifier(role)))
     conn.execute(sql.SQL("CREATE SCHEMA {schema} AUTHORIZATION {role}").format(
         schema=sql.Identifier(role), role=sql.Identifier(role)

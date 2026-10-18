@@ -14,9 +14,7 @@ const WHAT_THIS_IS = [
   "Grading like a real code review - what broke, why, and exactly how to fix it, not just a score",
 ];
 
-// A real multi-color rotation (reusing the already-chosen phase accent
-// colors, not inventing new ones) instead of one flat brand color on
-// every stat/step - a single-hue homepage reads flatter than it needs to.
+// Reuses the phase accent colors instead of one flat brand color.
 const STAT_COLORS = ["text-phase-postgres", "text-phase-nosql", "text-phase-warehouse", "text-phase-lakehouse"];
 const STEP_COLORS = ["bg-phase-postgres", "bg-phase-nosql", "bg-phase-warehouse", "bg-phase-lakehouse"];
 
