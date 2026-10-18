@@ -14,7 +14,7 @@ Reading about star schemas or the Delta Lake transaction log is one thing; writi
 against a few hundred thousand messy rows and watching a grader explain exactly which rows you
 missed, and why, is a different kind of learning.
 
-**[Live demo →](#)** covers everything except the Warehouse/Lake/Lakehouse capstones - those run
+**[Live demo →](https://data-infra-learn.vercel.app)** covers everything except the Warehouse/Lake/Lakehouse capstones - those run
 real PySpark + Delta Lake, which needs a JVM and real memory, not something worth paying to keep
 running 24/7 for a demo site. They run locally instead, in about two minutes - see "Running it
 locally" below. Everything else (login, the fundamentals tracks, Reference, Edge Cases, Interview
@@ -93,3 +93,8 @@ to `http://localhost:8000` - see `frontend/.env.local.example`).
 
 Running PySpark locally also needs a JDK - see `backend/app/core/config.py` for the
 `spark_java_home` setting if your machine doesn't have one on the default path.
+
+## License
+
+All rights reserved. Feel free to read through the code and learn from it, but please don't
+clone, copy, or reuse it without asking first.
