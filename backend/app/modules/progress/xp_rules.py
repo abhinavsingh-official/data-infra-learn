@@ -55,9 +55,8 @@ def capstone_badge_for(paradigm: str) -> Badge | None:
 
 
 def all_badge_definitions() -> list[Badge]:
-    """Every badge that can ever be earned, not just the ones a given
-    user already has - the frontend's badge bar shows locked badges too,
-    so it needs the full catalog, not just `progress.badges` rows."""
+    """The full badge catalog, not just a user's earned ones - the
+    frontend's badge bar shows locked badges too."""
     definitions = [Badge(badge_id, label) for _, badge_id, label in NODE_COUNT_BADGES]
     definitions += [Badge(badge_id, label) for _, badge_id, label in STREAK_BADGES]
     definitions += [Badge(badge_id, label) for _, badge_id, label in XP_BADGES]

@@ -1,9 +1,7 @@
 """Session provisioning for the lake phase, built on PySpark (see
-app.core.spark_sessions for the shared engine layer this builds on). Each
-session gets a read-only Postgres role plus a real local output
-directory - the directory stays a genuine filesystem path (not just a
-Spark-catalog concept), since the whole point of this phase is writing
-and reading real Parquet files."""
+app.core.spark_sessions). Each session gets a read-only Postgres role
+plus a real local output directory, since this phase actually writes
+and reads Parquet files on disk."""
 
 import shutil
 

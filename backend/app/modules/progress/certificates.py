@@ -1,11 +1,8 @@
-"""Certificates - purely a vanity reward, unlocked after finishing EVERY
-node in a paradigm's tree, not just its capstone. The SQL and NoSQL
-umbrellas each span two tracks (SQL Databases + Postgres; MongoDB
-Databases + NoSQL; Warehouse Databases + Warehouse), so "a paradigm"
-here is really a small group of tracks - a certificate covers the whole
-group, matching how `/sql`, `/nosql`, and `/warehouse` already present
-themselves as one umbrella to the learner, not two separate things to
-finish."""
+"""Certificates - a vanity reward, unlocked after finishing every node in
+a paradigm's tree, not just its capstone. SQL/NoSQL/Warehouse each span
+two tracks (e.g. SQL Databases + Postgres), so a certificate covers the
+whole umbrella group, matching how `/sql`/`/nosql`/`/warehouse` present
+to the learner as one thing."""
 
 from app.modules.lake_databases_track.skill_tree import LAKE_DATABASES_SKILL_TREE
 from app.modules.lakehouse_databases_track.skill_tree import LAKEHOUSE_DATABASES_SKILL_TREE
@@ -19,12 +16,9 @@ from app.modules.sql_databases_track.skill_tree import SQL_DATABASES_SKILL_TREE
 from app.modules.warehouse_databases_track.skill_tree import WAREHOUSE_DATABASES_SKILL_TREE
 from app.modules.warehouse_phase.skill_tree import WAREHOUSE_SKILL_TREE
 
-# Every skill tree that exists, keyed by its own `paradigm` field -
-# deliberately broader than node_practice._SKILL_TREES (which only lists
-# the gradable ones): a certificate needs to count capstone nodes too,
-# and nosql's capstone-only wrapper has no gradable nodes of its own at
-# all (lake and lakehouse used to be capstone-only wrappers too, but now
-# each has a paired *_databases_track with real gradable nodes).
+# Every skill tree, keyed by `paradigm` - broader than
+# node_practice._SKILL_TREES since a certificate needs to count capstone
+# nodes too, and nosql's capstone-only wrapper has no gradable nodes.
 _ALL_TREES: dict[str, dict] = {
     "postgres": POSTGRES_SKILL_TREE,
     "sql-databases": SQL_DATABASES_SKILL_TREE,

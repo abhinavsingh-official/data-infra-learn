@@ -1,16 +1,10 @@
-"""MongoDB Atlas Administration API client for the two operations the
-self-hosted provisioning path covers with a direct `db.command("createUser"
-/"dropUser", ...)` call - Atlas's free M0 tier doesn't accept that
-database command for its own cluster-level database users, so creating/
-deleting one has to go through this HTTP API instead, authenticated with
-an org-level API key pair (HTTP Digest, not the data-plane credentials).
+"""Atlas's free M0 tier won't accept a direct `db.command("createUser")`
+for its own users - this goes through Atlas's Admin API instead (HTTP
+Digest, org-level API key).
 
-Measured against a real M0 cluster: a newly created Atlas database user
-takes a few seconds (seen ~5s, Atlas's own docs say up to ~1 minute
-worst-case) to actually propagate to the cluster and start authenticating
-- `create_scoped_db_user` blocks until a real connection with the new
-credentials succeeds (or the retry budget runs out), so callers never see
-a freshly-"created" user that isn't actually usable yet."""
+A new Atlas user takes a few seconds to actually start authenticating
+(~5s measured, up to a minute per Atlas's docs), so
+`create_scoped_db_user` blocks on a real connection before returning."""
 
 import secrets
 import string
@@ -59,7 +53,7 @@ def _wait_until_usable(username: str, password: str, db_name: str) -> None:
                 return
             finally:
                 client.close()
-        except PyMongoError as e:  # noqa: BLE001 - genuinely any auth/connection failure means "not yet", retry
+        except PyMongoError as e:  # noqa: BLE001 - any auth/connection failure just means "not yet", so retry
             last_error = e
             time.sleep(PROPAGATION_POLL_INTERVAL_SECONDS)
     raise TimeoutError(
@@ -69,9 +63,7 @@ def _wait_until_usable(username: str, password: str, db_name: str) -> None:
 
 
 def create_scoped_db_user(db_name: str) -> str:
-    """Creates an Atlas database user named `db_name` with readWrite on
-    that one database, blocking until it's actually usable. Returns the
-    generated password."""
+    """Returns the generated password once the new user is usable."""
     settings = get_settings()
     password = _generate_password()
     response = requests.post(
@@ -92,9 +84,7 @@ def create_scoped_db_user(db_name: str) -> str:
 
 
 def delete_scoped_db_user(db_name: str) -> None:
-    """Deletes the Atlas database user named `db_name` - a 404 (already
-    gone) is treated as success, same resilience contract as the
-    self-hosted path's `dropUser`-ignoring-"no such user" behavior."""
+    """A 404 (already gone) counts as success."""
     settings = get_settings()
     response = requests.delete(
         f"{ATLAS_API_BASE}/groups/{settings.mongo_atlas_project_id}/databaseUsers/admin/{db_name}",

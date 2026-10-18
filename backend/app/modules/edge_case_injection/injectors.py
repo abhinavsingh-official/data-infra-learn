@@ -13,7 +13,7 @@ WATERMARK_HOURS = 48
 
 
 def inject_null(payload: dict[str, Any], rate: float) -> tuple[dict[str, Any], FaultRecord | None]:
-    """3.1 - a required field missing entirely from the payload."""
+    """A required field missing entirely from the payload."""
     if random.random() >= rate:
         return payload, None
     field = random.choice(["amount", "merchant", "currency", "timestamp"])
@@ -29,10 +29,9 @@ def inject_null(payload: dict[str, Any], rate: float) -> tuple[dict[str, Any], F
 def maybe_build_duplicate(
     payload: dict[str, Any], received_at: datetime, rate: float
 ) -> tuple[str, datetime, FaultRecord] | None:
-    """3.2 - a real webhook resend: same business event (event_id
-    unchanged), new transport-layer delivery ID, arrives shortly after the
-    original - not a byte-identical row. Returns the new delivery_id and
-    received_at for a second row the caller appends, or None."""
+    """A webhook resend: same event_id, new delivery ID, arrives shortly
+    after the original. Returns the new delivery_id/received_at for a
+    second row the caller appends, or None."""
     if random.random() >= rate:
         return None
     resend_delivery_id = uuid.uuid4().hex
@@ -54,8 +53,8 @@ def maybe_build_duplicate(
 def inject_late_arrival(
     received_at: datetime, event_timestamp: datetime, rate: float
 ) -> tuple[datetime, FaultRecord | None]:
-    """3.3 - received_at set past the stated 48h watermark relative to
-    the event's own timestamp."""
+    """received_at set past the 48h watermark relative to the event's
+    own timestamp."""
     if random.random() >= rate:
         return received_at, None
     late_by_hours = WATERMARK_HOURS + random.randint(1, 240)
@@ -70,13 +69,9 @@ def inject_late_arrival(
 
 
 def inject_schema_drift(payload: dict[str, Any], rate: float) -> tuple[dict[str, Any], FaultRecord | None]:
-    """3.4 - three real categories: added field, renamed field, type change.
-
-    Guards against stacked faults: if inject_null already removed 'merchant'
-    or 'amount', the corresponding variant is skipped rather than crashing -
-    found by running at real scale (50k rows), where a ~0.09% co-occurrence
-    chance still means dozens of hits, not something a small smoke test
-    would ever surface."""
+    """Added field, renamed field, or type change. Skips a variant if
+    inject_null already removed that field, instead of crashing - a real
+    collision at 50k rows, not just a theoretical edge case."""
     if random.random() >= rate:
         return payload, None
     mutated = dict(payload)
@@ -100,9 +95,8 @@ def inject_schema_drift(payload: dict[str, Any], rate: float) -> tuple[dict[str,
             "error_code": "ERR_SCHEMA_DRIFT_RENAMED_FIELD",
             "description": "'merchant' was renamed to 'merchant_name' - a consumer still reading 'merchant' sees it as deleted.",
         }
-    # type_change: amount as a decimal string -> integer smallest-currency-unit
-    # (cents/paise) - the real, well-known "forgot the amount is in the
-    # smallest unit" integration bug.
+    # type_change: amount as a decimal string -> integer cents/paise, the
+    # classic "forgot the amount is in the smallest unit" bug.
     cents = round(float(mutated["amount"]) * 100)
     mutated["amount"] = cents
     return mutated, {
@@ -113,19 +107,13 @@ def inject_schema_drift(payload: dict[str, Any], rate: float) -> tuple[dict[str,
 
 
 def inject_malformed(payload: dict[str, Any], rate: float) -> tuple[dict[str, Any], FaultRecord | None]:
-    """3.5 - Excel-style ID corruption, or an ambiguous regional date string.
+    """Excel-style ID corruption, or an ambiguous regional date string.
 
-    Guards, both found by re-reviewing rather than just re-running: (1)
-    'ambiguous_date' only runs if 'timestamp' is still present - otherwise
-    it would silently re-add a field inject_null had already deleted,
-    making the fault log claim two contradictory things about the same
-    field. (2) the excel_corruption sub-choice between event_id (always
-    reachable) and card_last4 (only reachable ~10% of the time, when it
-    genuinely starts with '0') is now an explicit precondition-checked
-    choice, not an if/else gated on a condition that was always true for
-    event_id - the card_last4 branch was previously dead code, and even
-    when reached via a bad condition, silently no-op'd on ~90% of values
-    while still logging a fault that produced no visible change."""
+    'ambiguous_date' only runs if 'timestamp' still exists - otherwise it
+    silently re-adds a field inject_null already deleted. The
+    event_id/card_last4 choice is precondition-checked rather than an
+    if/else that was always true for event_id - card_last4 used to be
+    dead code that logged a fault with no actual change."""
     if random.random() >= rate:
         return payload, None
     mutated = dict(payload)

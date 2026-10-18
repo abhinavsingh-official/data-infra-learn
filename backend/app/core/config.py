@@ -12,93 +12,54 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=_REPO_ROOT_ENV, env_file_encoding="utf-8", extra="ignore")
 
     postgres_host: str = "localhost"
-    # 5433, not 5432 - avoids colliding with a native/Homebrew Postgres
-    # already running on the default port on the host machine.
-    postgres_port: int = 5433
+    postgres_port: int = 5433  # not 5432, to avoid colliding with a native Postgres install
     postgres_db: str = "data_infra_learn"
     postgres_app_user: str = "app_role"
     postgres_app_password: str = "app_role_dev_password"
 
-    # Control-plane only (session provisioning) - never used for regular
-    # request handling.
+    # Session provisioning only, never regular request handling.
     postgres_superuser: str = "postgres"
     postgres_superuser_password: str = "postgres"
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
-    # Warehouse/Lake/Lakehouse capstones need a JVM for real PySpark/Delta -
-    # true locally, false on the hosted deployment (no JVM there, and not
-    # worth the memory just to keep a portfolio demo live). False only
-    # skips registering those three routers; nothing else changes.
+    # Off on the hosted deployment (no JVM there) - skips registering the
+    # three Spark-backed phase routers, nothing else changes.
     enable_spark_phases: bool = True
 
-    # Local frontend dev server origin. Kept as a single configurable
-    # value (not "allow all") so the CORS surface stays deliberate even
-    # though this never runs multi-tenant in local dev.
     frontend_origin: str = "http://localhost:3000"
 
-    # MongoDB root user is provisioning-only (creates/drops per-session
-    # scoped users), mirroring the Postgres superuser/app_role split -
-    # never used for regular request handling.
+    # Mongo root user, provisioning only, same split as Postgres above.
     mongo_host: str = "localhost"
     mongo_port: int = 27017
     mongo_superuser: str = "mongo_admin"
     mongo_superuser_password: str = "mongo_admin_dev_password"
-    # Set on the hosted deployment only - self-hosted Mongo (local dev)
-    # supports direct `db.command("createUser"/"dropUser", ...)`, but
-    # Atlas's free M0 tier doesn't accept that database command for
-    # managing Atlas-level database users; those have to go through
-    # Atlas's own Administration API instead (see
-    # app/core/mongo_atlas_admin.py).
+    # "self_hosted" locally; "atlas_api" on the hosted deployment, where
+    # Atlas's free tier won't accept a direct createUser/dropUser command
+    # (see app/core/mongo_atlas_admin.py).
     mongo_provisioning_backend: str = "self_hosted"
-    # Atlas connection string for the one fixed, project-scoped admin-
-    # equivalent database user (readWriteAnyDatabase + dbAdminAnyDatabase)
-    # - only used when mongo_provisioning_backend == "atlas_api". A
-    # mongodb+srv:// URI, not reconstructed from host/port like the
-    # self-hosted mongo_admin_uri below.
+    # The one fixed Atlas admin-equivalent user's full connection string -
+    # only used when mongo_provisioning_backend == "atlas_api".
     mongo_atlas_admin_uri: str = ""
-    # Atlas Administration API credentials (org-level API key, scoped to
-    # this one project) - only used to create/delete the per-session/
-    # per-check scoped database users themselves, never for data access.
+    # Atlas Admin API credentials - only for creating/deleting per-session
+    # scoped users, never for data access.
     mongo_atlas_public_key: str = ""
     mongo_atlas_private_key: str = ""
     mongo_atlas_project_id: str = ""
-    # The mongodb+srv:// host (e.g. "datalearn.9aalmnx.mongodb.net"), used
-    # to build a fresh connection string for each newly Atlas-created
-    # scoped user.
     mongo_atlas_host: str = ""
 
-    # One DuckDB file per warehouse-phase session, not a network service,
-    # so there's no admin/app split here the way Postgres and Mongo have -
-    # the backend process already has full filesystem access to any file
-    # it created.
     warehouse_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "warehouse_sessions"
-
-    # One DuckDB file plus a real local directory of Parquet output per
-    # lake-phase session.
     lake_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "lake_sessions"
-
-    # One DuckDB file plus a real local Delta table directory per
-    # lakehouse-phase session.
     lakehouse_sessions_dir: Path = Path(__file__).resolve().parents[2] / "data" / "lakehouse_sessions"
 
-    # PySpark backs the Warehouse/Lake/Lakehouse phases. PySpark needs a
-    # JVM; this machine's system Python has none installed system-wide, so
-    # this points at the Homebrew-installed JDK directly rather than
-    # relying on a symlinked /Library/Java install.
+    # PySpark needs a JVM - points at the Homebrew JDK directly since this
+    # machine has no system-wide Java install.
     spark_java_home: str = "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
-    # One shared on-disk location for every session's managed Delta
-    # tables, namespaced by per-session database name underneath it - not
-    # one dir per phase, since all three phases share the one SparkSession.
     spark_warehouse_dir: Path = Path(__file__).resolve().parents[2] / "data" / "spark_warehouse"
 
     @property
     def mongo_admin_uri(self) -> str:
-        # Atlas doesn't expose a bare host:port the way self-hosted Mongo
-        # does (it's a mongodb+srv:// DNS-seedlist connection) - the full
-        # URI for the one fixed admin-equivalent user is configured
-        # directly rather than assembled from host/port.
         if self.mongo_provisioning_backend == "atlas_api":
             return self.mongo_atlas_admin_uri
         return (
@@ -107,10 +68,9 @@ class Settings(BaseSettings):
         )
 
     def postgres_attach_conninfo(self, role: str, password: str) -> str:
-        """A libpq-style conninfo string for DuckDB's `ATTACH ... (TYPE
-        postgres)` - a different string shape from the postgres_dsn/
-        postgres_admin_dsn URIs above, which DuckDB's postgres extension
-        doesn't accept."""
+        """libpq-style conninfo for DuckDB's `ATTACH ... (TYPE postgres)` -
+        a different shape than the DSN properties below, which DuckDB's
+        postgres extension doesn't accept."""
         return (
             f"host={self.postgres_host} port={self.postgres_port} "
             f"dbname={self.postgres_db} user={role} password={password}"
@@ -118,10 +78,8 @@ class Settings(BaseSettings):
 
     @property
     def postgres_jdbc_url(self) -> str:
-        """Spark's JDBC data source wants a plain `jdbc:postgresql://...`
-        URL with user/password as separate .option() calls - a different
-        shape from the postgres_dsn/postgres_admin_dsn URIs above, which
-        are psycopg connection strings, not JDBC ones."""
+        """Spark's JDBC source wants user/password as separate .option()
+        calls, so this is bare - not a psycopg connection string."""
         return f"jdbc:postgresql://{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
     @property

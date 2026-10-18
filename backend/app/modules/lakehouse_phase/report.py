@@ -1,10 +1,8 @@
-"""The lakehouse-phase grading report generator, run against the
-session's own Spark session object. Reuses grading.report.
-grade_clean_transactions directly for the required-output contract and
-ground truth (engine-agnostic), plus three lakehouse-specific structural
-checks: is this a real Delta table, does its history show genuine
-incremental commits, and does time travel actually work (an earlier
-version doesn't leak later batches' rows)."""
+"""Lakehouse-phase grading - reuses grading.report.
+grade_clean_transactions for the ground truth, plus three checks: is
+this a real Delta table, does its history show incremental commits, and
+does time travel actually work (an earlier version doesn't leak later
+batches' rows)."""
 
 import polars as pl
 
@@ -36,18 +34,12 @@ def _fetch_clean_transactions(session_spark) -> pl.DataFrame:
 
 
 def _check_time_travel(session_spark, findings: list[Finding]) -> None:
-    """Reads the Delta table at the version recorded right after its
-    FIRST commit (always version 0 - the platform's own commit_batch()
-    always writes with mode='append', and the first append to a
-    not-yet-existing table is version 0) and checks it contains only
-    event ids that genuinely had a row in batch_1_events, per the ground
-    truth this phase itself controls (id % 2 = 0), not inferred from the
-    user's own submission.
-
-    This is not simply "any event id that also has an id % 2 = 1 row is
-    leaked" - some real event ids have duplicate-delivery rows spanning
-    BOTH batches. Those legitimately belong in version 0, since they
-    genuinely had a batch-1 row too."""
+    """Checks that version 0 (the first commit) contains only event ids
+    that actually had a row in batch_1_events (id % 2 = 0 - the
+    platform's own ground truth, not inferred from the submission). Not
+    simply "any id % 2 = 1 row is leaked": some events have
+    duplicate-delivery rows spanning both batches, so those legitimately
+    belong in version 0 too."""
     try:
         version_0_ids = {
             row["event_id"] for row in session_spark.sql("SELECT event_id FROM clean_transactions VERSION AS OF 0").collect()

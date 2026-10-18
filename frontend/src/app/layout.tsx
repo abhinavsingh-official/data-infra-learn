@@ -10,11 +10,9 @@ import { SiteNav } from "@/components/site-nav";
 import { UserMenu } from "@/components/user-menu";
 import { XpBadge } from "@/components/progress/xp-badge";
 
-// An actual retro terminal/arcade font, not just a rounded friendly one -
-// VT323 stays legible at body-text length (unlike Press Start 2P, which
-// breaks down past a word or two), so it's used everywhere. Press Start
-// 2P is reserved for the single short wordmark, where true 8-bit
-// chunkiness matters more than paragraph legibility.
+// VT323 (retro terminal font) stays legible at body-text length, unlike
+// Press Start 2P, which breaks down past a word or two - that one's
+// reserved for the short wordmark instead.
 const gameSans = VT323({
   variable: "--font-sans",
   weight: "400",
